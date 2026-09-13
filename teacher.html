@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>인생설계 시뮬레이터 — 교실 전광판</title>
+<style>
+:root{
+  --font:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --ink:#1f2430; --ink2:#5b6472; --line:#dfe3ea; --bg:#f4f2ee; --card:#fff;
+  --pri:#2f6fd0; --ok:#177a4a; --bad:#c0392b; --warn:#b06a12; --gold:#c99a3a;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);font-size:15px;line-height:1.5}
+body.locked{overflow:hidden}
+.wrap{max-width:1180px;margin:0 auto;padding:14px 16px 60px}
+
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 0 12px;border-bottom:1px solid var(--line)}
+header h1{font-size:20px;margin:0;letter-spacing:-.4px}
+.conn{font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;border:1px solid var(--line);background:#fff;color:var(--ink2)}
+.conn.ok{color:var(--ok);border-color:#bbf7d0;background:#f0fdf4}
+.conn.no{color:var(--bad);border-color:#fecaca;background:#fef2f2}
+.sp{flex:1}
+.btn{font-family:inherit;font-size:14px;font-weight:700;padding:9px 14px;border-radius:14px;
+  border:1.5px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
+.btn.pri{background:var(--pri);border-color:var(--pri);color:#fff}
+.btn.danger{color:var(--bad);border-color:#fecaca}
+.btn.dark{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:14px 0}
+@media(max-width:820px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:11px 13px}
+.kpi .l{font-size:11.5px;color:var(--ink2)}
+.kpi .v{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+.kpi .s{font-size:11.5px;color:var(--ink2)}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:19px;padding:15px;margin-top:12px}
+.card h2{font-size:16px;margin:0 0 3px;letter-spacing:-.3px}
+.card .sub{font-size:12.5px;color:var(--ink2);margin:0 0 10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+
+/* 분포 막대 */
+.dist{margin-top:12px}
+.dist h3{font-size:13px;margin:0 0 6px;color:var(--ink2);font-weight:700}
+.drow{display:flex;align-items:center;gap:9px;margin:5px 0;font-size:13.5px}
+.drow .nm{width:150px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.drow .ba{flex:1;height:20px;background:#f0f2f5;border-radius:9px;overflow:hidden}
+.drow .ba i{display:block;height:100%;background:var(--pri);border-radius:9px;transition:width .5s}
+.drow .pc{width:74px;text-align:right;font-variant-numeric:tabular-nums;font-weight:700;flex:none}
+.distcols{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media(max-width:900px){.distcols{grid-template-columns:1fr}}
+
+canvas{width:100%;display:block}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left}
+th{background:#fafbfc;font-weight:700;font-size:12px;color:var(--ink2);position:sticky;top:0}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.tablewrap{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:14px}
+.empty{color:var(--ink2);text-align:center;padding:26px;font-size:13.5px}
+
+.rq{background:#fffdf6;border:1px solid #e7d9ae;border-radius:15px;padding:11px 13px;margin-top:8px}
+.rq .h{font-size:11.5px;color:var(--warn);font-weight:800}
+.rq .b{font-size:14.5px;margin-top:4px}
+.rq .w{font-size:11.5px;color:var(--ink2);margin-top:3px}
+.rq .pickline{display:inline-block;font-size:12.5px;font-weight:700;color:var(--pri);
+  background:#eef4fd;border:1px solid #cfe0f7;border-radius:10px;padding:2px 8px;margin-top:4px}
+
+/* 학생 상세 */
+.namebtn{background:none;border:0;padding:0;font:inherit;color:var(--pri);font-weight:700;
+  cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+#detailPop{position:fixed;inset:0;background:rgba(20,24,33,.62);z-index:180;display:none;
+  align-items:flex-start;justify-content:center;padding:26px 16px;overflow-y:auto}
+#detailPop.on{display:flex}
+#detailPop .box{background:#fff;border-radius:22px;max-width:640px;width:100%;padding:20px;box-shadow:0 24px 60px rgba(0,0,0,.3)}
+#detailPop h2{margin:0;font-size:20px}
+#detailPop .sub2{font-size:13px;color:var(--ink2);margin:2px 0 14px}
+#detailPop .close{float:right}
+.dsec{margin-top:14px}
+.dsec h4{margin:0 0 6px;font-size:12.5px;color:var(--ink2);font-weight:800;letter-spacing:.3px}
+.drow2{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.drow2:last-child{border:0}
+.drow2 span{color:var(--ink2);flex:none}
+.drow2 b{text-align:right}
+.drow2 b.ok{color:var(--ok)} .drow2 b.no{color:var(--bad)}
+.dwhy{background:#fffdf6;border:1px solid #e7d9ae;border-radius:14px;padding:9px 11px;margin-top:7px}
+.dwhy .h{font-size:11.5px;color:var(--warn);font-weight:800}
+.dwhy .p{font-size:12.5px;font-weight:700;color:var(--pri);margin-top:2px}
+.dwhy .b{font-size:14px;margin-top:3px;white-space:pre-wrap}
+
+/* 암호 게이트 */
+#gate{position:fixed;inset:0;background:#20242e;z-index:200;display:flex;align-items:center;justify-content:center}
+#gate.off{display:none}
+#gate .box{background:#fff;border-radius:22px;padding:24px;width:320px;text-align:center}
+#gate h2{margin:0 0 4px;font-size:19px}
+#gate p{font-size:13px;color:var(--ink2);margin:0 0 14px}
+#gate input{width:100%;padding:12px;border:1.5px solid var(--line);border-radius:14px;font-size:17px;text-align:center;font-family:inherit}
+#gerr{color:var(--bad);font-size:12.5px;min-height:18px;margin-top:6px;font-weight:700}
+
+/* 발표 모드 */
+#present{position:fixed;inset:0;background:#161a22;color:#fff;z-index:150;display:none;padding:34px 40px;overflow:auto}
+#present.on{display:block}
+#present .px{position:absolute;top:18px;right:22px}
+#present h2{font-size:30px;margin:0 0 4px;letter-spacing:-.6px}
+#present .psub{color:#98a3b6;font-size:15px;margin:0 0 22px}
+#present .pgrid{display:grid;grid-template-columns:1.15fr .85fr;gap:26px}
+@media(max-width:1000px){#present .pgrid{grid-template-columns:1fr}}
+#present .pbox{background:#1e2431;border:1px solid #2c3444;border-radius:19px;padding:18px}
+#present .pbox h3{margin:0 0 10px;font-size:16px;color:#c9d2e0}
+#present .drow .nm{color:#c9d2e0}
+#present .drow .ba{background:#2b3342}
+#present .drow .pc{color:#fff}
+#present .rq{background:#242c3b;border-color:#38445a}
+#present .rq .b{color:#eef2f8}
+#present .rq .w{color:#98a3b6}
+#present .kpi{background:#1e2431;border-color:#2c3444}
+#present .kpi .l,#present .kpi .s{color:#98a3b6}
+.tiny{font-size:12px;color:var(--ink2)}
+.warn{background:#fffbeb;border:1px solid #fde68a;color:#8a5a10;border-radius:15px;padding:11px 13px;font-size:13px;margin-top:12px}
+</style>
+</head>
+<body class="locked">
+
+<div id="gate"><div class="box">
+  <h2>교실 전광판</h2>
+  <p>선생님 암호를 입력하세요</p>
+  <input id="gcode" type="password" inputmode="numeric" placeholder="암호">
+  <div id="gerr"></div>
+  <button class="btn pri" id="gbtn" style="width:100%;margin-top:8px">들어가기</button>
+</div></div>
+
+<div class="wrap">
+<header>
+  <h1>인생설계 시뮬레이터 · 교실 전광판</h1>
+  <span class="conn" id="conn">연결 확인 중…</span>
+  <span class="sp"></span>
+  <button class="btn dark" id="btnPresent">발표 화면 (F)</button>
+  <button class="btn" id="btnCsv">엑셀로 내려받기</button>
+  <button class="btn danger" id="btnClear">학생 기록 전체 지우기</button>
+</header>
+
+<div class="warn" id="setup" style="display:none">
+  <b>아직 연결 전입니다.</b> 이 화면은 <b>예시 자료</b>로 보여주고 있어요.
+  파일 맨 아래 <code>FIREBASE_CONFIG</code>에 학생 앱(<code>index.html</code>)과 <b>똑같은 값</b>을 넣으면 실제 자료가 들어옵니다.
+</div>
+
+<div class="kpis">
+  <div class="kpi"><div class="l">끝낸 학생</div><div class="v" id="kDone">0</div><div class="s">명</div></div>
+  <div class="kpi"><div class="l">반 평균 순자산</div><div class="v" id="kNw">—</div><div class="s" id="kNwSub">&nbsp;</div></div>
+  <div class="kpi"><div class="l">반 평균 만족도</div><div class="v" id="kHp">—</div><div class="s">100점 만점</div></div>
+  <div class="kpi"><div class="l">돈 1등</div><div class="v" id="kTopM" style="font-size:17px">—</div><div class="s" id="kTopMs">&nbsp;</div></div>
+  <div class="kpi"><div class="l">만족도 1등</div><div class="v" id="kTopH" style="font-size:17px">—</div><div class="s" id="kTopHs">&nbsp;</div></div>
+</div>
+
+<!-- ① 선택 분포 -->
+<div class="card">
+  <h2>우리 반은 이렇게 골랐습니다</h2>
+  <p class="sub">같은 교실인데 고른 길이 이렇게 다릅니다.</p>
+  <div class="distcols" id="dists"><div class="empty">아직 응답이 없습니다.</div></div>
+</div>
+
+<!-- ② 산점도 -->
+<div class="card">
+  <h2>돈 vs 만족도</h2>
+  <p class="sub">점 하나가 학생 한 명입니다. <b>오른쪽 아래</b>는 돈은 많지만 만족도가 낮은 사람, <b>왼쪽 위</b>는 그 반대입니다.</p>
+  <canvas id="scatter" height="360"></canvas>
+  <div class="legend">
+    <span><i style="background:#2f6fd0"></i>학생</span>
+    <span><i style="background:#c99a3a"></i>돈 1등</span>
+    <span><i style="background:#177a4a"></i>만족도 1등</span>
+  </div>
+</div>
+
+
+<!-- ②-2 인생곡선 -->
+<div class="card">
+  <h2>우리 반이 그린 인생곡선</h2>
+  <p class="sub">수업 시작할 때 <b>17살의 아이들이 직접 그린 예상</b>입니다. 선 하나가 학생 한 명이에요.
+    굵은 선은 반 평균, <b>주황 선</b>은 시뮬레이션이 내놓은 실제 만족도 평균입니다.</p>
+  <canvas id="curves" height="330"></canvas>
+  <div class="legend">
+    <span><i style="background:#9fb8dc"></i>학생 각자의 예상</span>
+    <span><i style="background:#2f6fd0"></i>반 평균 예상</span>
+    <span><i style="background:#c1734a"></i>실제 만족도 평균</span>
+  </div>
+  <p class="tiny" id="curveNote" style="margin-top:8px"></p>
+</div>
+
+<!-- ③ 주사위 실제 결과 -->
+<div class="card">
+  <h2>주사위는 실제로 어땠나</h2>
+  <p class="sub">교과서 확률과 우리 반 실제 결과를 비교해 보세요.</p>
+  <div id="rolls"><div class="empty">아직 응답이 없습니다.</div></div>
+</div>
+
+<!-- ④ 이유 -->
+<div class="card">
+  <h2>같은 선택, 다른 이유</h2>
+  <p class="sub">한 항목을 고르면 그 선택을 한 학생들의 이유가 모입니다.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px" id="rqTabs"></div>
+  <div id="rqList"><div class="empty">아직 응답이 없습니다.</div></div>
+</div>
+
+<!-- ⑤ 학생 표 -->
+<div class="card">
+  <h2>학생별 결과</h2>
+  <p class="sub"><b>이름을 누르면</b> 그 학생이 처음부터 끝까지 무엇을 골랐는지 전부 볼 수 있습니다.</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr>
+        <th>학번 이름</th><th>학교 · 전공</th><th>직업</th><th>결혼 · 아이</th><th>집</th><th>40대</th>
+        <th class="n">순자산</th><th class="n">만족도</th><th class="n">저축률</th>
+      </tr></thead>
+      <tbody id="rows"><tr><td colspan="9" class="empty">아직 아무도 끝내지 않았습니다.</td></tr></tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- 학생 한 명 전체 선택 -->
+<div id="detailPop"><div class="box">
+  <button class="btn close" id="dpClose">닫기</button>
+  <h2 id="dpName">—</h2>
+  <p class="sub2" id="dpSub">—</p>
+  <div id="dpBody"></div>
+</div></div>
+
+<!-- 발표 화면 -->
+<div id="present">
+  <button class="btn px" id="btnPx">닫기 (Esc)</button>
+  <h2 id="prTitle">우리 반은 이렇게 골랐습니다</h2>
+  <p class="psub" id="prSub">—</p>
+  <div class="pgrid">
+    <div>
+      <div class="pbox" style="margin-bottom:16px">
+        <h3 id="prLeftTitle" style="cursor:pointer">돈 vs 만족도  (클릭하면 인생곡선)</h3>
+        <canvas id="prScatter" height="330"></canvas>
+        <canvas id="prCurves" height="330" style="display:none"></canvas>
+        <p class="tiny" id="prCurveNote" style="color:#98a3b6;margin-top:8px"></p>
+      </div>
+      <div class="pbox"><h3>주사위 실제 결과</h3><div id="prRolls"></div></div>
+    </div>
+    <div>
+      <div class="pbox" style="margin-bottom:16px"><h3 id="prDistTitle">직업</h3><div id="prDist"></div></div>
+      <div class="pbox"><h3>같은 선택, 다른 이유</h3><div id="prRq"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================
+   ① 암호 — 학생이 들어와 자료를 건드리지 못하게 막습니다.
+   ===================================================== */
+var TEACHER_CODE="1234";
+(function(){
+  var gate=document.getElementById('gate');
+  function open(){gate.classList.add('off');document.body.classList.remove('locked');}
+  try{if(localStorage.getItem('life_teacher')===TEACHER_CODE)open();}catch(e){}
+  function tryIn(){
+    var v=document.getElementById('gcode').value;
+    if(v===TEACHER_CODE){try{localStorage.setItem('life_teacher',v);}catch(e){}open();}
+    else{document.getElementById('gerr').textContent='암호가 다릅니다';document.getElementById('gcode').select();}
+  }
+  document.getElementById('gbtn').onclick=tryIn;
+  document.getElementById('gcode').addEventListener('keydown',function(e){if(e.key==='Enter')tryIn();});
+})();
+
+/* =====================================================
+   ② Firebase 설정 — index.html 과 똑같은 값을 넣으세요.
+   ===================================================== */
+var FIREBASE_CONFIG={apiKey:"",authDomain:"",projectId:"",storageBucket:"",messagingSenderId:"",appId:""};
+var COLLECTION="life_students";
+
+/* =====================================================
+   화면 그리기
+   ===================================================== */
+var DATA={};     /* 학번이름 → 결과 */
+var DB=null, api=null;
+var $=function(s){return document.querySelector(s);};
+
+function shortWon(v){
+  var neg=v<0,a=Math.abs(Math.round(v));
+  return (neg?'−':'')+(a>=10000?(a/10000).toFixed(1)+'억':a.toLocaleString()+'만');
+}
+function won(v){
+  if(v===undefined||v===null||isNaN(v))return '—';
+  var neg=v<0,a=Math.abs(Math.round(v)),s;
+  if(a>=10000){var e=Math.floor(a/10000),m=a%10000;s=e+'억'+(m?' '+m.toLocaleString()+'만':'');}
+  else s=a.toLocaleString()+'만';
+  return (neg?'빚 ':'')+s+'원';
+}
+function list(){var a=[];for(var k in DATA)a.push(DATA[k]);return a;}
+
+/* 코드 → 사람이 읽는 말 */
+var HOUSE={parents:'부모님 집',monthly:'월세',jeonse:'전세',buy:'내 집(매매)'};
+var CAREER={promo:'승진 도전',move:'이직',startup:'창업',stay:'현상 유지'};
+var INV={safe:'은행 예금',mid:'예금+펀드',risky:'주식·투자'};
+var STRAT={stable:'안정 지원',fit:'적정 지원',reach:'상향 지원'};
+var OX=function(v){return v?'성공':'실패';};
+function shortName(n){return String(n||'').split(' ').slice(-1)[0];}
+
+/* 그 학생이 무엇을 골랐는지 한 줄 요약 (탭별) */
+function choiceOf(r,tab){
+  if(tab==='이유_대학')  return (r.학교||'')+' · '+(r.전공||'')+' · '+(STRAT[r.지원전략]||'')+' → '+(r.대학합격?'합격':'불합격');
+  if(tab==='이유_직업')  return (r.직업||'')+' → '+(r.취업합격?'합격':'탈락');
+  if(tab==='이유_결혼')  return r.결혼?'결혼함':'결혼 안 함 / 못 함';
+  if(tab==='이유_자녀주거'){
+    var s='아이 '+(r.아이수===undefined?'?':r.아이수)+'명 · '+(HOUSE[r.집]||r.집||'');
+    if(r.집==='buy') s+=' → 대출 '+(r.대출통과?'통과':'거절');
+    return s;
+  }
+  if(tab==='이유_커리어'){
+    var c=CAREER[r.사십대]||r.사십대||'';
+    if(r.사십대==='promo') c+=' → '+OX(r.승진);
+    if(r.사십대==='startup') c+=' → '+OX(r.사업성공);
+    return c;
+  }
+  return '';
+}
+
+/* --- 분포 --- */
+var DIST_FIELDS=[
+  {k:'직업',   t:'직업'},
+  {k:'전공',   t:'전공'},
+  {k:'집',     t:'집', map:{parents:'부모님 집',monthly:'월세',jeonse:'전세',buy:'내 집'}},
+  {k:'사는곳', t:'사는 곳'},
+  {k:'사십대', t:'40대 선택', map:{promo:'승진 도전',move:'이직',startup:'창업',stay:'현상 유지'}},
+  {k:'투자',   t:'모은 돈 두는 곳', map:{safe:'은행 예금',mid:'예금+펀드',risky:'주식·투자'}},
+  {k:'결혼',   t:'결혼', map:{true:'했다',false:'안 했다/못 했다'}},
+  {k:'아이수', t:'아이 수', suffix:'명'},
+  {k:'지원전략',t:'지원 전략', map:{stable:'안정',fit:'적정',reach:'상향'}}
+];
+function tally(field){
+  var m={},n=0;
+  list().forEach(function(r){
+    var v=r[field.k];
+    if(v===undefined||v===null)return;
+    if(field.map)v=field.map[String(v)]||String(v);
+    else if(field.suffix)v=v+field.suffix;
+    m[v]=(m[v]||0)+1;n++;
+  });
+  var a=[];for(var k in m)a.push([k,m[k]]);
+  a.sort(function(x,y){return y[1]-x[1];});
+  return {rows:a,n:n};
+}
+function distHTML(field,limit){
+  var t=tally(field);
+  if(!t.n)return '<div class="tiny">—</div>';
+  var rows=limit?t.rows.slice(0,limit):t.rows;
+  return rows.map(function(r){
+    var pc=Math.round(r[1]/t.n*100);
+    return '<div class="drow"><span class="nm">'+r[0]+'</span>'+
+      '<span class="ba"><i style="width:'+pc+'%"></i></span>'+
+      '<span class="pc">'+pc+'% ('+r[1]+')</span></div>';
+  }).join('');
+}
+function renderDists(){
+  var box=$('#dists');
+  if(!list().length){box.innerHTML='<div class="empty">아직 응답이 없습니다.</div>';return;}
+  var cols=[[],[],[]];
+  DIST_FIELDS.forEach(function(f,i){cols[i%3].push('<div class="dist"><h3>'+f.t+'</h3>'+distHTML(f,6)+'</div>');});
+  box.innerHTML=cols.map(function(c){return '<div>'+c.join('')+'</div>';}).join('');
+}
+
+/* --- 주사위 결과 --- */
+var ROLL_FIELDS=[
+  {k:'대학합격',t:'대학 합격'},{k:'취업합격',t:'취업 성공'},
+  {k:'결혼',t:'결혼 성공'},{k:'대출통과',t:'대출 심사 통과'},
+  {k:'승진',t:'승진 성공'},{k:'사업성공',t:'사업 성공'}
+];
+function rollsHTML(){
+  var L=list();
+  if(!L.length)return '<div class="empty">아직 응답이 없습니다.</div>';
+  return ROLL_FIELDS.map(function(f){
+    var tried=L.filter(function(r){return r[f.k]!==undefined&&r[f.k]!==null;});
+    if(f.k==='결혼')tried=L.filter(function(r){return r['결혼']!==undefined;});
+    if(f.k==='대출통과')tried=L.filter(function(r){return r['집']==='buy';});
+    if(f.k==='승진')tried=L.filter(function(r){return r['사십대']==='promo';});
+    if(f.k==='사업성공')tried=L.filter(function(r){return r['사십대']==='startup';});
+    if(!tried.length)return '<div class="drow"><span class="nm">'+f.t+'</span><span class="ba"></span><span class="pc">해당 없음</span></div>';
+    var ok=tried.filter(function(r){return !!r[f.k];}).length;
+    var pc=Math.round(ok/tried.length*100);
+    return '<div class="drow"><span class="nm">'+f.t+'</span>'+
+      '<span class="ba"><i style="width:'+pc+'%;background:'+(pc>=50?'#177a4a':'#c0392b')+'"></i></span>'+
+      '<span class="pc">'+pc+'% ('+ok+'/'+tried.length+')</span></div>';
+  }).join('');
+}
+
+/* --- 산점도 --- */
+function drawScatter(id,dark){
+  var cv=document.getElementById(id);if(!cv)return;
+  var dpr=window.devicePixelRatio||1,w=cv.clientWidth||600,h=cv.getAttribute('height')*1||340;
+  cv.width=w*dpr;cv.height=h*dpr;
+  var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.lineCap='round';x.lineJoin='round';x.clearRect(0,0,w,h);
+  var L=list(),pad={l:62,r:16,t:14,b:34};
+  var gridC=dark?'#2c3444':'#e6e2db', txtC=dark?'#98a3b6':'#8b93a1';
+  var vals=L.map(function(r){return r.육십세순자산||0;});
+  var mx=Math.max.apply(null,vals.concat([10000])),mn=Math.min.apply(null,vals.concat([0]));
+  var sp=(mx-mn)||1;mx+=sp*.08;mn-=sp*.08;
+  var X=function(v){return pad.l+(w-pad.l-pad.r)*(v-mn)/(mx-mn);};
+  var Y=function(v){return h-pad.b-(h-pad.t-pad.b)*v/100;};
+  x.strokeStyle=gridC;x.fillStyle=txtC;x.font='11px sans-serif';x.lineWidth=1;
+  for(var g=0;g<=4;g++){
+    var yy=Y(g*25);
+    x.beginPath();x.moveTo(pad.l,yy);x.lineTo(w-pad.r,yy);x.stroke();
+    x.fillText(g*25+'점',6,yy+4);
+  }
+  for(var i=0;i<=4;i++){
+    var v=mn+(mx-mn)*i/4,xx=X(v);
+    x.beginPath();x.moveTo(xx,pad.t);x.lineTo(xx,h-pad.b);x.strokeStyle=gridC;x.stroke();
+    var lb=shortWon(v);x.fillStyle=txtC;x.fillText(lb,xx-x.measureText(lb).width/2,h-12);
+  }
+  if(!L.length){
+    x.fillStyle=txtC;x.font='13px sans-serif';
+    x.fillText('아직 응답이 없습니다.',w/2-60,h/2);return;
+  }
+  var topM=L.slice().sort(function(a,b){return (b.육십세순자산||0)-(a.육십세순자산||0);})[0];
+  var topH=L.slice().sort(function(a,b){return (b.만족도||0)-(a.만족도||0);})[0];
+  L.forEach(function(r){
+    var isM=(r===topM),isH=(r===topH);
+    x.beginPath();x.arc(X(r.육십세순자산||0),Y(r.만족도||0),isM||isH?9:6,0,7);
+    x.fillStyle=isM?'#c99a3a':isH?'#177a4a':(dark?'#5b91e0':'#2f6fd0');
+    x.globalAlpha=isM||isH?1:.72;x.fill();x.globalAlpha=1;
+    if(isM||isH){
+      x.fillStyle=dark?'#fff':'#1f2430';x.font='bold 11.5px sans-serif';
+      var nm=String(r.name||'').split(' ').slice(-1)[0];
+      x.fillText(nm,X(r.육십세순자산||0)+12,Y(r.만족도||0)+4);
+    }
+  });
+}
+
+/* --- 인생곡선 --- */
+var CURVE_AGE=[17,25,35,45,58];      /* 예상 곡선의 5개 점 나이 */
+var REAL_AGE=[25,35,45,58];          /* 실제 만족도 저장 나이 */
+function nums(s){
+  if(!s)return null;
+  var a=String(s).split(',').map(function(v){return parseFloat(v);});
+  return a.some(isNaN)?null:a;
+}
+function drawCurves(id,dark){
+  var cv=document.getElementById(id);if(!cv)return;
+  var dpr=window.devicePixelRatio||1,w=cv.clientWidth||600,h=cv.getAttribute('height')*1||330;
+  cv.width=w*dpr;cv.height=h*dpr;
+  var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.lineCap='round';x.lineJoin='round';x.clearRect(0,0,w,h);
+  var pad={l:44,r:16,t:14,b:32};
+  var X=function(age){return pad.l+(w-pad.l-pad.r)*(age-17)/(60-17);};
+  var Y=function(v){return h-pad.b-(h-pad.t-pad.b)*v/100;};
+  var gridC=dark?'#2c3444':'#e6e2db',txtC=dark?'#98a3b6':'#8b93a1';
+  x.strokeStyle=gridC;x.fillStyle=txtC;x.font='11px sans-serif';x.lineWidth=1;
+  [0,25,50,75,100].forEach(function(v){var yy=Y(v);
+    x.beginPath();x.moveTo(pad.l,yy);x.lineTo(w-pad.r,yy);x.stroke();x.fillText(v,8,yy+4);});
+  [17,25,35,45,58].forEach(function(a){var xx=X(a);
+    x.strokeStyle=gridC;x.beginPath();x.moveTo(xx,pad.t);x.lineTo(xx,h-pad.b);x.stroke();
+    x.fillStyle=txtC;var lb=a+'세';x.fillText(lb,xx-x.measureText(lb).width/2,h-10);});
+
+  var exps=[],reals=[];
+  list().forEach(function(r){
+    var e=nums(r.예상곡선);if(e&&e.length===5)exps.push(e);
+    var v=nums(r.실제만족도곡선);if(v&&v.length===4)reals.push(v);
+  });
+  if(!exps.length){
+    x.fillStyle=txtC;x.font='13px sans-serif';
+    x.fillText('아직 곡선 자료가 없습니다.',w/2-70,h/2);
+    var n=document.getElementById('curveNote');if(n)n.textContent='';
+    return;
+  }
+  /* 학생 각자 */
+  x.lineWidth=1.6;x.strokeStyle=dark?'rgba(120,160,220,.34)':'rgba(159,184,220,.55)';
+  exps.forEach(function(e){
+    x.beginPath();
+    CURVE_AGE.forEach(function(a,i){var xx=X(a),yy=Y(e[i]);i?x.lineTo(xx,yy):x.moveTo(xx,yy);});
+    x.stroke();
+  });
+  /* 반 평균 예상 */
+  var avgE=CURVE_AGE.map(function(a,i){
+    return exps.reduce(function(s,e){return s+e[i];},0)/exps.length;});
+  x.lineWidth=3.4;x.strokeStyle=dark?'#5b91e0':'#2f6fd0';x.beginPath();
+  CURVE_AGE.forEach(function(a,i){var xx=X(a),yy=Y(avgE[i]);i?x.lineTo(xx,yy):x.moveTo(xx,yy);});
+  x.stroke();
+  /* 실제 평균 */
+  var avgR=null;
+  if(reals.length){
+    avgR=REAL_AGE.map(function(a,i){
+      return reals.reduce(function(s,v){return s+v[i];},0)/reals.length;});
+    x.lineWidth=3.4;x.strokeStyle='#c1734a';x.beginPath();
+    REAL_AGE.forEach(function(a,i){var xx=X(a),yy=Y(avgR[i]);i?x.lineTo(xx,yy):x.moveTo(xx,yy);});
+    x.stroke();
+  }
+  var n2=document.getElementById(dark?'prCurveNote':'curveNote');
+  if(n2){
+    var rise=exps.filter(function(e){return e[4]>e[0]+8;}).length;
+    var t='학생 '+exps.length+'명 중 <b>'+rise+'명('+Math.round(rise/exps.length*100)+
+      '%)</b>이 오른쪽 위로 올라가는 곡선을 그렸습니다.';
+    if(avgR){
+      var g=Math.round(avgE.slice(1).reduce(function(s,v,i){return s+(v-avgR[i]);},0)/4);
+      t+=' 예상이 실제보다 평균 <b>'+(g>=0?g+'점 높았':Math.abs(g)+'점 낮았')+'습니다.</b>';
+    }
+    n2.innerHTML=t;
+  }
+}
+
+/* --- 이유 --- */
+var RQ=[['이유_대학','대학 · 전공'],['이유_직업','직업'],['이유_결혼','결혼'],['이유_자녀주거','아이와 집'],['이유_커리어','40대']];
+var rqPick=0;
+function renderRqTabs(){
+  $('#rqTabs').innerHTML=RQ.map(function(x,i){
+    return '<button class="btn'+(i===rqPick?' pri':'')+'" data-i="'+i+'">'+x[1]+'</button>';
+  }).join('');
+  $('#rqTabs').querySelectorAll('button').forEach(function(b){
+    b.onclick=function(){rqPick=+this.dataset.i;renderRqTabs();renderRq();};
+  });
+}
+function rqHTML(limit){
+  var f=RQ[rqPick][0];
+  var rows=list().filter(function(r){return (r[f]||'').trim();});
+  if(!rows.length)return '<div class="empty">아직 응답이 없습니다.</div>';
+  rows=rows.slice().sort(function(){return Math.random()-.5;});
+  if(limit)rows=rows.slice(0,limit);
+  return rows.map(function(r){
+    return '<div class="rq"><div class="h">'+esc(shortName(r.name))+'</div>'+
+      '<div class="pickline">'+esc(choiceOf(r,f))+'</div>'+
+      '<div class="b">'+esc(r[f])+'</div></div>';
+  }).join('');
+}
+function esc(s){return String(s||'').replace(/[&<>]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;'})[c];});}
+function renderRq(){$('#rqList').innerHTML=rqHTML(12);}
+
+/* --- 표 --- */
+function renderRows(){
+  var L=list().slice().sort(function(a,b){return (b.육십세순자산||0)-(a.육십세순자산||0);});
+  if(!L.length){$('#rows').innerHTML='<tr><td colspan="9" class="empty">아직 아무도 끝내지 않았습니다.</td></tr>';return;}
+  $('#rows').innerHTML=L.map(function(r){
+    return '<tr>'+
+      '<td><button class="namebtn" data-id="'+esc(r.name)+'">'+esc(r.name)+'</button></td>'+
+      '<td>'+esc(r.학교)+' · '+esc(r.전공)+'</td>'+
+      '<td>'+esc(r.직업)+(r.취업합격?'':' <span style="color:var(--bad)">(탈락)</span>')+'</td>'+
+      '<td>'+(r.결혼?'결혼':'안 함')+' · 아이 '+(r.아이수===undefined?'?':r.아이수)+'</td>'+
+      '<td>'+esc(HOUSE[r.집]||r.집||'')+(r.집==='buy'&&!r.대출통과?' <span style="color:var(--bad)">(거절)</span>':'')+'</td>'+
+      '<td>'+esc(CAREER[r.사십대]||r.사십대||'')+
+        (r.사십대==='promo'?(r.승진?' ✓':' ✕'):r.사십대==='startup'?(r.사업성공?' ✓':' ✕'):'')+'</td>'+
+      '<td class="n">'+shortWon(r.육십세순자산||0)+'</td>'+
+      '<td class="n">'+(r.만족도||0)+'</td><td class="n">'+(r.저축률||0)+'%</td></tr>';
+  }).join('');
+  $('#rows').querySelectorAll('.namebtn').forEach(function(b){
+    b.onclick=function(){ openDetail(this.dataset.id); };
+  });
+}
+
+/* --- 학생 한 명 전체 선택 --- */
+function drow(a,b,cls){return '<div class="drow2"><span>'+a+'</span><b'+(cls?' class="'+cls+'"':'')+'>'+b+'</b></div>';}
+function openDetail(id){
+  var r=DATA[id]; if(!r)return;
+  $('#dpName').textContent=r.name||id;
+  $('#dpSub').textContent='엔딩: '+(r.엔딩||'—')+' · 60세 '+won(r.육십세순자산||0)+' · 만족도 '+(r.만족도||0)+'점';
+  var h='';
+  h+='<div class="dsec"><h4>출발 카드 (본인이 고른 게 아님)</h4>'+
+     drow('가족이 도와준 돈',won(r.출발지원금||0))+
+     drow('갚아야 할 학자금',r.출발학자금?won(r.출발학자금):'없음')+'</div>';
+
+  h+='<div class="dsec"><h4>고른 것</h4>'+
+     drow('학교','<b>'+esc(r.학교||'—')+'</b>')+
+     drow('전공',esc(r.전공||'—'))+
+     drow('지원 전략',esc(STRAT[r.지원전략]||r.지원전략||'—'))+
+     drow('직업',esc(r.직업||'—'))+
+     drow('사는 곳',esc(r.사는곳||'—'))+
+     drow('돈을 둔 곳',esc(INV[r.투자]||r.투자||'—'))+
+     drow('결혼',r.결혼?'했다':'안 했다 / 못 했다')+
+     drow('아이',(r.아이수===undefined?'—':r.아이수+'명'))+
+     drow('집',esc(HOUSE[r.집]||r.집||'—'))+
+     drow('40대 선택',esc(CAREER[r.사십대]||r.사십대||'—'))+'</div>';
+
+  h+='<div class="dsec"><h4>주사위 결과</h4>'+
+     drow('대학 합격',r.대학합격?'합격':'불합격',r.대학합격?'ok':'no')+
+     drow('취업',r.취업합격?'합격':'탈락',r.취업합격?'ok':'no')+
+     drow('결혼',r.결혼?'성공':'안 했거나 실패',r.결혼?'ok':'no')+
+     (r.집==='buy'?drow('대출 심사',r.대출통과?'통과':'거절',r.대출통과?'ok':'no'):'')+
+     (r.사십대==='promo'?drow('승진',OX(r.승진),r.승진?'ok':'no'):'')+
+     (r.사십대==='startup'?drow('사업',OX(r.사업성공),r.사업성공?'ok':'no'):'')+'</div>';
+
+  h+='<div class="dsec"><h4>결과</h4>'+
+     drow('첫 연봉',won(r.첫연봉||0))+
+     drow('60세에 남은 돈',won(r.육십세순자산||0))+
+     drow('평생 저축한 돈',won(r.평생저축액||0))+
+     drow('한 달 평균 저축',won(r.월평균저축||0))+
+     drow('번 돈 중 저축한 비율',(r.저축률||0)+'%')+
+     drow('만족도',(r.만족도||0)+'점')+'</div>';
+
+  h+='<div class="dsec"><h4>왜 그렇게 골랐나</h4>'+
+     RQ.map(function(x){
+       if(!(r[x[0]]||'').trim())return '';
+       return '<div class="dwhy"><div class="h">'+x[1]+'</div>'+
+         '<div class="p">'+esc(choiceOf(r,x[0]))+'</div>'+
+         '<div class="b">'+esc(r[x[0]])+'</div></div>';
+     }).join('')+'</div>';
+  $('#dpBody').innerHTML=h;
+  $('#detailPop').classList.add('on');
+}
+$('#dpClose').onclick=function(){$('#detailPop').classList.remove('on');};
+$('#detailPop').addEventListener('click',function(e){ if(e.target===this) this.classList.remove('on'); });
+
+/* --- KPI --- */
+function renderKpi(){
+  var L=list();
+  $('#kDone').textContent=L.length;
+  if(!L.length){['kNw','kHp','kTopM','kTopH'].forEach(function(i){$('#'+i).textContent='—';});
+    $('#kNwSub').innerHTML='&nbsp;';$('#kTopMs').innerHTML='&nbsp;';$('#kTopHs').innerHTML='&nbsp;';return;}
+  var avgN=L.reduce(function(s,r){return s+(r.육십세순자산||0);},0)/L.length;
+  var avgH=L.reduce(function(s,r){return s+(r.만족도||0);},0)/L.length;
+  $('#kNw').textContent=shortWon(avgN);$('#kNwSub').textContent='한 사람 평균';
+  $('#kHp').textContent=Math.round(avgH);
+  var tm=L.slice().sort(function(a,b){return (b.육십세순자산||0)-(a.육십세순자산||0);})[0];
+  var th=L.slice().sort(function(a,b){return (b.만족도||0)-(a.만족도||0);})[0];
+  $('#kTopM').textContent=String(tm.name||'').split(' ').slice(-1)[0];
+  $('#kTopMs').textContent=shortWon(tm.육십세순자산||0)+' · 만족도 '+(tm.만족도||0);
+  $('#kTopH').textContent=String(th.name||'').split(' ').slice(-1)[0];
+  $('#kTopHs').textContent='만족도 '+(th.만족도||0)+' · '+shortWon(th.육십세순자산||0);
+}
+
+function renderAll(){
+  renderKpi();renderDists();
+  $('#rolls').innerHTML=rollsHTML();
+  renderRq();renderRows();
+  try{drawScatter('scatter',false);drawCurves('curves',false);}catch(e){}
+  if($('#present').classList.contains('on'))renderPresent();
+}
+
+/* --- 발표 화면 --- */
+var prDist=0, prLeft=0;
+function renderPresent(){
+  var L=list();
+  $('#prSub').textContent='끝낸 학생 '+L.length+'명';
+  var f=DIST_FIELDS[prDist];
+  $('#prDistTitle').textContent=f.t+'  (클릭하면 다음 항목)';
+  $('#prDist').innerHTML=distHTML(f,7);
+  $('#prRolls').innerHTML=rollsHTML();
+  $('#prRq').innerHTML=rqHTML(4);
+  $('#prScatter').style.display=prLeft===0?'block':'none';
+  $('#prCurves').style.display=prLeft===1?'block':'none';
+  $('#prCurveNote').style.display=prLeft===1?'block':'none';
+  $('#prLeftTitle').textContent=prLeft===0?'돈 vs 만족도  (클릭하면 인생곡선)'
+                                          :'우리 반이 그린 인생곡선  (클릭하면 산점도)';
+  try{ prLeft===0?drawScatter('prScatter',true):drawCurves('prCurves',true); }catch(e){}
+}
+$('#prLeftTitle').onclick=function(){prLeft=(prLeft+1)%2;renderPresent();};
+$('#btnPresent').onclick=function(){$('#present').classList.add('on');renderPresent();};
+$('#btnPx').onclick=function(){$('#present').classList.remove('on');};
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape')$('#present').classList.remove('on');
+  if((e.key==='f'||e.key==='F')&&!/input|textarea/i.test((e.target.tagName||''))) $('#btnPresent').click();
+});
+$('#prDistTitle').onclick=function(){prDist=(prDist+1)%DIST_FIELDS.length;renderPresent();};
+$('#prDistTitle').style.cursor='pointer';
+setInterval(function(){if($('#present').classList.contains('on'))$('#prRq').innerHTML=rqHTML(4);},7000);
+
+/* --- CSV --- */
+$('#btnCsv').onclick=function(){
+  var L=list();
+  if(!L.length){alert('내려받을 자료가 없습니다.');return;}
+  var cols=['name','학교','전공','지원전략','직업','사는곳','집','결혼','아이수','투자','사십대',
+    '대학합격','취업합격','대출통과','승진','사업성공','첫연봉','육십세순자산','만족도','저축률','월평균저축','평생저축액','엔딩',
+    '출발지원금','출발학자금','예상곡선','실제만족도곡선',
+    '추구미_10대','추구미_20대','추구미_30대','추구미_40대','추구미_50대',
+    '이유_대학','이유_직업','이유_결혼','이유_자녀주거','이유_커리어'];
+  var head=['학번 이름','학교','전공','지원전략','직업','사는 곳','집','결혼','아이 수','투자','40대',
+    '대학합격','취업합격','대출통과','승진','사업성공','첫 연봉(만원)','60세 순자산(만원)','만족도','저축률(%)','월평균저축(만원)','평생저축(만원)','엔딩',
+    '출발 지원금','출발 학자금','예상곡선(17/25/35/45/58)','실제만족도(25/35/45/58)',
+    '추구미_10대','추구미_20대','추구미_30대','추구미_40대','추구미_50대',
+    '이유_대학','이유_직업','이유_결혼','이유_자녀주거','이유_커리어'];
+  function q(v){return '"'+String(v===undefined||v===null?'':v).replace(/"/g,'""')+'"';}
+  var csv='﻿'+head.map(q).join(',')+'\n'+
+    L.map(function(r){return cols.map(function(c){return q(r[c]);}).join(',');}).join('\n');
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='인생설계_결과_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+};
+
+/* --- 지우기 --- */
+$('#btnClear').onclick=async function(){
+  if(!DB){DATA={};renderAll();return;}
+  if(!confirm('학생 기록을 전부 지웁니다. 계속할까요?'))return;
+  var snap=await api.getDocs(api.collection(DB,COLLECTION));
+  for(const d of snap.docs) await api.deleteDoc(d.ref);
+  DATA={};renderAll();
+};
+
+/* =====================================================
+   연결
+   ===================================================== */
+(async function(){
+  if(!FIREBASE_CONFIG.apiKey){
+    $('#setup').style.display='block';
+    $('#conn').textContent='예시 화면 (실제 연결 안 됨)';$('#conn').className='conn no';
+    $('#btnClear').disabled=true;
+    /* 예시 자료 */
+    var names=['김서준','이하윤','박도윤','최지우','정시우','강예은','윤하람','조민준','임서아','한지호',
+               '오유진','신태윤','배소율','문건우','송채원','권다인','황준서','안수아','유이준','전나윤'];
+    var jobs=['대기업 직원','공무원 · 선생님','중소기업 직원','전문직 (의사·변호사·약사 등)','프리랜서 (작가·디자이너 등)','내 사업 (창업)','중견기업 직원','스타트업 직원','기술직 · 현장직'];
+    var majors=['공학','IT·소프트웨어','상경·경영','교육','예체능','인문·어학','의약·보건','사회과학'];
+    var unis=['부산대','인하대','서울대','교육대학교','전문대학','경북대','한국예술종합학교','고등학교 졸업 후 바로 취업'];
+    var houses=['jeonse','monthly','buy','parents'],regions=['수도권','광역시','그 밖의 지역'];
+    var careers=['promo','move','startup','stay'],invests=['safe','mid','risky'];
+    var strat=['stable','fit','reach'];
+    var endings=['균형 만점형','자산 집중형','삶의 질 우선형','돌아가는 길','혼자의 길','성장 진행형','사업 성공형','다시 일어서는 중'];
+    var why=['돈보다 시간이 더 중요하다고 생각해서','어릴 때부터 하고 싶던 일이라서','부모님이 편하게 사셨으면 해서',
+      '내가 만든 걸 사람들이 쓰는 게 좋아서','안정적으로 오래 다니고 싶어서','친구들과 다르게 살아보고 싶어서',
+      '실패해도 다시 할 수 있는 나이라고 생각해서','가족과 저녁을 같이 먹고 싶어서','좋아하는 걸 계속하려면 돈이 필요해서'];
+    var R=function(a){return a[Math.floor(Math.random()*a.length)];};
+    var aims10=['공부 빡세게 해서 원하는 곳 가기','하고 싶은 거 하면서 길 찾기','친구들과 보내는 시간이 제일 중요','벌써 돈 벌기 시작하기'];
+    var aims20=['스펙 쌓고 취업에 올인','여행·연애·취미 다 해보기','일 배우면서 돈 모으기','내 걸 만들어보기'];
+    names.forEach(function(n,i){
+      var nw=Math.round((Math.random()*Math.random()*46+0.4)*10000);
+      var hp=clampN(Math.round(88-nw/10000*0.9+ (Math.random()*40-18)),18,96);
+      /* 예시 곡선 — 대부분 우상향으로 그립니다 */
+      var base=22+Math.random()*22, step=(Math.random()<.82)?(9+Math.random()*10):(Math.random()*6-4);
+      var exp=[0,1,2,3,4].map(function(k){return Math.round(clampN(base+step*k+(Math.random()*8-4),5,98));});
+      var real=[0,1,2,3].map(function(k){return Math.round(clampN(hp-16+k*6+(Math.random()*12-6),5,98));});
+      DATA['201'+(i<9?'0':'')+(i+1)+' '+n]={
+        name:'201'+(i<9?'0':'')+(i+1)+' '+n,학교:R(unis),전공:R(majors),지원전략:R(strat),직업:R(jobs),
+        사는곳:R(regions),집:R(houses),결혼:Math.random()<.62,아이수:Math.floor(Math.random()*4),
+        투자:R(invests),사십대:R(careers),
+        대학합격:Math.random()<.66,취업합격:Math.random()<.62,대출통과:Math.random()<.55,
+        승진:Math.random()<.5,사업성공:Math.random()<.34,
+        첫연봉:2400+Math.floor(Math.random()*4000),육십세순자산:nw,만족도:hp,
+        저축률:5+Math.floor(Math.random()*32),월평균저축:20+Math.floor(Math.random()*500),
+        평생저축액:Math.round(nw*0.4),엔딩:R(endings),출발지원금:R([0,300,700,1200,2000]),출발학자금:R([0,0,800,1500]),
+        예상곡선:exp.join(','),실제만족도곡선:real.join(','),
+        추구미_10대:R(aims10),추구미_20대:R(aims20),
+        이유_대학:R(why),이유_직업:R(why),이유_결혼:R(why),이유_자녀주거:R(why),이유_커리어:R(why)};
+    });
+    renderAll();renderRqTabs();
+    return;
+  }
+  try{
+    var appMod=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+    var m=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    DB=m.getFirestore(appMod.initializeApp(FIREBASE_CONFIG));api=m;
+    $('#conn').textContent='연결됨';$('#conn').className='conn ok';
+    m.onSnapshot(m.collection(DB,COLLECTION),function(snap){
+      DATA={};snap.forEach(function(d){DATA[d.id]=d.data();});
+      renderAll();
+    },function(){$('#conn').textContent='읽기 권한 없음';$('#conn').className='conn no';});
+    renderRqTabs();
+  }catch(e){
+    $('#conn').textContent='연결 안 됨';$('#conn').className='conn no';
+  }
+})();
+function clampN(v,a,b){return Math.max(a,Math.min(b,v));}
+window.addEventListener('resize',function(){try{
+  drawScatter('scatter',false);drawCurves('curves',false);
+  if($('#present').classList.contains('on'))renderPresent();}catch(e){}});
+</script>
+</body>
+</html>
