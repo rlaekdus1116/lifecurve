@@ -13,9 +13,9 @@
 *{box-sizing:border-box}
 body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);font-size:15px;line-height:1.5}
 body.locked{overflow:hidden}
-.wrap{max-width:1180px;margin:0 auto;padding:14px 16px 60px}
+.wrap{max-width:1180px;margin:0 auto;padding:10px 16px 20px}
 
-header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 0 12px;border-bottom:1px solid var(--line)}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:6px 0 8px;border-bottom:1px solid var(--line)}
 header h1{font-size:20px;margin:0;letter-spacing:-.4px}
 .conn{font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;border:1px solid var(--line);background:#fff;color:var(--ink2)}
 .conn.ok{color:var(--ok);border-color:#bbf7d0;background:#f0fdf4}
@@ -28,14 +28,14 @@ header h1{font-size:20px;margin:0;letter-spacing:-.4px}
 .btn.dark{background:var(--ink);border-color:var(--ink);color:#fff}
 .btn:disabled{opacity:.4;cursor:not-allowed}
 
-.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:14px 0}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:0}
 @media(max-width:820px){.kpis{grid-template-columns:repeat(2,1fr)}}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:11px 13px}
 .kpi .l{font-size:11.5px;color:var(--ink2)}
 .kpi .v{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
 .kpi .s{font-size:11.5px;color:var(--ink2)}
 
-.card{background:var(--card);border:1px solid var(--line);border-radius:19px;padding:15px;margin-top:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:19px;padding:14px;margin-top:10px}
 .card h2{font-size:16px;margin:0 0 3px;letter-spacing:-.3px}
 .card .sub{font-size:12.5px;color:var(--ink2);margin:0 0 10px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -94,6 +94,18 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 .dwhy .p{font-size:12.5px;font-weight:700;color:var(--pri);margin-top:2px}
 .dwhy .b{font-size:14px;margin-top:3px;white-space:pre-wrap}
 
+/* 탭 — 한 번에 한 화면만 */
+.tabbar{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.tab{font-family:inherit;font-size:14px;font-weight:750;padding:9px 16px;border-radius:13px 13px 0 0;
+  border:1.5px solid var(--line);border-bottom:none;background:#eceff3;color:var(--ink2);cursor:pointer}
+.tab.on{background:var(--card);color:var(--pri);box-shadow:0 -2px 0 var(--pri) inset}
+.pane{display:none;margin-top:0;border-top-left-radius:0}
+.pane.on{display:block}
+.scrollbox{max-height:calc(100vh - 560px);min-height:160px;overflow-y:auto;padding-right:4px}
+.pane .tablewrap{max-height:calc(100vh - 540px)}
+.pane .distcols{max-height:calc(100vh - 530px);overflow-y:auto}
+.wrap{padding-bottom:20px}
+
 /* 진행 제어판 */
 .ctrl{border:2px solid var(--pri);background:#f7faff}
 .ctrlhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -108,6 +120,9 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
   border:1.5px solid var(--line);background:#fff;color:var(--ink2);cursor:pointer;position:relative}
 .stepchip.on{background:var(--pri);border-color:var(--pri);color:#fff}
 .stepchip.done{background:#eaf3ff;border-color:#cfe0f7;color:var(--pri)}
+.stepchip.lock{opacity:.55;cursor:default;border-style:dashed}
+.stepchip.lock:not(.on){background:#f6f7f9}
+.nowstep.free{color:var(--ok);border-color:#bbf7d0;background:#f0fdf4}
 .stepchip .cnt{display:block;font-size:10.5px;font-weight:800;opacity:.8}
 .newbadge{font-size:13px;font-weight:800;color:#fff;background:var(--bad);border-radius:99px;padding:5px 12px}
 
@@ -204,7 +219,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
   <div class="ctrlhead">
     <div>
       <h2 style="margin:0">지금 아이들이 보는 화면</h2>
-      <p class="sub" style="margin:2px 0 0">여기서 넘겨야 아이들이 다음으로 갑니다.</p>
+      <p class="sub" style="margin:2px 0 0"><b>예상 소득 그리기</b>까지만 넘겨주면, 15살부터는 아이들이 각자 속도로 갑니다.</p>
     </div>
     <div class="nowstep" id="nowStep">—</div>
     <span class="sp"></span>
@@ -226,81 +241,57 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
   </div>
 </div>
 
-<div class="kpis">
-  <div class="kpi"><div class="l">끝낸 학생</div><div class="v" id="kDone">0</div><div class="s">명</div></div>
-  <div class="kpi"><div class="l">돈이 바닥난 학생</div><div class="v" id="kBroke">—</div><div class="s" id="kBrokeSub">&nbsp;</div></div>
-  <div class="kpi"><div class="l">평균 바닥 나이</div><div class="v" id="kAge">—</div><div class="s">85살까지 사는데</div></div>
-  <div class="kpi"><div class="l">평생 번 돈 1등</div><div class="v" id="kTopM" style="font-size:17px">—</div><div class="s" id="kTopMs">&nbsp;</div></div>
-  <div class="kpi"><div class="l">가장 오래 버틴 학생</div><div class="v" id="kTopH" style="font-size:17px">—</div><div class="s" id="kTopHs">&nbsp;</div></div>
-</div>
+<!-- 탭 -->
+<div class="tabbar" id="tabBar"></div>
 
-<!-- ① 선택 분포 -->
-<div class="card">
+<!-- 선택 분포 -->
+<div class="card pane" id="pane-dist">
   <h2>우리 반은 이렇게 골랐습니다</h2>
   <p class="sub">같은 교실인데 고른 길이 이렇게 다릅니다.</p>
   <div class="distcols" id="dists"><div class="empty">아직 응답이 없습니다.</div></div>
 </div>
 
-<!-- ② 산점도 -->
-<div class="card">
-  <h2>평생 번 돈 vs 돈이 바닥난 나이</h2>
-  <p class="sub">점 하나가 학생 한 명입니다. <b>오른쪽 아래</b>는 많이 벌고도 일찍 바닥난 사람입니다. 많이 버는 것과 오래 버티는 것은 다릅니다.</p>
-  <canvas id="scatter" height="360"></canvas>
-  <div class="legend">
-    <span><i style="background:#2f6fd0"></i>학생</span>
-    <span><i style="background:#c99a3a"></i>많이 번 1등</span>
-    <span><i style="background:#177a4a"></i>오래 버틴 1등</span>
-  </div>
+<!-- 이유 -->
+<div class="card pane" id="pane-why">
+  <h2>왜 그렇게 골랐나 — 아이들이 쓴 이유</h2>
+  <p class="sub">항목을 고르면 우리 반이 <b>그 선택을 한 이유</b>가 모입니다. 발표시키기 좋습니다.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px" id="rqTabs"></div>
+  <div class="scrollbox" id="rqList"><div class="empty">아직 응답이 없습니다.</div></div>
 </div>
 
-
-<!-- ②-2 인생곡선 -->
-<div class="card">
-  <h2>우리 반이 그린 소득곡선</h2>
-  <p class="sub">수업 시작할 때 <b>아이들이 직접 그린 소득 예상</b>입니다. 선 하나가 학생 한 명이에요.
-    굵은 선은 반 평균, <b>주황 선</b>은 시뮬레이션이 내놓은 실제 소득 평균입니다.</p>
-  <canvas id="curves" height="330"></canvas>
-  <div class="legend">
-    <span><i style="background:#9fb8dc"></i>학생 각자의 예상</span>
-    <span><i style="background:#2f6fd0"></i>반 평균 예상</span>
-    <span><i style="background:#c1734a"></i>실제 소득 평균</span>
-  </div>
-  <p class="tiny" id="curveNote" style="margin-top:8px"></p>
+<!-- 목표 -->
+<div class="card pane" id="pane-goal">
+  <h2>시기별 목표 모아보기</h2>
+  <p class="sub">나이대를 고르면 우리 반이 그 나이에 무엇을 목표로 삼았는지 모입니다.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px" id="goTabs"></div>
+  <div class="scrollbox" id="goList"><div class="empty">아직 응답이 없습니다.</div></div>
 </div>
 
-<!-- ③ 주사위 실제 결과 -->
-<div class="card">
+<!-- 주사위 -->
+<div class="card pane" id="pane-dice">
   <h2>주사위는 실제로 어땠나</h2>
   <p class="sub">교과서 확률과 우리 반 실제 결과를 비교해 보세요.</p>
   <div id="rolls"><div class="empty">아직 응답이 없습니다.</div></div>
+  <div class="kpis" style="margin-top:16px">
+    <div class="kpi"><div class="l">끝낸 학생</div><div class="v" id="kDone">0</div><div class="s">명</div></div>
+    <div class="kpi"><div class="l">돈이 바닥난 학생</div><div class="v" id="kBroke">—</div><div class="s" id="kBrokeSub">&nbsp;</div></div>
+    <div class="kpi"><div class="l">평균 바닥 나이</div><div class="v" id="kAge">—</div><div class="s">85살까지 사는데</div></div>
+    <div class="kpi"><div class="l">평생 번 돈 1등</div><div class="v" id="kTopM" style="font-size:17px">—</div><div class="s" id="kTopMs">&nbsp;</div></div>
+    <div class="kpi"><div class="l">가장 오래 버틴 학생</div><div class="v" id="kTopH" style="font-size:17px">—</div><div class="s" id="kTopHs">&nbsp;</div></div>
+  </div>
 </div>
 
-<!-- ④ 이유 -->
-<div class="card">
-  <h2>왜 그렇게 골랐나 — 아이들이 쓴 이유</h2>
-  <p class="sub">항목을 고르면 우리 반이 <b>그 선택을 한 이유</b>가 모입니다. 발표시키기 좋습니다.</p>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px" id="rqTabs"></div>
-  <div id="rqList"><div class="empty">아직 응답이 없습니다.</div></div>
-</div>
-
-<div class="card">
-  <h2>시기별 목표 모아보기</h2>
-  <p class="sub">나이대를 고르면 우리 반이 그 나이에 무엇을 목표로 삼았는지 모입니다.</p>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px" id="goTabs"></div>
-  <div id="goList"><div class="empty">아직 응답이 없습니다.</div></div>
-</div>
-
-<!-- ④-2 한 학생의 인생 그래프 -->
-<div class="card">
+<!-- 한 학생 -->
+<div class="card pane" id="pane-one">
   <h2>한 학생의 인생 그래프 띄우기</h2>
-  <p class="sub">발표할 학생을 고르면 <b>그 학생이 그린 예상 곡선</b>과 <b>실제로 살아본 결과</b>를 나란히 보여줍니다.</p>
+  <p class="sub">발표할 학생을 고르면 <b>그 학생이 그린 예상 곡선</b>과 <b>실제로 살아본 결과</b>를 보여줍니다.</p>
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
     <select id="oneSel" style="padding:9px 12px;border-radius:12px;border:1px solid #ddd;font-family:inherit;font-size:15px;min-width:220px"></select>
     <button class="btn" id="onePrev">◀ 이전</button>
     <button class="btn" id="oneNext">다음 ▶</button>
     <button class="btn dark" id="oneBig">크게 보기</button>
   </div>
-  <canvas id="oneC" height="330"></canvas>
+  <canvas id="oneC" height="260"></canvas>
   <div class="legend">
     <span><i style="background:#9aa0a8"></i>본인이 짐작한 소득</span>
     <span><i style="background:#2f6fd0"></i>실제로 번 돈</span>
@@ -308,10 +299,10 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
   <p class="tiny" id="oneNote" style="margin-top:8px"></p>
 </div>
 
-<!-- ⑤ 학생 표 -->
-<div class="card">
+<!-- 학생 표 -->
+<div class="card pane" id="pane-rows">
   <h2>학생별 결과</h2>
-  <p class="sub"><b>이름을 누르면</b> 그 학생이 처음부터 끝까지 무엇을 골랐는지 전부 볼 수 있습니다.</p>
+  <p class="sub"><b>이름을 누르면</b> 그 학생이 처음부터 끝까지 무엇을 골랐는지 한 화면에 나옵니다.</p>
   <div class="tablewrap">
     <table>
       <thead><tr>
@@ -350,16 +341,15 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
   <div class="pgrid">
     <div>
       <div class="pbox" style="margin-bottom:16px">
-        <h3 id="prLeftTitle" style="cursor:pointer">번 돈 vs 버틴 나이  (클릭하면 소득곡선)</h3>
-        <canvas id="prScatter" height="330"></canvas>
-        <canvas id="prCurves" height="330" style="display:none"></canvas>
-        <p class="tiny" id="prCurveNote" style="color:#98a3b6;margin-top:8px"></p>
+        <h3 id="prOneTitle">한 학생의 인생 그래프</h3>
+        <canvas id="prOne" height="300"></canvas>
+        <p class="tiny" id="prOneNote" style="color:#98a3b6;margin-top:8px"></p>
       </div>
       <div class="pbox"><h3>주사위 실제 결과</h3><div id="prRolls"></div></div>
     </div>
     <div>
-      <div class="pbox" style="margin-bottom:16px"><h3 id="prDistTitle">직업</h3><div id="prDist"></div></div>
-      <div class="pbox"><h3>같은 선택, 다른 이유</h3><div id="prRq"></div></div>
+      <div class="pbox" style="margin-bottom:16px"><h3 id="prDistTitle">직업 <span style="font-size:12px;color:#8a97ab">(눌러서 바꾸기)</span></h3><div id="prDist"></div></div>
+      <div class="pbox"><h3>아이들이 쓴 이유</h3><div id="prRq"></div></div>
     </div>
   </div>
 </div>
@@ -706,9 +696,35 @@ function goHTML(limit){
 function renderGo(){var b=$('#goList');if(b)b.innerHTML=goHTML(12);}
 
 
+
+/* ================= 탭 : 한 번에 한 화면만 ================= */
+var TABS=[['dist','우리 반 선택'],['why','아이들이 쓴 이유'],['goal','시기별 목표'],
+          ['dice','주사위 · 요약'],['one','한 학생 보기'],['rows','학생 표']];
+var TAB='dist';
+function renderTabs(){
+  var bar=document.getElementById('tabBar');if(!bar)return;
+  bar.innerHTML=TABS.map(function(x){
+    return '<button class="tab'+(TAB===x[0]?' on':'')+'" data-t="'+x[0]+'">'+x[1]+'</button>';}).join('');
+  bar.querySelectorAll('[data-t]').forEach(function(b){
+    b.onclick=function(){setTab(this.dataset.t);};});
+  TABS.forEach(function(x){
+    var el=document.getElementById('pane-'+x[0]);
+    if(el)el.classList.toggle('on',TAB===x[0]);});
+}
+function setTab(id){
+  TAB=id;renderTabs();window.scrollTo(0,0);
+  if(id==='one'){try{if(ONE&&DATA[ONE])drawOne('oneC',DATA[ONE],260);}catch(e){}}
+}
+document.addEventListener('keydown',function(e){
+  if(/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||''))return;
+  var n=parseInt(e.key,10);
+  if(n>=1&&n<=TABS.length)setTab(TABS[n-1][0]);
+});
+
 /* ================= 진행 제어 + 수동 새로고침 ================= */
 var CTRL_DOC='ZZ-CONTROL';   /* Firestore는 __xxx__ 형태의 문서 이름을 금지합니다 */
 var STEPS=['시작 전','평균 보기','예상 소득 그리기','15살','25살','35살','45살','55살','65살','75살','결산'];
+var CTRL_MAX=2;   /* 여기까지만 선생님이 넘겨줍니다. 15살부터는 아이들이 각자 진행합니다. */
 var STEP=0, FREEMODE=false;
 var PENDING=null, NEWCNT=0;
 
@@ -717,19 +733,24 @@ function stepCount(i){
 }
 function renderSteps(){
   var el=document.getElementById('nowStep');if(!el)return;
+  var free=(STEP>=CTRL_MAX)||FREEMODE;
   el.textContent=FREEMODE?'자유 진행':STEPS[STEP];
+  el.className='nowstep'+(free?' free':'');
   document.getElementById('stFree').checked=FREEMODE;
   document.getElementById('stPrev').disabled=(STEP<=0);
-  document.getElementById('stNext').disabled=(STEP>=10);
+  var nx=document.getElementById('stNext');
+  nx.disabled=(STEP>=CTRL_MAX)||FREEMODE;
+  nx.textContent=(STEP>=CTRL_MAX)?'여기부터는 아이들이 알아서':'다음으로 넘기기 ▶';
   document.getElementById('stepBar').innerHTML=STEPS.map(function(n,i){
-    var c=stepCount(i);
-    return '<button class="stepchip'+(i===STEP?' on':(i<STEP?' done':''))+'" data-s="'+i+'">'+n+
+    var c=stepCount(i),lock=(i>CTRL_MAX);
+    return '<button class="stepchip'+(i===STEP?' on':(i<STEP?' done':''))+(lock?' lock':'')+'" data-s="'+i+'">'+n+
       '<span class="cnt">'+(i===0?'&nbsp;':c+'명 도착')+'</span></button>';}).join('');
   document.getElementById('stepBar').querySelectorAll('[data-s]').forEach(function(b){
     b.onclick=function(){setStep(+this.dataset.s);};});
 }
 function setStep(n){
-  STEP=Math.max(0,Math.min(10,n));FREEMODE=false;pushCtrl();renderSteps();
+  n=Math.max(0,Math.min(CTRL_MAX,n));   /* 3단계 이후는 선생님이 넘길 필요가 없습니다 */
+  STEP=n;FREEMODE=false;pushCtrl();renderSteps();
 }
 function ctrlMsg(txt,bad){
   var el=document.getElementById('ctrlState');if(!el)return;
@@ -774,17 +795,17 @@ var ONE=null;
 function oneList(){return list().slice().sort(function(a,b){return String(a.name).localeCompare(String(b.name));});}
 function renderOne(){
   var L=oneList(),sel=document.getElementById('oneSel');
-  if(!L.length){sel.innerHTML='<option>아직 응답이 없습니다</option>';ONE=null;drawOne('oneC',null,330);$('#oneNote').textContent='';return;}
+  if(!L.length){sel.innerHTML='<option>아직 응답이 없습니다</option>';ONE=null;drawOne('oneC',null,260);$('#oneNote').textContent='';return;}
   if(!ONE||!DATA[ONE]||L.map(function(r){return r.name;}).indexOf(ONE)<0)ONE=L[0].name;
   sel.innerHTML=L.map(function(r){
     return '<option value="'+esc(r.name)+'"'+(r.name===ONE?' selected':'')+'>'+esc(r.name)+'</option>';}).join('');
-  drawOne('oneC',DATA[ONE],330);
+  drawOne('oneC',DATA[ONE],260);
   var r=DATA[ONE],g=nums(r.예상소득곡선),a=nums(r.실제소득곡선);
   var gap=0,n=0;for(var i=1;i<8;i++){if(g[i]!==undefined&&a[i]!==undefined){gap+=a[i]-g[i];n++;}}
   gap=n?Math.round(gap/n):0;
   $('#oneNote').innerHTML= '<b style="color:var(--pri)">본인이 그린 가장 높은 값 '+shortWon(r.예상최고액||Math.max.apply(null,g))+'</b> · '+
     '진행 '+esc(r.진행||'—')+' · '+
-    (r.엔딩?'<b>'+esc(r.엔딩)+'</b> · ':'')+
+    (((r.진행단계||0)>=10&&r.엔딩)?'<b>'+esc(r.엔딩)+'</b> · ':'')+
     ((r.진행단계||0)<10?'아직 결산 전':
       (r.돈바닥나이?'<b style="color:var(--bad)">'+r.돈바닥나이+'살에 돈이 바닥났습니다</b>':'끝까지 안 바닥남')+
       ' · 짐작과 실제 차이 평균 <b>'+shortWon(Math.abs(gap))+'</b>'+(gap<0?' (실제가 더 적었음)':gap>0?' (실제가 더 많았음)':''));
@@ -821,7 +842,7 @@ function drawOne(id,r,h,dark){
       x.strokeStyle=dark?'#161a22':'#fff';x.lineWidth=dark?3:2.2;x.stroke();});});
   if(!hasReal){x.fillStyle=dark?'#98a3b6':'#9aa0a8';x.font='bold '+(dark?'18px':'13px')+' sans-serif';
     x.fillText('아직 진행 중 — 본인이 짐작한 곡선만',pad.l+8,pad.t+(dark?24:16));}
-  if(r.돈바닥나이){var bx=X(r.돈바닥나이);
+  if(hasReal&&r.돈바닥나이){var bx=X(r.돈바닥나이);
     x.strokeStyle='#c0392b';x.lineWidth=2;x.setLineDash([4,4]);
     x.beginPath();x.moveTo(bx,pad.t);x.lineTo(bx,h-pad.b);x.stroke();x.setLineDash([]);
     x.fillStyle='#c0392b';x.font='bold '+(dark?'16px':'12px')+' sans-serif';
@@ -965,29 +986,26 @@ document.addEventListener('keydown',function(e){
 function renderAll(){
   renderKpi();renderDists();
   $('#rolls').innerHTML=rollsHTML();
-  bindCtrl();renderSteps();renderClsTabs();renderRqTabs();renderRq();renderGoTabs();renderGo();renderRows();bindOne();renderOne();
-  try{drawScatter('scatter',false);drawCurves('curves',false);}catch(e){}
+  bindCtrl();renderSteps();renderTabs();renderClsTabs();renderRqTabs();renderRq();renderGoTabs();renderGo();renderRows();bindOne();renderOne();
+
   if($('#present').classList.contains('on'))renderPresent();
 }
 
 /* --- 발표 화면 --- */
-var prDist=0, prLeft=0;
+var prDist=0;
 function renderPresent(){
   var L=list();
-  $('#prSub').textContent='끝낸 학생 '+L.length+'명';
+  $('#prSub').textContent=(CLS==='전체'?'':CLS+' · ')+'끝낸 학생 '+L.filter(function(r){return (r.진행단계||0)>=10;}).length+'명 / 들어온 학생 '+L.length+'명';
   var f=DIST_FIELDS[prDist];
-  $('#prDistTitle').textContent=f.t+'  (클릭하면 다음 항목)';
+  $('#prDistTitle').innerHTML=f.t+' <span style="font-size:12px;color:#8a97ab">(눌러서 바꾸기)</span>';
   $('#prDist').innerHTML=distHTML(f,7);
   $('#prRolls').innerHTML=rollsHTML();
   $('#prRq').innerHTML=rqHTML(4);
-  $('#prScatter').style.display=prLeft===0?'block':'none';
-  $('#prCurves').style.display=prLeft===1?'block':'none';
-  $('#prCurveNote').style.display=prLeft===1?'block':'none';
-  $('#prLeftTitle').textContent=prLeft===0?'번 돈 vs 버틴 나이  (클릭하면 소득곡선)'
-                                          :'우리 반이 그린 소득곡선  (클릭하면 산점도)';
-  try{ prLeft===0?drawScatter('prScatter',true):drawCurves('prCurves',true); }catch(e){}
+  var r=ONE&&DATA[ONE]?DATA[ONE]:null;
+  $('#prOneTitle').textContent=r?(r.name+' 의 인생 그래프'):'한 학생의 인생 그래프';
+  $('#prOneNote').textContent=r?('본인이 그린 가장 높은 값 '+shortWon(r.예상최고액||0)+' · '+(r.진행||'')):'「한 학생 보기」 탭에서 학생을 고르세요';
+  try{drawOne('prOne',r,300,true);}catch(e){}
 }
-$('#prLeftTitle').onclick=function(){prLeft=(prLeft+1)%2;renderPresent();};
 $('#btnPresent').onclick=function(){$('#present').classList.add('on');renderPresent();};
 $('#btnPx').onclick=function(){$('#present').classList.remove('on');};
 document.addEventListener('keydown',function(e){
@@ -1131,7 +1149,7 @@ $('#btnClear').onclick=async function(){
 })();
 function clampN(v,a,b){return Math.max(a,Math.min(b,v));}
 window.addEventListener('resize',function(){try{
-  drawScatter('scatter',false);drawCurves('curves',false);
+  if(ONE&&DATA[ONE])drawOne('oneC',DATA[ONE],260);
   if($('#present').classList.contains('on'))renderPresent();}catch(e){}});
 </script>
 </body>
