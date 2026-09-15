@@ -219,6 +219,8 @@ table.life td.g{color:var(--ink2)}
 .waitwrap{min-height:72vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
 .waitname{font-size:17px;font-weight:700;color:var(--ink2)}
 .waitmsg{font-size:23px;font-weight:750;letter-spacing:-.5px}
+.wdot{width:9px;height:9px;border-radius:50%;background:#d8d3ca}
+.wdot.on{background:#2a7a55}
 .dots3{display:flex;gap:11px}
 .dots3 i{width:15px;height:15px;border-radius:50%;background:var(--pri);opacity:.25;animation:bob 1.1s infinite}
 .dots3 i:nth-child(2){animation-delay:.16s}
@@ -406,6 +408,7 @@ table.life td.g{color:var(--ink2)}
     <div class="waitname" id="wName">—</div>
     <div class="dots3"><i></i><i></i><i></i></div>
     <div class="waitmsg" id="wMsg">잠시만요</div>
+    <div class="wdot" id="wDot"></div>
   </div>
 </section>
 
@@ -747,8 +750,9 @@ function sndScan(){for(var i=0;i<17;i++)beep(620+i*18,i*.08,.035,'square',.05);}
 /* ================= 교사가 진도를 넘겨줍니다 =================
    단계 0=이름/대기  1=평균 보기  2=예상 소득 그리기
         3~9=15·25·35·45·55·65·75살   10=결산        99=자유 진행  */
-var CTRL_DOC='__control__';
-var DB=null, FS=null, ALLOW=0, FREE=false, CONNECTED=false;
+var CTRL_DOC='ZZ-CONTROL';   /* Firestore는 __xxx__ 형태의 문서 이름을 금지합니다 */
+var DB=null, FS=null, ALLOW=0, FREE=false, CONNECTED=false, LINK=false;
+function dot(){var e=document.getElementById('wDot');if(e)e.className='wdot'+(LINK?' on':'');}
 function curStep(){
   var on=document.querySelector('.screen.on');if(!on)return 0;
   if(on.id==='s-intro')return 1;
@@ -772,7 +776,7 @@ function enterStep(step){
 }
 var WAITMSG={1:'곧 시작합니다',2:'곧 시작합니다',10:'모두 기다리는 중'};
 function showWait(step){
-  $('#wName').textContent=(S.cls?S.cls+' ':'')+S.sid;
+  $('#wName').textContent=(S.cls?S.cls+' ':'')+S.sid;dot();
   $('#wMsg').textContent=WAITMSG[step]||'잠시만요';
   show('s-wait');
 }
@@ -797,11 +801,15 @@ function connectFB(){
     return import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js').then(function(f){
       FS=f;DB=f.getFirestore(a.initializeApp(FIREBASE_CONFIG));CONNECTED=true;
       f.onSnapshot(f.doc(DB,COLLECTION,CTRL_DOC),function(d){
-        var v=(d.exists&&d.exists())?d.data():{};
+        var v=(d&&d.exists&&d.exists())?d.data():{};
         ALLOW=(typeof v.step==='number')?v.step:0;
         FREE=(ALLOW===99)||!!v.free;
-        onAllow();
-      },function(){});
+        LINK=true;dot();onAllow();
+      },function(e){
+        /* 선생님 신호를 못 읽으면 수업이 멈추므로 잠금을 풉니다 */
+        console.error('진행 신호 읽기 실패',e);
+        CONNECTED=false;LINK=false;dot();onAllow();
+      });
     });
   }).catch(function(){CONNECTED=false;});
 }
@@ -816,7 +824,8 @@ function saveProgress(step){
   d.진행=STEPNAME[step]||('단계 '+step);d.진행단계=step;d.완료=(step>=10);
   d.예상소득곡선=S.guess.join(',');
   d.예상최고액=Math.max.apply(null,S.guess);
-  try{FS.setDoc(FS.doc(DB,COLLECTION,S.sid),d,{merge:true});}catch(e){}
+  try{FS.setDoc(FS.doc(DB,COLLECTION,S.sid),d,{merge:true}).catch(function(e){console.warn('저장 실패',e);});}
+  catch(e){console.warn('저장 실패',e);}
 }
 
 /* ---- 시작 ---- */

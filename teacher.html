@@ -100,6 +100,9 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 .nowstep{font-size:19px;font-weight:800;color:var(--pri);background:#fff;border:1.5px solid #cfe0f7;
   border-radius:12px;padding:6px 14px;letter-spacing:-.3px}
 .freebox{font-size:13px;font-weight:700;color:var(--ink2);display:flex;align-items:center;gap:5px;cursor:pointer}
+.ctrlstate{font-size:12.5px;font-weight:700;color:var(--ink2);margin-top:8px}
+.ctrlstate.ok{color:var(--ok)}
+.ctrlstate.bad{color:var(--bad)}
 .steps{display:flex;gap:5px;flex-wrap:wrap;margin-top:11px}
 .stepchip{font-family:inherit;font-size:12.5px;font-weight:700;padding:6px 11px;border-radius:10px;
   border:1.5px solid var(--line);background:#fff;color:var(--ink2);cursor:pointer;position:relative}
@@ -209,6 +212,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
     <button class="btn pri" id="stNext" style="font-size:16px;padding:11px 22px">다음으로 넘기기 ▶</button>
     <label class="freebox"><input type="checkbox" id="stFree"> 자유 진행</label>
   </div>
+  <div class="ctrlstate" id="ctrlState">아직 넘기지 않았습니다</div>
   <div class="steps" id="stepBar"></div>
 </div>
 
@@ -703,7 +707,7 @@ function renderGo(){var b=$('#goList');if(b)b.innerHTML=goHTML(12);}
 
 
 /* ================= 진행 제어 + 수동 새로고침 ================= */
-var CTRL_DOC='__control__';
+var CTRL_DOC='ZZ-CONTROL';   /* Firestore는 __xxx__ 형태의 문서 이름을 금지합니다 */
 var STEPS=['시작 전','평균 보기','예상 소득 그리기','15살','25살','35살','45살','55살','65살','75살','결산'];
 var STEP=0, FREEMODE=false;
 var PENDING=null, NEWCNT=0;
@@ -727,9 +731,16 @@ function renderSteps(){
 function setStep(n){
   STEP=Math.max(0,Math.min(10,n));FREEMODE=false;pushCtrl();renderSteps();
 }
+function ctrlMsg(txt,bad){
+  var el=document.getElementById('ctrlState');if(!el)return;
+  el.textContent=txt;el.className='ctrlstate'+(bad?' bad':' ok');
+}
 function pushCtrl(){
-  if(!DB)return;
-  try{api.setDoc(api.doc(DB,COLLECTION,CTRL_DOC),{step:FREEMODE?99:STEP,free:FREEMODE,at:Date.now()});}catch(e){}
+  if(!DB){ctrlMsg('연결 안 됨 — 아이들 화면은 안 바뀝니다',true);return;}
+  ctrlMsg('보내는 중…');
+  api.setDoc(api.doc(DB,COLLECTION,CTRL_DOC),{step:FREEMODE?99:STEP,free:FREEMODE,at:Date.now()})
+    .then(function(){ctrlMsg('아이들 화면에 전달됨 · '+(FREEMODE?'자유 진행':STEPS[STEP]));})
+    .catch(function(e){ctrlMsg('전달 실패 — '+(e&&e.code?e.code:'권한/규칙 확인'),true);console.error(e);});
 }
 function bindCtrl(){
   var n=document.getElementById('stNext');if(!n||n.dataset.b)return;n.dataset.b='1';
