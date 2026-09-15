@@ -761,9 +761,7 @@ function curStep(){
   if(on.id==='s-result')return 10;
   return 0;
 }
-/* 15살부터는 아이들이 각자 속도로 진행합니다. 교사는 2단계까지만 열어줍니다. */
-var FREE_FROM=3;
-function allowed(step){return FREE||!CONNECTED||step>=FREE_FROM||step<=ALLOW;}
+function allowed(step){return FREE||!CONNECTED||step<=ALLOW;}
 var WANT=null;               /* 교사가 열어주면 가려던 곳 */
 function goStep(step){
   if(!allowed(step)){WANT=step;showWait(step);return false;}
@@ -816,49 +814,18 @@ function connectFB(){
   }).catch(function(){CONNECTED=false;});
 }
 /* 단계마다 저장 — 교사가 중간에도 볼 수 있게 */
-var STEPNAME=['시작 전','평균 보기','예상 소득 그리기','15살','25살','35살','45살','55살','65살','75살','결산'];
-function saveProgress(step,cb){
-  curStepSaved=step;saveLocal();
-  if(!DB||!S.sid){if(cb)cb(false);return;}
+var STEPNAME=['시작','평균 보기','예상 소득','15살','25살','35살','45살','55살','65살','75살','결산'];
+function saveProgress(step){
+  curStepSaved=step;
+  if(!DB||!S.sid)return;
   var d;
-  try{d=payload(simulate());}catch(e){d={};}
+  try{d=payload(simulate());}catch(e){d={name:S.sid};}
   d.name=S.sid;d.반=S.cls;d.at=new Date().toISOString();
   d.진행=STEPNAME[step]||('단계 '+step);d.진행단계=step;d.완료=(step>=10);
   d.예상소득곡선=S.guess.join(',');
   d.예상최고액=Math.max.apply(null,S.guess);
-  try{
-    FS.setDoc(FS.doc(DB,COLLECTION,S.sid),d,{merge:true})
-      .then(function(){if(cb)cb(true);})
-      .catch(function(e){console.warn('저장 실패',e);if(cb)cb(false);});
-  }catch(e){console.warn('저장 실패',e);if(cb)cb(false);}
-}
-
-/* ================= 새로고침해도 이어서 =================
-   고른 것·쓴 이유·주사위 결과를 갤탭 안에 계속 저장해 둡니다. */
-var LSKEY='life_state_v1';
-function snapState(){
-  return {sid:S.sid,cls:S.cls,idx:S.idx,pick:S.pick,custom:S.custom,goal:S.goal,
-          memo:S.memo,ch:S.ch,ev:S.ev,guess:S.guess,moved:S.moved,done:S.done,
-          step:curStepSaved,t:Date.now()};
-}
-function saveLocal(){try{localStorage.setItem(LSKEY,JSON.stringify(snapState()));}catch(e){}}
-function loadLocal(sid){
-  try{var v=JSON.parse(localStorage.getItem(LSKEY)||'null');
-    if(!v||!v.sid)return null;
-    if(sid&&v.sid!==sid)return null;
-    if(Date.now()-(v.t||0)>1000*60*60*12)return null;   /* 12시간 지나면 새로 시작 */
-    return v;}catch(e){return null;}
-}
-function clearLocal(){try{localStorage.removeItem(LSKEY);}catch(e){}}
-function applyState(v){
-  if(!v)return false;
-  S.sid=v.sid||S.sid;S.cls=v.cls||S.cls;S.idx=v.idx||0;
-  S.pick=v.pick||{};S.custom=v.custom||{};S.goal=v.goal||{};S.memo=v.memo||{};
-  S.ch=v.ch||{};S.ev=v.ev||{};
-  if(v.guess&&v.guess.length===8)S.guess=v.guess;
-  if(v.moved&&v.moved.length===8)S.moved=v.moved;
-  S.done=!!v.done;curStepSaved=v.step||0;
-  return true;
+  try{FS.setDoc(FS.doc(DB,COLLECTION,S.sid),d,{merge:true}).catch(function(e){console.warn('저장 실패',e);});}
+  catch(e){console.warn('저장 실패',e);}
 }
 
 /* ---- 시작 ---- */
@@ -900,13 +867,9 @@ $('#go2').onclick=function(){
  if(!S.cls){$('#sidErr').textContent='반을 골라주세요.';return;}
  var v=checkSid();if(!v){$('#sid').focus();return;}
  S.sid=v;try{localStorage.setItem('life_sid',v);localStorage.setItem('life_cls',S.cls);}catch(e){}
- var saved=loadLocal(v);
- if(saved)applyState(saved);
  $('#hName').textContent=S.cls+' '+v;
- var back=(saved&&saved.step>1)?saved.step:1;
- if(saved&&saved.done)back=10;
- saveProgress(back===10?10:0);
- if(goStep(back))saveProgress(back);};
+ saveProgress(0);
+ if(goStep(1))saveProgress(1);};
 
 /* ---- 짐작 곡선 ---- */
 var GMAX=20000;   /* 짐작 곡선 위쪽 끝 = 2억 */
@@ -999,7 +962,7 @@ function gateGuess(){
  var gate=allowed(3);
  $('#guessNext').disabled=(n>0)||!gate;
  $('#guessNext').textContent=(n===0&&!gate)?'기다리는 중…':'다 찍었어요';
- $('#guessNote').textContent=n>0?'점 '+n+'개가 남았습니다.':'';saveLocal();}
+ $('#guessNote').textContent=n>0?'점 '+n+'개가 남았습니다.':'';}
 $('#guessNext').onclick=function(){if(goStep(3))saveProgress(3);};
 window.addEventListener('resize',function(){if($('#s-guess').classList.contains('on'))drawGuess();});
 function guessAt(age){
@@ -1738,7 +1701,7 @@ function refresh(){
   if(ok){var cl=chalList();cl.forEach(function(k){var s=S.ch[k];if(!s||!s.done){ok=false;msg='주사위를 굴려야 넘어갑니다.';}});}
   var target=(S.idx<L.length-1)?(3+S.idx+1):10;
   var gate=allowed(target);
-  $('#nextBtn').disabled=!ok||!gate;$('#footNote').textContent=msg;fitFoot();saveLocal();
+  $('#nextBtn').disabled=!ok||!gate;$('#footNote').textContent=msg;fitFoot();
   $('#nextBtn').textContent=(!gate&&ok)?'기다리는 중…':((S.idx===L.length-1)?'85살까지 살아보기':'다음');
 }
 $('#nextBtn').onclick=function(){
@@ -1940,7 +1903,7 @@ function payload(r){
     부모님이낸돈:r.parentPaid,
     주거비총액:r.cat.home,생활비총액:r.cat.live,자녀비총액:r.cat.kid,
     의료비총액:r.cat.care,큰지출총액:r.cat.big,노후준비총액:r.cat.pen,
-    예상소득곡선:S.guess.join(','),예상최고액:Math.max.apply(null,S.guess),
+    예상소득곡선:S.guess.join(','),
     실제소득곡선:r.rows.map(function(x){return x.income;}).join(','),
     목표_15:S.goal[15]||'',목표_25:S.goal[25]||'',목표_35:S.goal[35]||'',목표_45:S.goal[45]||'',
     목표_55:S.goal[55]||'',목표_65:S.goal[65]||'',목표_75:S.goal[75]||''};
@@ -1948,14 +1911,15 @@ function payload(r){
 function sendToServer(r){
   var line=$('#saveline');
   if(!FIREBASE_CONFIG.apiKey){line.textContent='(선생님 설정 전이라 저장 안 됨)';return;}
-  if(!DB){line.textContent='연결이 끊겼어요. 화면을 선생님께 보여주세요.';return;}
   line.textContent='결과를 보내는 중…';
-  saveProgress(10,function(ok){
-    line.textContent=ok?'선생님께 결과가 전달됐어요.':'전송 실패. 화면을 선생님께 보여주세요.';
-  });
+  import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js').then(function(a){
+    return import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js').then(function(f){
+      var db=f.getFirestore(a.initializeApp(FIREBASE_CONFIG));
+      return f.setDoc(f.doc(db,COLLECTION,S.sid),payload(r));});
+  }).then(function(){line.textContent='선생님께 결과가 전달됐어요.';})
+   .catch(function(){line.textContent='전송 실패. 화면을 선생님께 보여주세요.';});
 }
 $('#againBtn').onclick=function(){
-  clearLocal();
   var k=S.sid,g=S.guess.slice(),m=S.moved.slice();
   S={sid:k,cls:S.cls,idx:0,pick:{},custom:{},goal:{},memo:{},ch:{},ev:{},guess:g,moved:m,done:false};
   $('#hName').textContent=(S.cls?S.cls+' ':'')+k;goStep(3);};
