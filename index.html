@@ -3,259 +3,422 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>인생설계 시뮬레이터</title>
+<title>생애설계 시뮬레이터</title>
 <style>
 :root{
   --font:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
-  --ink:#1f2430; --ink2:#5b6472; --line:#dfe3ea; --bg:#f4f2ee; --card:#fff;
-  --pri:#2f6fd0; --ok:#177a4a; --bad:#c0392b; --warn:#b06a12; --gold:#c99a3a;
+  --bg:#f7f6f3; --card:#fff; --ink:#17191d; --ink2:#71767f; --line:#e9e6e0;
+  --pri:#2f5aa8; --pri-s:#eaf0f9; --accent:#c4703f; --ok:#2a7a55; --bad:#b8453c;
+  --sh:0 1px 2px rgba(20,22,28,.05),0 8px 24px rgba(20,22,28,.055);
+  --sh-s:0 1px 2px rgba(20,22,28,.05),0 3px 10px rgba(20,22,28,.045);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
-body{font-family:var(--font);background:var(--bg);color:var(--ink);font-size:16px;line-height:1.55;-webkit-text-size-adjust:100%}
-.app{max-width:520px;margin:0 auto;min-height:100vh;padding:0 14px calc(104px + env(safe-area-inset-bottom))}
-.screen{display:none;animation:in .28s ease}
+html{background:var(--bg)}
+body{font-family:var(--font);background:transparent;color:var(--ink);font-size:16px;line-height:1.55;-webkit-text-size-adjust:100%}
+.app{max-width:520px;margin:0 auto;min-height:100vh;padding:0 15px calc(196px + env(safe-area-inset-bottom))}
+.screen{display:none;animation:in .28s cubic-bezier(.2,.8,.3,1)}
 .screen.on{display:block}
-@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-
-.bar{position:sticky;top:0;z-index:20;background:var(--bg);padding:8px 0}
-.who{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--ink2);gap:8px}
-.back{border:1px solid var(--line);background:#fff;border-radius:13px;padding:4px 10px;font-size:13px;
-  font-family:inherit;color:var(--ink2);cursor:pointer;flex:none}
-.back:disabled{opacity:.3}
-.who .nm{flex:1;font-weight:700;color:var(--ink)}
-.prog{height:5px;background:#e4e0d9;border-radius:99px;margin-top:7px;overflow:hidden}
-.prog i{display:block;height:100%;width:0;background:var(--pri);border-radius:99px;transition:width .4s}
-
-h1{font-size:26px;margin:0 0 6px;letter-spacing:-.5px}
-h2{font-size:20px;margin:2px 0 4px;letter-spacing:-.4px}
+@keyframes in{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+h1{font-size:31px;margin:0 0 6px;letter-spacing:-.8px;line-height:1.24}
+h2{font-size:21px;margin:2px 0 4px;letter-spacing:-.5px}
 p{margin:6px 0}
-.age{display:inline-block;background:var(--ink);color:#fff;font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px}
-.q{font-size:20px;font-weight:800;margin:12px 0 2px;letter-spacing:-.4px}
-.hint{font-size:13.5px;color:var(--ink2);margin:0 0 10px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:21px;padding:14px}
-.sect{margin:16px 0 0}
-.slab{font-size:13px;font-weight:700;color:var(--ink2);margin:0 0 6px}
-.tiny{font-size:12px;color:var(--ink2)}
+.tiny{font-size:12px;color:var(--ink2);line-height:1.5}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:15px;box-shadow:var(--sh-s)}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #f2efe9;font-size:14px}
+.kv:last-child{border:0}
+.kv span{color:var(--ink2);flex:none} .kv b{text-align:right;font-weight:650}
+.err{color:var(--bad);font-size:13.5px;font-weight:650;min-height:19px;margin-top:7px}
+input,select,textarea{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:15px;
+  font-family:inherit;font-size:16px;background:#fff;color:var(--ink)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 2.5px rgba(47,90,168,.14)}
 
-.money{background:#fff;border:1px solid var(--line);border-radius:21px;padding:12px 14px;margin-top:10px}
-.money .h{font-size:12.5px;font-weight:800;color:var(--ink2);margin-bottom:6px}
-.mrow{display:flex;justify-content:space-between;gap:8px;font-size:14px;padding:4px 0;border-bottom:1px dashed var(--line)}
-.mrow:last-of-type{border:0}
-.mrow b{font-variant-numeric:tabular-nums;text-align:right}
-.mrow .sm{display:block;font-size:11.5px;color:var(--ink2);font-weight:500}
-.mrow.plus b{color:var(--ok)} .mrow.minus b{color:var(--bad)}
-.mrow.big{font-size:15.5px;font-weight:800;padding-top:7px;border-top:1.5px solid var(--line);border-bottom:0}
-.debt{color:var(--bad)!important}
+/* 상단 */
+.bar{position:sticky;top:0;z-index:20;background:rgba(247,246,243,.97);
+  backdrop-filter:blur(8px);padding:9px 0 11px;
+  box-shadow:0 10px 14px -10px rgba(20,22,28,.10)}
+.who{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--ink2);gap:8px}
+.back{border:1px solid var(--line);background:#fff;border-radius:13px;padding:5px 11px;font-size:13px;
+  font-family:inherit;color:var(--ink2);cursor:pointer;flex:none;box-shadow:var(--sh-s)}
+.back:disabled{opacity:.32;box-shadow:none}
+.who .nm{flex:1;font-weight:600;color:var(--ink)}
+.agebig{font-size:34px;font-weight:800;letter-spacing:-1.2px;margin:6px 0 0}
+.agebig small{font-size:15px;font-weight:600;color:var(--ink2);margin-left:8px;letter-spacing:0}
+.stagesub{font-size:13.5px;color:var(--ink2);margin:2px 0 0}
 
+/* 슬롯 */
+.slot{margin-top:18px}
+.slot .sh{font-size:13px;font-weight:750;color:var(--ink);margin:0 0 3px;display:flex;align-items:center;gap:7px}
+.slot .sh i{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--pri)}
+.slot .ss{font-size:12.5px;color:var(--ink2);margin:0 0 8px}
 .opts{display:grid;gap:8px}
 .opts.two{grid-template-columns:1fr 1fr}
-.opt{background:var(--card);border:1.5px solid var(--line);border-radius:19px;padding:12px 13px;cursor:pointer;
-  text-align:left;font-family:inherit;font-size:16px;color:var(--ink);transition:.14s;width:100%;position:relative}
-.opt b{display:block;font-size:16.5px;font-weight:700}
-.opt span{display:block;font-size:12.8px;color:var(--ink2);margin-top:3px;line-height:1.45}
-.opt .cost{display:block;font-size:12.8px;color:var(--warn);font-weight:700;margin-top:3px}
-.opt:active:not(.lock){transform:scale(.985)}
-.opt.sel{border-color:var(--pri);background:#eef4fd;box-shadow:0 0 0 3px rgba(47,111,208,.12)}
+.opt{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:12px 13px;cursor:pointer;
+  text-align:left;font-family:inherit;font-size:15.5px;color:var(--ink);transition:.15s;width:100%;box-shadow:var(--sh-s)}
+.opt b{display:block;font-size:16px;font-weight:700;letter-spacing:-.2px}
+.opt span{display:block;font-size:12.5px;color:var(--ink2);margin-top:3px;line-height:1.45}
+.opt .cost{display:block;font-size:12.5px;color:var(--accent);font-weight:650;margin-top:3px}
+.opt.sel{border-color:var(--pri);background:var(--pri-s);box-shadow:0 0 0 2.5px rgba(47,90,168,.13)}
 .opt.sel b::after{content:" ✓";color:var(--pri)}
-.opt.lock{background:#f3f4f6;border-style:dashed;color:#9aa3b0;cursor:not-allowed}
-.opt.lock b{color:#9aa3b0}
-.opt .why{display:block;font-size:12.5px;color:var(--bad);font-weight:700;margin-top:4px}
-select,input{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:16px;
-  font-family:inherit;font-size:16px;background:#fff;color:var(--ink)}
-select:focus,input:focus,textarea:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(47,111,208,.14)}
-.free{margin-top:8px;background:#f7f9fc;border:1.5px dashed #b9c6da;border-radius:18px;padding:11px}
-.free .fl{font-size:12.5px;font-weight:700;color:var(--ink2);margin-bottom:5px}
-.free .fl2{font-size:12px;color:var(--ink2);margin:8px 0 4px}
-.found{margin-top:6px;font-size:12.5px;color:var(--ok);font-weight:700}
-
-.reason{margin-top:16px;background:#fffdf6;border:1.5px solid #e7d9ae;border-radius:21px;padding:13px}
-.reason .rq{font-size:16.5px;font-weight:800;margin:0 0 2px}
-.reason .rq em{font-style:normal;color:var(--bad)}
-.reason .rh{font-size:12.5px;color:var(--ink2);margin:0 0 8px}
-textarea{width:100%;min-height:80px;padding:11px 12px;border:1.5px solid #e0d3a8;border-radius:16px;
-  font-family:inherit;font-size:16px;line-height:1.5;resize:vertical;background:#fff;color:var(--ink)}
-textarea.ok{border-color:#8fc9a8;background:#f7fdf9}
-.cnt{font-size:12.5px;font-weight:700;color:var(--bad);margin-top:6px;text-align:right}
+.opt.lock{background:#f4f2ee;border-style:dashed;color:#a8acb3;cursor:not-allowed;box-shadow:none}
+.opt.lock b{color:#a8acb3}
+.opt .why{display:block;font-size:12.5px;color:var(--bad);font-weight:650;margin-top:4px}
+.opt .jobs{display:none}
+.slotinfo{min-height:0;margin-top:9px}
+.slotinfo .box{min-height:70px}
+.slotinfo .box{background:#eef3fb;border:1px solid #d5e2f4;border-radius:15px;padding:11px 13px;font-size:13px;line-height:1.55}
+.slotinfo .box b{color:var(--pri)}
+.slotinfo .box .t{font-weight:750;color:var(--ink);font-size:14px;margin-bottom:3px}
+.slotinfo .box .c{color:var(--accent);font-weight:650;font-size:12.5px;margin-top:3px}
+.free{margin-top:8px;background:#fbfaf7;border:1px dashed #c8c3b8;border-radius:16px;padding:12px}
+.free .fl{font-size:12.5px;font-weight:650;color:var(--ink2);margin-bottom:6px}
+.found{margin-top:7px;font-size:12.5px;color:var(--ok);font-weight:650}
+.goal textarea{min-height:62px;border-radius:16px;border-color:#ddd5c2;background:#fff}
+.goal{background:#fdfbf5;border:1px solid #e6dcc4;border-radius:20px;padding:14px;margin-top:18px;box-shadow:var(--sh-s)}
+.goal .gq{font-size:16.5px;font-weight:750;margin:0 0 3px}
+.goal .gq em{font-style:normal;color:var(--bad)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{font-family:inherit;font-size:12.5px;padding:6px 11px;border-radius:99px;border:1px solid #ded4bb;
+  background:#fff;color:var(--ink2);cursor:pointer}
+.chip:active{transform:scale(.97)}
+.chip.on{background:var(--pri);border-color:var(--pri);color:#fff;font-weight:700}
+.cnt{font-size:12.5px;font-weight:650;color:var(--bad);margin-top:7px;text-align:right}
 .cnt.ok{color:var(--ok)}
 
-.chal{margin-top:14px;background:#fff;border:2px solid var(--ink);border-radius:24px;padding:16px;text-align:center}
-.chal.locked{opacity:.45}
-.chname{font-size:18px;font-weight:800}
-.need{font-size:14px;color:var(--ink2);margin-top:4px}
-.need b{color:var(--pri);font-size:16px}
-.dots{letter-spacing:6px;font-size:16px;color:var(--pri);margin-top:8px}
-.risk{font-size:13px;color:var(--warn);font-weight:700;margin-top:6px}
-.done{font-size:18px;font-weight:800;margin-top:8px}
+/* 도전 */
+.chal{margin-top:16px;background:#fff;border:1px solid var(--ink);border-radius:22px;padding:16px;text-align:center;box-shadow:var(--sh)}
+.chname{font-size:17.5px;font-weight:750}
+.need{font-size:13.5px;color:var(--ink2);margin-top:5px;line-height:1.5}
+.need b{color:var(--pri);font-size:15.5px}
+.dots{letter-spacing:7px;font-size:15px;color:var(--pri);margin-top:8px}
+.risk{font-size:12.5px;color:var(--accent);font-weight:650;margin-top:6px}
+.done{font-size:17.5px;font-weight:750;margin-top:8px}
 .done.ok{color:var(--ok)} .done.bad{color:var(--bad)}
-.lockmsg{font-size:13px;color:var(--warn);font-weight:700;margin-top:8px}
 
-.btn{font-family:inherit;font-size:16px;font-weight:700;padding:13px 18px;border-radius:18px;
-  border:1.5px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
+/* 버튼 */
+.btn{font-family:inherit;font-size:16px;font-weight:700;padding:13px 19px;border-radius:17px;
+  border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;box-shadow:var(--sh-s);transition:.15s}
 .btn.pri{background:var(--pri);border-color:var(--pri);color:#fff}
 .btn.dark{background:var(--ink);border-color:var(--ink);color:#fff}
-.btn.big{width:100%;font-size:17.5px;padding:15px}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-.foot{position:fixed;left:0;right:0;bottom:0;z-index:30;
-  background:linear-gradient(180deg,rgba(244,242,238,0),var(--bg) 26%);padding:16px 14px calc(14px + env(safe-area-inset-bottom))}
+.btn.big{width:100%;font-size:17.5px;padding:16px}
+.btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+.btn:active:not(:disabled){transform:scale(.99)}
+
+/* 하단 생애표 */
+.foot{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(247,246,243,.93);backdrop-filter:blur(10px);
+  box-shadow:0 -1px 0 var(--line),0 -10px 26px rgba(20,22,28,.06);
+  padding:10px 15px calc(13px + env(safe-area-inset-bottom))}
 .foot .in{max-width:520px;margin:0 auto}
-.footnote{font-size:12.5px;color:var(--warn);font-weight:700;text-align:center;margin:0 0 7px;min-height:17px}
+.lifebar{display:flex;gap:4px;align-items:flex-end;height:52px;margin-bottom:7px}
+.lb{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:default}
+.lb .bars{height:40px;display:flex;align-items:flex-end;gap:2px}
+.lb .bars i{width:7px;border-radius:3px 3px 0 0;background:#dcd8d0;transition:height .3s}
+.lb .bars i.inc{background:var(--pri)}
+.lb .bars i.exp{background:var(--accent)}
+.lb .ag{font-size:9.5px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.lb.now .ag{color:var(--pri);font-weight:800}
+.lb.now{background:#eef2f8;border-radius:8px}
+.nowline{display:flex;gap:10px;font-size:12.5px;justify-content:space-between;margin-bottom:8px;font-variant-numeric:tabular-nums}
+.nowline b{font-weight:750}
+.nowline .a{color:var(--pri)} .nowline .b2{color:var(--accent)} .nowline .c{color:var(--ok)}
+.nowline .c.neg{color:var(--bad)}
+.footnote{font-size:12.5px;color:var(--accent);font-weight:650;text-align:center;margin:0 0 7px;min-height:16px}
 
 /* 팝업 */
-.pop{position:fixed;inset:0;z-index:100;background:rgba(20,24,33,.94);display:none;
-  align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);overflow-y:auto}
+.pop{position:fixed;inset:0;z-index:100;background:rgba(18,20,25,.93);display:none;
+  align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);overflow-y:auto}
 .pop.on{display:flex;animation:fade .2s}
 @keyframes fade{from{opacity:0}to{opacity:1}}
-.popin{width:100%;max-width:370px;text-align:center;color:#fff;padding:14px 0}
-.poptitle{font-size:14.5px;letter-spacing:2px;color:#a9b4c6;font-weight:700}
-.popneed{font-size:16px;color:#e7ecf5;margin-top:6px}
-.popneed b{color:#7fb0ff;font-size:20px}
-.bigdice{width:140px;height:140px;margin:22px auto;border-radius:34px;background:#fff;
-  display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:19px;gap:4px;
-  box-shadow:0 18px 44px rgba(0,0,0,.55)}
-.bigdice i{width:24px;height:24px;border-radius:50%;background:#1f2430;align-self:center;justify-self:center;visibility:hidden}
-.bigdice.spin{animation:tumble .42s linear infinite}
-@keyframes tumble{0%{transform:rotate(0) scale(1)}25%{transform:rotate(90deg) scale(1.08)}
- 50%{transform:rotate(180deg) scale(1)}75%{transform:rotate(270deg) scale(1.08)}100%{transform:rotate(360deg) scale(1)}}
-.bigdice.land{animation:pop .34s cubic-bezier(.2,1.6,.4,1)}
-@keyframes pop{0%{transform:scale(.7)}60%{transform:scale(1.13)}100%{transform:scale(1)}}
-.popres{font-size:31px;font-weight:900;letter-spacing:-1px;min-height:40px;line-height:1.2}
-.popres.ok{color:#5ddc9a;text-shadow:0 0 26px rgba(93,220,154,.55)}
-.popres.bad{color:#ff7d6e;text-shadow:0 0 26px rgba(255,125,110,.45)}
-.popres.show{animation:pop .38s cubic-bezier(.2,1.6,.4,1)}
-.popsub{font-size:15.5px;color:#dfe6f2;margin-top:8px;min-height:20px;font-weight:600}
-.penal{margin-top:14px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);
-  border-radius:18px;padding:11px 13px;font-size:14px;color:#ffd9a8;text-align:left;font-weight:600}
-.penal .ph{font-size:12px;color:#ffb765;letter-spacing:1px;font-weight:800;margin-bottom:3px}
+.popin{width:100%;max-width:360px;text-align:center;color:#fff;padding:12px 0}
+.poptitle{font-size:13.5px;letter-spacing:2.5px;color:#9ea7b5;font-weight:650}
+.popneed{font-size:15.5px;color:#e8ecf3;margin-top:7px}
+.popneed b{color:#8fb4ef;font-size:19px}
+.bigdice{width:130px;height:130px;margin:22px auto;border-radius:28px;background:#fff;
+  display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:18px;gap:4px;
+  box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.bigdice i{width:22px;height:22px;border-radius:50%;background:#17191d;align-self:center;justify-self:center;visibility:hidden}
+.bigdice.spin{animation:tumble .44s linear infinite}
+.bigdice.throwin{animation:throwin .62s cubic-bezier(.3,.75,.35,1)}
+@keyframes throwin{
+  0%{transform:translateY(-78vh) translateX(46px) rotate(-190deg) scale(.62);opacity:0}
+  12%{opacity:1}
+  62%{transform:translateY(0) translateX(0) rotate(340deg) scale(1)}
+  74%{transform:translateY(-58px) rotate(420deg) scale(.97)}
+  86%{transform:translateY(0) rotate(470deg) scale(1.03)}
+  94%{transform:translateY(-18px) rotate(492deg) scale(.99)}
+  100%{transform:translateY(0) rotate(500deg) scale(1)}}
+.throwhint{font-size:12.5px;color:#9ea7b5;margin-top:-8px}
+@keyframes tumble{0%{transform:rotate(0) scale(1)}25%{transform:rotate(90deg) scale(1.07)}
+ 50%{transform:rotate(180deg) scale(1)}75%{transform:rotate(270deg) scale(1.07)}100%{transform:rotate(360deg) scale(1)}}
+.bigdice.land{animation:pop .34s cubic-bezier(.2,1.5,.4,1)}
+@keyframes pop{0%{transform:scale(.72)}60%{transform:scale(1.11)}100%{transform:scale(1)}}
+.popres{font-size:29px;font-weight:800;letter-spacing:-.8px;min-height:36px;line-height:1.25}
+.popres.ok{color:#6fd8a4} .popres.bad{color:#f08a7c}
+.popres.show{animation:pop .38s cubic-bezier(.2,1.5,.4,1)}
+.popsub{font-size:14.5px;color:#dde3ec;margin-top:8px;min-height:19px;font-weight:550}
+.penal{margin-top:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);
+  border-radius:16px;padding:12px 13px;font-size:13.5px;color:#f3d3ae;text-align:left;font-weight:550;line-height:1.6}
+.penal .ph{font-size:11px;color:#e0a468;letter-spacing:1.2px;font-weight:700;margin-bottom:4px}
+.popcard{background:#fff;color:var(--ink);border-radius:19px;padding:15px;text-align:left;margin-top:14px}
 .popbtn{margin-top:18px}
-.popcard{background:#fff;color:var(--ink);border-radius:21px;padding:14px;text-align:left;margin-top:14px}
 
-.wheelwrap{position:relative;width:242px;height:242px;margin:14px auto 0}
-.wheel{position:relative;width:242px;height:242px;border-radius:50%;border:6px solid #fff;
-  box-shadow:0 12px 34px rgba(0,0,0,.45);transition:transform 3.6s cubic-bezier(.16,.9,.24,1)}
-.needle{position:absolute;top:-12px;left:50%;transform:translateX(-50%);width:0;height:0;
-  border-left:14px solid transparent;border-right:14px solid transparent;border-top:26px solid #ffd166;z-index:2;
-  filter:drop-shadow(0 3px 4px rgba(0,0,0,.4))}
-.wlabs{position:absolute;inset:0;pointer-events:none}
-.wlab{position:absolute;left:50%;top:50%;width:84px;margin-left:-42px;margin-top:-9px;
-  font-size:11.5px;font-weight:800;color:#fff;text-align:center;white-space:nowrap;
-  text-shadow:0 1px 3px rgba(0,0,0,.8);transition:transform 3.6s cubic-bezier(.16,.9,.24,1)}
+/* 예상 곡선 */
+.curvewrap{background:#fff;border:1px solid var(--line);border-radius:20px;padding:13px;box-shadow:var(--sh);margin-top:14px}
+#curveC{touch-action:none;cursor:crosshair;border-radius:12px}
+.curvehint{font-size:12.5px;color:var(--accent);font-weight:650;text-align:center;margin-top:7px;min-height:17px}
 
-.res{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-.res div{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:11px}
-.res .l{font-size:11.5px;color:var(--ink2)}
-.res .v{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
-.kv{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:14px}
-.kv:last-child{border:0}
-.kv span{color:var(--ink2);flex:none} .kv b{text-align:right}
-.ending{background:linear-gradient(140deg,#2b3446,#3c4a63);color:#fff;border-radius:24px;padding:18px;text-align:center;margin-top:12px}
-.ending .t{font-size:12px;letter-spacing:3px;color:#c9b98b}
-.ending .n{font-size:27px;font-weight:800;margin:4px 0 2px;letter-spacing:-.6px}
-.ending .d{font-size:13.5px;color:#d5dae4}
-.rlist .it{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:10px 12px;margin-top:7px}
-.rlist .it .h{font-size:12px;color:var(--ink2);font-weight:700}
-.rlist .it .b{font-size:14.5px;margin-top:2px;white-space:pre-wrap;word-break:break-word}
+/* 결산 */
+.res{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:11px}
+.res>div{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;box-shadow:var(--sh-s)}
+.res>div>.l{font-size:11.5px;color:var(--ink2)}
+.res>div>.v{font-size:20px;font-weight:750;font-variant-numeric:tabular-nums;letter-spacing:-.4px}
+.res .big{grid-column:1/-1;background:var(--ink);border-color:var(--ink)}
+.res>.big>.l{color:#a5adba} .res>.big>.v{color:#fff;font-size:26px}
+.ending{background:linear-gradient(145deg,#262b36,#39424f);color:#fff;border-radius:22px;padding:18px;text-align:center;margin-top:12px}
+.ending .t{font-size:11px;letter-spacing:3px;color:#c0ae86}
+.ending .n{font-size:25px;font-weight:750;margin:5px 0 3px;letter-spacing:-.6px}
+.ending .d{font-size:13.5px;color:#cfd5de}
 canvas{width:100%;display:block}
-.leg{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--ink2);margin-top:8px}
-.leg i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px}
-.satrow{display:flex;align-items:center;gap:8px;font-size:13px;margin-top:7px}
-.satrow .nm{width:64px;color:var(--ink2);flex:none}
-.satbar{flex:1;height:11px;background:#eceef2;border-radius:99px;overflow:hidden}
-.satbar i{display:block;height:100%;background:var(--pri);border-radius:99px}
-.satrow .vv{width:34px;text-align:right;font-weight:700}
-.err{color:var(--bad);font-size:13.5px;font-weight:700;min-height:19px;margin-top:6px}
-.saveline{font-size:12.5px;text-align:center;color:var(--ink2);margin-top:10px}
-/* 인생곡선 */
-.band{margin-top:16px}
-.band .bh{font-size:15px;font-weight:800;margin:0 0 6px}
-.band .bh em{font-style:normal;color:var(--pri)}
-.aims{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-.aim{background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:11px 12px;
-  font-family:inherit;font-size:13.5px;line-height:1.4;color:var(--ink);text-align:left;cursor:pointer;
-  transition:.14s;min-height:56px;display:flex;align-items:center}
-.aim.sel{border-color:var(--pri);background:#eef4fd;box-shadow:0 0 0 3px rgba(47,111,208,.12)}
-.aim:active{transform:scale(.985)}
-.curvewrap{position:sticky;top:0;z-index:15;margin-top:14px;background:#fff;
-  border:1.5px solid var(--line);border-radius:21px;padding:12px;
-  box-shadow:0 6px 18px rgba(31,36,48,.07)}
-.curvewrap.ready{border-color:var(--pri)}
-#curveC{touch-action:none;cursor:grab}
-.curvehint{font-size:12.5px;color:var(--warn);font-weight:700;text-align:center;margin-top:6px;min-height:18px}
-.startcard{background:#fff;color:var(--ink);border-radius:21px;padding:15px;text-align:left;margin-top:14px}
-.startcard .sr{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed var(--line);font-size:14.5px}
-.startcard .sr:last-child{border:0}
+.leg{display:flex;flex-wrap:wrap;gap:11px;font-size:12px;color:var(--ink2);margin-top:9px}
+.leg i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+table.life{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:8px}
+table.life th,table.life td{border-bottom:1px solid #f0ede7;padding:7px 5px;text-align:right}
+table.life th:first-child,table.life td:first-child{text-align:left}
+table.life th{color:var(--ink2);font-weight:650;font-size:11.5px}
+table.life td.g{color:var(--ink2)}
+.note{background:#fdfbf5;border:1px solid #e6dcc4;border-radius:17px;padding:12px 14px;font-size:13.5px;margin-top:12px;line-height:1.55}
+.saveline{font-size:12.5px;text-align:center;color:var(--ink2);margin-top:11px}
+
+
+/* 인트로 · 타이틀 */
+.hero2{display:grid;grid-template-columns:1fr;gap:16px;padding:44px 0 0}
+.introgrid{display:grid;grid-template-columns:1fr;gap:11px;margin-top:12px}
+.cmp{display:flex;align-items:center;gap:9px;margin-top:9px;font-size:13px}
+.cmp .cn{flex:none;width:70px;color:var(--ink2);font-size:12.5px}
+.cmp .cb{flex:1;height:13px;border-radius:7px;background:#f0ede7;overflow:hidden}
+.cmp .cb i{display:block;height:100%;border-radius:7px}
+.cmp .cv{flex:none;font-weight:750;font-size:12.5px}
+
+/* 메모 · 직접입력 */
+.memo{margin-top:8px}
+.memo .ml{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:5px;display:flex;gap:7px;align-items:center}
+.memo .ml em{font-style:normal;color:var(--bad)}
+.memo .ml .mc{margin-left:auto;font-weight:650;color:var(--bad);flex:none}
+.memo .ml{flex-wrap:nowrap}
+.memo .ml .mc.ok{color:var(--ok)}
+.memo input{padding:10px 12px;font-size:14px;border-radius:14px;background:#fffdf8;border-color:#e2dccc}
+.askbox{margin-top:8px;background:#fdfbf5;border:1px solid #e6dcc4;border-radius:16px;padding:11px 12px}
+.askbox .al{font-size:12.5px;font-weight:700;color:var(--ink);margin-bottom:6px}
+.askbox .al em{font-style:normal;color:var(--bad)}
+
+/* 출처 */
+.src{font-size:11.5px;color:var(--ink2);line-height:1.7;margin-top:10px}
+.src b{color:var(--ink)}
+
+/* 배경 사진 */
+#bgA,#bgB{position:fixed;inset:0;z-index:-3;background:center/cover no-repeat;
+  opacity:0;transition:opacity .5s ease}
+#bgA.on,#bgB.on{opacity:1}
+/* 배경이 너무 흐리면 아래 숫자(.70 .84 .90)를 낮추고, 글씨가 안 보이면 높이세요 */
+#bgS{position:fixed;inset:0;z-index:-2;pointer-events:none;
+  background:linear-gradient(rgba(247,246,243,.70),rgba(247,246,243,.84) 45%,rgba(247,246,243,.90))}
+
+/* 확률 이벤트 */
+.evbox{margin-top:16px;background:#fff;border:1px solid var(--accent);border-radius:22px;padding:16px;text-align:center;box-shadow:var(--sh)}
+.evbox .evn{font-size:17.5px;font-weight:750}
+.evbox .evt{font-size:13.5px;color:var(--ink2);margin-top:6px;line-height:1.55}
+.evbox .evt b{color:var(--accent);font-size:16px}
+.evbox .evd{font-size:17.5px;font-weight:750;margin-top:8px}
+.evbox .evd.ok{color:var(--ok)} .evbox .evd.bad{color:var(--bad)}
+.g100{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;width:230px;margin:20px auto}
+.g100 i{aspect-ratio:1;border-radius:4px;background:rgba(255,255,255,.15);display:block;transition:.12s}
+.g100 i.r{background:#e0765f}
+.g100 i.me{outline:3px solid #fff;transform:scale(1.3);position:relative;z-index:2}
+.minig{display:grid;grid-template-columns:repeat(20,1fr);gap:2px;width:100%;max-width:230px;margin:9px auto 0}
+.minig i{aspect-ratio:1;border-radius:2px;background:#e6e2da;display:block}
+.minig i.r{background:#dd9a77}
+
+/* 항목별 합계 */
+.brk{margin-top:9px}
+.brkrow{display:flex;align-items:center;gap:9px;padding:6px 0;font-size:13px}
+.brkrow .bn{flex:none;width:88px;color:var(--ink2);font-size:12.5px}
+.brkrow .bb{flex:1;height:9px;border-radius:5px;background:#f0ede7;overflow:hidden}
+.brkrow .bb i{display:block;height:100%;border-radius:5px}
+.brkrow .bv{flex:none;font-weight:700;font-variant-numeric:tabular-nums;font-size:12.5px}
+.calc{background:#fbfaf7;border:1px dashed #d8d2c5;border-radius:15px;padding:11px 13px;font-size:12.5px;
+  color:var(--ink2);line-height:1.65;margin-top:10px}
+.calc b{color:var(--ink)}
+.addbox{margin-top:8px;background:#fbfaf7;border:1px dashed #c8c3b8;border-radius:16px;padding:12px}
+.addbox .row{display:flex;gap:8px;margin-top:7px}
+.addbox .row input:first-child{flex:2} .addbox .row input:last-child{flex:1}
+
+/* 태블릿 (갤탭) */
+@media (min-width:740px){
+  .hero2{grid-template-columns:1.1fr .9fr;gap:30px;align-items:center}
+  .introgrid{grid-template-columns:1.35fr 1fr;gap:14px}
+  body{font-size:17px}
+  .app{max-width:880px;padding:0 28px calc(200px + env(safe-area-inset-bottom))}
+  .foot .in{max-width:880px}
+  .foot{padding:12px 28px calc(15px + env(safe-area-inset-bottom))}
+  h1{font-size:42px} h2{font-size:26px}
+  .agebig{font-size:40px}
+  .opts{grid-template-columns:1fr 1fr}
+  .opts.two{grid-template-columns:repeat(3,1fr)}
+  .opt{font-size:16.5px;padding:14px 15px} .opt b{font-size:17px} .opt span{font-size:13.5px}
+  .slot{margin-top:22px} .slot .sh{font-size:14.5px} .slot .ss{font-size:13.5px}
+  .goal .gq{font-size:19px} .chip{font-size:14px;padding:7px 13px}
+  .btn.big{font-size:19px;padding:17px}
+  .lifebar{height:64px} .lb .bars{height:50px} .lb .bars i{width:11px}
+  .lb .ag{font-size:11.5px}
+  .nowline{font-size:14.5px}
+  .res{grid-template-columns:repeat(4,1fr)}
+  .res .big{grid-column:1/-1}
+  .tiny{font-size:13.5px}
+  table.life{font-size:14px}
+  .popin{max-width:430px}
+  .bigdice{width:160px;height:160px}
+  .g100{width:280px}
+}
+
+/* 가로로 긴 화면 (갤탭 가로) — 세로 스크롤 줄이기 */
+@media (min-width:1000px){
+  .app{max-width:1180px;padding:0 26px calc(188px + env(safe-area-inset-bottom))}
+  .foot .in{max-width:1180px}
+  .foot{padding:9px 26px calc(12px + env(safe-area-inset-bottom))}
+  #stageBody{display:grid;grid-template-columns:repeat(3,1fr);gap:0 16px;align-items:start}
+  .stackcol{min-width:0}
+  .slot{margin-top:0;margin-bottom:16px}
+  .goal,.evbox,.chal{margin-top:0;margin-bottom:16px}
+  .wideband{grid-column:1/-1}
+  .opts{grid-template-columns:1fr}
+  .opts.two{grid-template-columns:1fr 1fr}
+  .slot.wide .opts{grid-template-columns:repeat(5,1fr);gap:7px}
+  .slot.wide .opt{padding:9px 10px;min-height:52px}
+  .slot.wide .slotinfo{min-height:92px}
+  .opt{padding:10px 12px;border-radius:14px;font-size:14.5px}
+  .opt b{font-size:15px} .opt span{font-size:12px;margin-top:2px}
+  .agebig{font-size:34px;margin:2px 0 0}
+  .bar{padding:6px 0 8px}
+  h1{font-size:46px}
+  .lifebar{height:54px} .lb .bars{height:42px}
+  .res{grid-template-columns:repeat(5,1fr)}
+  .curvewrap{padding:10px}
+}
+@media (min-width:1000px) and (orientation:landscape){
+  .app{padding-bottom:calc(176px + env(safe-area-inset-bottom))}
+}
 </style>
 </head>
 <body>
+<div id="bgA"></div><div id="bgB"></div><div id="bgS"></div>
 <div class="app">
 
 <!-- 타이틀 -->
 <section class="screen on" id="s-title">
-  <div style="padding:48px 0 0">
-    <div class="tiny" style="letter-spacing:4px;font-weight:700">인생설계</div>
-    <h1 style="font-size:34px;line-height:1.2;margin-top:6px">내가 고른 인생,<br>60살에 얼마가<br>남을까?</h1>
-    <p class="hint" style="font-size:14.5px;margin-top:12px">
-      대학 · 직업 · 결혼 · 집을 직접 고릅니다.<br>
-      중요한 순간마다 <b style="color:var(--ink)">주사위</b>로 되고 안 되고가 갈립니다.<br>
-      <b style="color:var(--ink)">왜 그렇게 골랐는지 써야 넘어갑니다.</b>
-    </p>
-    <div class="card" style="margin-top:16px">
-      <div class="kv"><span>걸리는 시간</span><b>약 15분</b></div>
-      <div class="kv"><span>17살부터</span><b>60살까지</b></div>
-      <div class="kv"><span>실패하면</span><b>3번까지 다시 도전</b></div>
+  <div class="hero2">
+    <div>
+      <div class="tiny" style="letter-spacing:4px;font-weight:700;color:var(--accent)">생애설계</div>
+      <h1 style="margin-top:8px">나의 인생 그래프<br>그리기</h1>
+      <p class="tiny" style="font-size:15.5px;margin-top:14px;color:var(--ink2)">
+        15살부터 85살까지 살아봅니다.<br>
+        고를 때마다 아래 표가 채워지고,<br>
+        마지막에 <b style="color:var(--ink)">내 돈이 몇 살에 바닥나는지</b> 나옵니다.
+      </p>
+    </div>
+    <div class="card" style="align-self:center">
+      <div class="kv"><span>걸리는 시간</span><b>약 25분</b></div>
+      <div class="kv"><span>다루는 기간</span><b>15살 → 85살</b></div>
+      <div class="kv"><span>이번 시간엔</span><b>투자 없이, 모으기만</b></div>
     </div>
   </div>
   <div class="foot"><div class="in"><button class="btn pri big" id="go1">시작하기</button></div></div>
 </section>
 
+<!-- 평균은 이렇다 -->
+<section class="screen" id="s-intro">
+  <div style="padding:20px 0 0">
+    <h2>먼저, 보통 사람은 이렇습니다</h2>
+    <p class="tiny" style="margin:2px 0 0">이 그림을 기억해 두세요. 이따 내 그래프와 비교합니다.</p>
+    <div class="introgrid">
+      <div class="card">
+        <canvas id="avgC" height="250"></canvas>
+        <div class="leg"><span><i style="background:#2f5aa8"></i>버는 돈</span>
+          <span><i style="background:#c4703f"></i>쓰는 돈</span></div>
+        <p class="tiny" style="margin-top:8px">
+          버는 돈은 <b>45살쯤 가장 높았다가 뚝 떨어집니다.</b>
+          쓰는 돈은 태어나서 죽을 때까지 <b>한 번도 0이 된 적이 없습니다.</b></p>
+      </div>
+      <div>
+        <div class="card">
+          <div class="tiny" style="font-weight:700;color:var(--ink)">돈 버는 기간 vs 돈 쓰는 기간</div>
+          <div class="cmp"><span class="cn">버는 기간</span><span class="cb"><i style="width:47%;background:var(--pri)"></i></span><span class="cv">약 35~40년</span></div>
+          <div class="cmp"><span class="cn">쓰는 기간</span><span class="cb"><i style="width:100%;background:var(--accent)"></i></span><span class="cv">85년 내내</span></div>
+          <p class="tiny" style="margin-top:9px">35~40년 벌어서 <b>85년을 살아야 합니다.</b></p>
+        </div>
+        <div class="card" style="margin-top:11px">
+          <div class="kv"><span>가장 오래 다닌 직장을 그만두는 나이</span><b>평균 52.9살</b></div>
+          <div class="kv"><span>그 직장에서 일한 기간</span><b>평균 17년 7개월</b></div>
+          <div class="kv"><span>실제로 일을 아주 놓는 나이</span><b>평균 65살 안팎</b></div>
+          <div class="kv"><span>그 뒤로 더 사는 기간</span><b>약 20년</b></div>
+          <p class="tiny" style="margin:8px 0 0">통계청 <b>2025년 5월 경제활동인구조사 고령층 부가조사</b> ·
+            OECD <b>Pensions at a Glance 2023</b> 실효 은퇴연령</p>
+        </div>
+      </div>
+    </div>
+    <div class="note" style="margin-top:12px;display:flex;gap:10px;align-items:center">
+      <span style="font-size:22px;flex:none">💡</span>
+      <span><b>이번 시간에는 이자와 투자를 빼고 계산합니다.</b> 번 돈을 그냥 모으기만 합니다.
+        은행 이자도 0, 물가도 그대로라고 생각하세요. <b>투자는 다음 시간에 배웁니다.</b></span>
+    </div>
+  </div>
+  <div class="foot"><div class="in"><button class="btn pri big" id="go15">알겠어요</button></div></div>
+</section>
+
 <!-- 이름 -->
 <section class="screen" id="s-name">
-  <div style="padding:44px 0 0">
-    <div class="age">먼저</div>
-    <h2 style="margin-top:10px">학번과 이름을 적어주세요</h2>
-    <p class="hint">선생님이 결과를 확인하는 데 씁니다.</p>
-    <div class="card">
+  <div style="padding:30px 0 0">
+    <h2>반 · 학번 · 이름</h2>
+    <div class="card" style="margin-top:12px">
+      <div class="tiny" style="font-weight:700;color:var(--ink);margin-bottom:7px">우리 반</div>
+      <div class="chips" id="clsChips"></div>
+      <div class="tiny" style="font-weight:700;color:var(--ink);margin:12px 0 7px">학번과 이름</div>
       <input type="text" id="sid" placeholder="20111 김OO" autocomplete="off">
       <div class="err" id="sidErr"></div>
-      <p class="tiny" style="margin:0">숫자 5자리 + 띄어쓰기 + 이름 &nbsp;예) <b>20111 김다연</b></p>
+      <p class="tiny" style="margin:0">예) <b>20111 김다연</b></p>
     </div>
   </div>
   <div class="foot"><div class="in"><button class="btn pri big" id="go2">시작</button></div></div>
 </section>
 
-<!-- 인생곡선 그리기 -->
-<section class="screen" id="s-curve">
+<!-- 예상 곡선 (1분) -->
+<section class="screen" id="s-guess">
   <div style="padding:26px 0 0">
-    <div class="age">시작하기 전에</div>
-    <h2 style="margin-top:10px">앞으로 내 인생, 어떨 것 같아?</h2>
-    <p class="hint">나이대마다 <b>추구미</b>를 하나씩 고르고,<br>
-      아래 그래프에서 그때 <b>얼마나 만족할 것 같은지</b> 점을 움직여보세요.<br>
-      60살에 결과가 나오면 <b>이 그림과 비교</b>해 봅니다.</p>
-    <div class="curvewrap" id="curveWrap">
-      <div class="slab">내가 그린 내 인생 (위로 갈수록 만족)</div>
-      <canvas id="curveC" height="250"></canvas>
+    <h1 style="font-size:30px;margin:0">나는 1년에<br><span style="color:var(--pri)">얼마나 벌 것 같나요?</span></h1>
+    <p style="font-size:17px;margin:10px 0 0;font-weight:600">나이마다 동그라미를 <b style="color:var(--accent)">위아래로 움직여</b> 보세요.</p>
+    <p class="tiny" style="margin-top:4px">회색 점선은 우리나라 평균입니다. 참고만 하고, 내 생각대로 그리면 됩니다.</p>
+    <div class="curvewrap">
+      <canvas id="curveC" height="240"></canvas>
       <p class="curvehint" id="curveHint"></p>
     </div>
-    <div id="aimBox"></div>
   </div>
   <div class="foot"><div class="in">
-    <p class="footnote" id="curveNote"></p>
-    <button class="btn pri big" id="curveNext">이대로 시작하기</button>
+    <p class="footnote" id="guessNote"></p>
+    <button class="btn pri big" id="guessNext">다 찍었어요</button>
   </div></div>
 </section>
 
-<!-- 스테이지 -->
+<!-- 나이대 화면 -->
 <section class="screen" id="s-stage">
   <div class="bar">
-    <div class="who">
-      <button class="back" id="backBtn">← 뒤로</button>
-      <span class="nm" id="hName">—</span>
-      <span id="hStep">—</span>
-    </div>
-    <div class="prog"><i id="hBar"></i></div>
+    <div class="who"><button class="back" id="backBtn">← 뒤로</button>
+      <span class="nm" id="hName">—</span><span id="hStep">—</span></div>
+    <div class="agebig" id="hAge">25살 <small id="hSub"></small></div>
+    <p class="stagesub" id="hDesc"></p>
   </div>
   <div id="stageBody"></div>
   <div class="foot"><div class="in">
+    <div class="nowline" id="nowLine"></div>
+    <div class="lifebar" id="lifeBar"></div>
     <p class="footnote" id="footNote"></p>
     <button class="btn pri big" id="nextBtn">다음</button>
   </div></div>
@@ -264,63 +427,74 @@ canvas{width:100%;display:block}
 <!-- 결산 -->
 <section class="screen" id="s-result">
   <div style="padding:24px 0 0">
-    <div class="age">60세 · 결산</div>
-    <h2 style="margin-top:10px" id="rName">—</h2>
+    <h2 id="rName">—</h2>
     <div class="ending"><div class="t">ENDING</div><div class="n" id="endName">—</div><div class="d" id="endDesc">—</div></div>
     <div class="res">
-      <div><div class="l">첫 연봉</div><div class="v" id="r1">—</div></div>
-      <div><div class="l">60세 연봉</div><div class="v" id="r2">—</div></div>
-      <div><div class="l">60세에 남은 돈</div><div class="v" id="r3">—</div></div>
-      <div><div class="l">만족도</div><div class="v" id="r4">—</div></div>
-      <div><div class="l">한 달 평균 저축</div><div class="v" id="r5">—</div></div>
-      <div><div class="l">번 돈 중 저축한 비율</div><div class="v" id="r6">—</div></div>
+      <div class="big"><div class="l">내 돈이 바닥나는 나이</div><div class="v" id="rBroke">—</div></div>
+      <div><div class="l" id="r1L">평생 번 돈</div><div class="v" id="r1">—</div></div>
+      <div><div class="l" id="r2L">평생 쓴 돈</div><div class="v" id="r2">—</div></div>
+      <div><div class="l">돈 버는 기간</div><div class="v" id="r3">—</div></div>
+      <div><div class="l">돈 쓰는 기간</div><div class="v" id="r4">—</div></div>
+      <div style="background:#fdfbf5;border-color:#e6dcc4"><div class="l">15~24살, 나에게 쓰인 돈</div>
+        <div class="v" id="r5" style="color:var(--accent)">—</div>
+        <div class="tiny" style="margin-top:2px">이건 <b>부모님이 내주셨습니다</b></div></div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="tiny" style="font-weight:700;color:var(--ink)">평생 어디에 얼마를 썼나</div>
+      <div class="brk" id="brk"></div>
+      <div class="calc" id="calcNote"></div>
+    </div>
+
+    <div class="card" style="margin-top:11px">
+      <div class="tiny" style="font-weight:700;color:var(--ink);margin-bottom:2px">한 번에 크게 나간 돈</div>
+      <div id="onceList"></div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="tiny" style="font-weight:700;color:var(--ink)">① 수입곡선과 지출곡선</div>
+      <canvas id="ch1" height="200"></canvas>
+      <div class="leg"><span><i style="background:#2f5aa8"></i>수입</span>
+        <span><i style="background:#c4703f"></i>지출</span>
+        <span><i style="background:rgba(42,122,85,.3)"></i>남는 돈</span>
+        <span><i style="background:rgba(184,69,60,.22)"></i>모자란 돈</span></div>
+      <p class="tiny" id="flowNote" style="margin-top:9px"></p>
+    </div>
+
+    <div class="card" style="margin-top:11px">
+      <div class="tiny" style="font-weight:700;color:var(--ink)">② 모은 돈</div>
+      <canvas id="ch2" height="200"></canvas>
+    </div>
+
+    <div class="card" style="margin-top:11px">
+      <div class="tiny" style="font-weight:700;color:var(--ink)">③ 짐작 vs 실제 수입</div>
+      <canvas id="ch3" height="190"></canvas>
+      <div class="leg"><span><i style="background:#9aa0a8"></i>내 짐작</span><span><i style="background:#2f5aa8"></i>실제</span></div>
+      <p class="tiny" id="gapNote" style="margin-top:9px"></p>
+    </div>
+
+    <div class="card" style="margin-top:11px">
+      <div class="tiny" style="font-weight:700;color:var(--ink)">내 생애주기 표</div>
+      <div style="overflow-x:auto"><table class="life" id="lifeTable"></table></div>
+    </div>
+
+    <div class="card" style="margin-top:11px">
+      <div class="tiny" style="font-weight:700;color:var(--ink);margin-bottom:6px">내가 고른 것</div>
+      <div id="detail"></div>
+    </div>
+    <div class="card" style="margin-top:11px">
+      <div class="tiny" style="font-weight:700;color:var(--ink);margin-bottom:6px">시기별 내 목표</div>
+      <div id="goals"></div>
+    </div>
+
+    <div class="note" style="margin-top:14px">
+      <b>기억할 것</b><br>
+      돈을 버는 기간은 <b id="wy">—</b>년, 돈을 쓰는 기간은 <b id="sy">—</b>년입니다.<br>그래서 계획이 필요합니다.
     </div>
     <div class="card" style="margin-top:12px">
-      <div class="slab">① 1년에 얼마 벌고, 얼마 썼을까</div>
-      <canvas id="ch1" height="200"></canvas>
-      <div class="leg"><span><i style="background:#2f6fd0"></i>버는 돈</span>
-        <span><i style="background:#c0392b"></i>쓰는 돈</span>
-        <span><i style="background:rgba(23,122,74,.35)"></i>남는 돈(저축)</span></div>
+      <div class="tiny" style="font-weight:700;color:var(--ink)">이 숫자들은 어디서 왔나</div>
+      <div class="src" id="srcBox"></div>
     </div>
-    <div class="card" style="margin-top:10px">
-      <div class="slab">② 쓰는 돈은 어디로 갔을까</div>
-      <canvas id="ch2" height="200"></canvas>
-      <div class="leg"><span><i style="background:#7c9cc4"></i>생활비</span>
-        <span><i style="background:#e3a857"></i>아이 키우는 돈</span>
-        <span><i style="background:#9b7ec4"></i>집에 드는 돈</span></div>
-    </div>
-    <div class="card" style="margin-top:10px">
-      <div class="slab">③ 모은 돈이 이렇게 쌓였어요</div>
-      <canvas id="ch3" height="200"></canvas>
-      <p class="tiny" style="margin-top:6px">빨간 점선 아래로 내려가면 <b style="color:var(--bad)">빚</b>입니다.</p>
-    </div>
-    <div class="card" style="margin-top:10px">
-      <div class="slab">④ 17살의 내가 그린 인생 vs 실제로 살아본 인생</div>
-      <canvas id="ch4" height="210"></canvas>
-      <div class="leg"><span><i style="background:#9aa3b0"></i>17살의 내 예상</span>
-        <span><i style="background:#2f6fd0"></i>실제 만족도</span></div>
-      <p class="tiny" id="gapNote" style="margin-top:8px"></p>
-    </div>
-
-    <div class="card" style="margin-top:10px">
-      <div class="slab">만족도는 무엇으로 채워졌을까</div>
-      <div id="satBars"></div>
-      <p class="tiny" style="margin-top:8px">돈을 많이 모아도 만족도가 낮을 수 있고, 그 반대일 수도 있습니다.</p>
-    </div>
-    <div class="card" style="margin-top:10px">
-      <div class="slab">운이 달랐다면? — 100번 살아보기</div>
-      <p class="tiny" style="margin:0 0 10px">선택은 그대로 두고 <b>주사위와 룰렛만</b> 100번 다시 돌려봅니다.</p>
-      <button class="btn big" id="manyBtn">100번 살아보기</button>
-      <div id="manyOut"></div>
-    </div>
-
-    <div class="card" style="margin-top:10px">
-      <div class="slab">내 인생 요약</div><div id="detail"></div>
-    </div>
-    <div class="sect"><div class="slab">내가 그렇게 고른 이유</div><div class="rlist" id="rlist"></div></div>
-    <p class="tiny" style="margin-top:14px;text-align:center">
-      이건 게임이에요. 숫자는 실제 통계를 참고한 <b>추정치</b>이고,<br>어떤 길이 더 좋은 인생이라는 뜻은 아닙니다.
-    </p>
     <p class="saveline" id="saveline"></p>
   </div>
   <div class="foot"><div class="in"><button class="btn big" id="againBtn">다시 해보기</button></div></div>
@@ -334,1321 +508,1308 @@ canvas{width:100%;display:block}
   <div class="popres" id="popRes"></div>
   <div class="popsub" id="popSub"></div>
   <div class="penal" id="popPenal" style="display:none"></div>
-  <div class="popbtn"><button class="btn big" id="popBtn" style="background:#fff;color:#1f2430;border-color:#fff">확인</button></div>
+  <div class="popbtn"><button class="btn big" id="popBtn" style="background:#fff;color:#17191d;border-color:#fff">확인</button></div>
 </div></div>
 
 <script>
-/* ========= 설정 ========= */
-var FIREBASE_CONFIG={
-  apiKey:"AIzaSyApUKeVhJ0EnOm_wu1vcT-14yeax7iQR7I",
-  authDomain:"court-ae96f.firebaseapp.com",
-  projectId:"court-ae96f",
-  storageBucket:"court-ae96f.firebasestorage.app",
-  messagingSenderId:"397308728790",
-  appId:"1:397308728790:web:d6d10fac3865e547d24077"
-};
-var COLLECTION="life_students";
-var MINLEN=10;
+var FIREBASE_CONFIG={apiKey:"AIzaSyApUKeVhJ0EnOm_wu1vcT-14yeax7iQR7I",authDomain:"court-ae96f.firebaseapp.com",
+ projectId:"court-ae96f",storageBucket:"court-ae96f.firebasestorage.app",
+ messagingSenderId:"397308728790",appId:"1:397308728790:web:d6d10fac3865e547d24077"};
+var COLLECTION="life_students", MINLEN=8, MEMOLEN=5;
+/* 이유 쓰기 —  true 로 바꾸면 모든 항목이 필수가 됩니다.
+   지금은 화면마다 별표(*) 붙은 한 칸만 필수이고, 나머지는 쓰고 싶은 사람만 씁니다. */
+var MEMO_ALL=true;
+/* 나이대 그림.
+   index.html 옆에 img/ 폴더를 만들고 아래 이름으로 넣으면 자동으로 붙습니다.
+   img/title.png  img/15.png  img/25.png  img/35.png
+   img/45.png  img/55.png  img/65.png  img/75.png  img/85.png
+   비율 16:9 권장 (예: 1600×900). 파일이 없으면 그 칸은 그냥 안 보입니다. */
+var IMG={title:'img/title.png',15:'img/15.png',25:'img/25.png',35:'img/35.png',45:'img/45.png',
+ 55:'img/55.png',65:'img/65.png',75:'img/75.png',85:'img/85.png'};
+(function(){for(var k in IMG){var i=new Image();i.src=IMG[k];}})();
+var AGES=[15,25,35,45,55,65,75,85];
+var CLASSES=['2학년 1반','2학년 2반','2학년 3반','2학년 4반','2학년 5반','2학년 6반'];
+/* 우리나라 평균 (세후, 1년, 만원) — 수업용으로 반올림한 값. 출처는 결산 맨 아래 */
+var AVG_IN =[0,2600,3800,4300,3600,1900,1500,1400];
+var AVG_OUT=[1100,2200,3200,3600,3100,2400,2100,2000];
 
-/* ========= 데이터 ========= */
-var UNIS={
- "서울권":["서울대","연세대","고려대","서강대","성균관대","한양대","중앙대","경희대","한국외대","서울시립대","건국대","동국대","홍익대","숙명여대","이화여대","국민대","숭실대","세종대","광운대","명지대","서울여대","성신여대"],
- "경기·인천":["인하대","아주대","가천대","경기대","단국대","한국항공대","인천대","수원대","용인대","대진대"],
- "지역거점 국립":["부산대","경북대","전남대","전북대","충남대","충북대","강원대","경상국립대","제주대"],
- "지역 대학":["부경대","동아대","동의대","영남대","계명대","조선대","원광대","순천향대","한남대","청주대","한림대","동명대"],
- "특수목적":["KAIST","POSTECH","GIST","DGIST","UNIST","교육대학교","경찰대","사관학교","한국예술종합학교","한국체육대"],
- "대학 말고 다른 길":["전문대학","폴리텍대학","방송통신대","사이버대학","해외 대학","고등학교 졸업 후 바로 취업"]
-};
-var NOT4YEAR=["전문대학","폴리텍대학","방송통신대","사이버대학","고등학교 졸업 후 바로 취업"];
-var MAJORS={"의약·보건":5200,"IT·소프트웨어":4400,"공학":4200,"상경·경영":3900,"자연과학":3600,"사회과학":3500,"교육":3300,"인문·어학":3200,"예체능":3000};
-
+/* ---- 직업 : 첫 연봉(세후, 만원) + 나이대별 배수 + 은퇴 ---- */
 var JOBS={
- "전문직 (의사·변호사·약사 등)":{m:1.50,g:.050,d:-2,need:'pro'},
- "대기업 직원":{m:1.25,g:.045,d:-1,need:'uni'},
- "공기업 직원":{m:1.05,g:.035,d:-1,need:'uni'},
- "중견기업 직원":{m:.95,g:.040,d:0},
- "스타트업 직원":{m:.90,g:.060,d:0},
- "공무원 · 선생님":{m:.85,g:.030,d:-1},
- "프리랜서 (작가·디자이너 등)":{m:.80,g:.050,d:1},
- "기술직 · 현장직":{m:.82,g:.035,d:1},
- "중소기업 직원":{m:.75,g:.035,d:1},
- "내 사업 (창업)":{m:.85,g:.050,d:1,biz:true}
+ "의사 · 약사 · 수의사":{p:5200,g:[0.55,1.55,1.95,2.05],ret:70,d:-2,need:['의약·보건'],
+  s:"수입이 가장 높고 잘릴 걱정이 적습니다. 대신 <b>30살 넘어서</b> 제대로 벌기 시작해요."},
+ "변호사 · 회계사 · 세무사":{p:4300,g:[0.75,1.50,1.90,2.00],ret:68,d:-2,need:['법학','상경·경영'],
+  s:"어려운 시험을 통과하면 내 사무실을 열 수 있습니다."},
+ "대기업 직원":{p:4100,g:[1,1.50,1.90,2.00],ret:55,d:-1,uni:true,
+  s:"월급이 높고 복지가 좋습니다. 대신 <b>55살이면 대부분 나옵니다.</b>"},
+ "공기업 직원":{p:3500,g:[1,1.40,1.70,1.85],ret:60,d:-1,uni:true,
+  s:"한국전력·코레일 같은 곳. 월급은 덜하지만 60살까지 다닙니다."},
+ "공무원 · 교사":{p:3000,g:[1,1.35,1.65,1.85],ret:62,d:-1,
+  s:"학교 선생님, 시청 공무원, 경찰, 소방관. <b>62살까지 일하고 연금도 많습니다.</b>"},
+ "개발자 · 엔지니어":{p:3800,g:[1,1.50,1.85,1.90],ret:58,d:0,
+  s:"앱이나 기계를 만듭니다. 실력이 있으면 회사를 옮기며 올라갑니다."},
+ "중견기업 직원":{p:3200,g:[1,1.40,1.70,1.80],ret:58,d:0,
+  s:"대기업보다 작지만 탄탄한 회사. 무난합니다."},
+ "스타트업 직원":{p:2900,g:[1,1.50,1.80,1.80],ret:57,d:0,
+  s:"사람이 열 명쯤인 새 회사. 크면 빨리 오르지만 <b>망하면 하루아침에 그만둡니다.</b>"},
+ "디자이너 · 크리에이터":{p:2600,g:[1,1.40,1.70,1.75],ret:60,d:0,
+  s:"그림·영상·웹툰을 만듭니다. 좋아하는 일이지만 처음엔 수입이 들쭉날쭉해요."},
+ "기술직 · 현장직":{p:3100,g:[1,1.35,1.60,1.70],ret:62,d:1,
+  s:"전기·용접·정비. 대학을 안 가도 되고 <b>나이 들어도 오래 일합니다.</b>"},
+ "중소기업 직원":{p:2600,g:[1,1.30,1.50,1.60],ret:60,d:1,
+  s:"동네에서 흔히 보는 작은 회사. 들어가긴 쉽지만 월급이 적게 오릅니다."},
+ "프리랜서":{p:2800,g:[1,1.40,1.70,1.70],ret:65,d:1,
+  s:"일감을 받아서 합니다. 시간은 자유롭지만 <b>일 없는 달은 수입이 0</b>이고 퇴직금도 없어요."},
+ "내 사업 (창업)":{p:2400,g:[1,1.60,2.20,2.30],ret:70,d:1,biz:true,
+  s:"내 가게, 내 회사. 성공하면 크게 벌지만 <b>실패하면 빚이 남습니다.</b>"}
 };
-
-/* 직업 이름 → 첫 연봉(만원). 직접 입력할 때 자동으로 찾아줍니다. */
-var PAYBOOK=[
- ["의사",9000],["치과",9000],["한의",7500],["약사",6500],["수의",5500],["변호사",7000],["검사",6500],["판사",7000],
- ["회계사",6000],["세무사",5000],["변리사",6500],["노무사",5000],["감정평가",5500],["법무사",4500],
- ["간호",4200],["물리치료",3800],["방사선",4300],["임상병리",3900],["치위생",3600],["응급구조",3800],["영양사",3200],
- ["파일럿",8000],["조종사",8000],["관제",5500],["승무원",4000],["항공정비",4500],
- ["소방",4200],["경찰",4300],["군인",3800],["부사관",3600],["교도",3900],
- ["교사",3300],["선생",3300],["교수",6000],["강사",3000],["유치원",3200],["보육",2900],
- ["개발자",4800],["프로그래머",4800],["엔지니어",4500],["데이터",5000],["인공지능",5500],["ai",5500],
- ["보안",4800],["반도체",5500],["로봇",4800],["게임",4200],["기획",4000],["디자이너",3400],["ux",4200],
- ["웹툰",3000],["만화",3000],["일러스트",3000],["애니메이터",3200],["성우",3200],["작가",2800],["번역",3200],["통역",4200],
- ["기자",4200],["아나운서",5000],["피디",4500],["pd",4500],["촬영",3400],["편집",3400],["사진",3000],
- ["유튜버",2800],["크리에이터",2800],["스트리머",2800],["마케",4000],["광고",4000],["홍보",3900],
- ["배우",3000],["가수",3000],["아이돌",3000],["댄서",2800],["무용",2800],["연주",3000],["작곡",3200],
- ["운동선수",4500],["축구",4500],["야구",5000],["프로게이머",4000],["트레이너",3200],["코치",3400],["체육",3300],
- ["요리",3200],["셰프",3400],["제빵",3000],["바리스타",2700],["미용",3000],["헤어",3000],["네일",2700],["플로리스트",2700],
- ["건축",4000],["인테리어",3400],["토목",4200],["기계",4300],["전기",4400],["자동차",4300],["정비",3600],
- ["조선",4500],["화학",4400],["환경",3800],["농업",3000],["농부",3000],["축산",3200],["어업",3200],
- ["은행",4500],["증권",5000],["보험",3800],["회계",4000],["인사",4000],["영업",3800],["물류",3700],["무역",4000],
- ["공무원",3300],["사회복지",3200],["상담",3400],["심리",3800],["사서",3200],["큐레이터",3200],["연구",4500],
- ["호텔",3200],["여행",3000],["부동산",3500],["중개",3500],["택배",3400],["운전",3600],["목수",3800],["용접",4000]
-];
-function lookupPay(name){
-  var s=(name||'').toLowerCase().replace(/\s/g,'');
-  if(!s) return null;
-  for(var i=0;i<PAYBOOK.length;i++) if(s.indexOf(PAYBOOK[i][0])>=0) return {key:PAYBOOK[i][0],pay:PAYBOOK[i][1]};
-  return null;
-}
-
-var REGION={capital:{c:1.25,home:70000,n:"수도권"},metro:{c:1.05,home:42000,n:"광역시"},other:{c:.90,home:30000,n:"그 밖의 지역"}};
-var INVEST={
- safe:{r:.020,t:'은행 예금에 넣는다',d:'절대 잃지 않지만 아주 천천히 불어납니다'},
- mid :{r:.040,t:'예금 반 · 펀드 반',d:'조금 흔들리지만 무난합니다'},
- risky:{r:.070,t:'주식 · 투자 위주',d:'빨리 불어나지만 크게 잃을 수도 있습니다'}
+var MAJORS={
+ "의약·보건":"의사 · 약사 · 수의사 · 간호사 · 물리치료사 · 방사선사",
+ "법학":"변호사 · 판사 · 검사 · 법무사 · 변리사 · 경찰",
+ "상경·경영":"회계사 · 세무사 · 은행원 · 마케터 · 무역 · 창업",
+ "공학":"기계 · 전기 · 건축 · 자동차 · 화학 엔지니어",
+ "IT·소프트웨어":"개발자 · 데이터 분석가 · 보안 · AI · 게임 기획",
+ "자연과학":"연구원 · 과학 교사 · 제약 연구 · 환경 · 통계",
+ "사회과학":"사회복지사 · 상담사 · 기자 · 공무원 · NGO",
+ "교육":"초·중·고 교사 · 유치원 교사 · 학원 강사 · 상담 교사",
+ "인문·어학":"번역가 · 통역사 · 작가 · 편집자 · 승무원",
+ "예체능":"디자이너 · 웹툰작가 · 음악가 · 배우 · 운동선수 · 코치",
+ "대학 안 감":"전기·용접·정비 같은 기술직 · 요리사 · 제빵사 · 바리스타 · 미용사 · 소방관 · 경찰 · 군인 · 운동선수 · 프로게이머 · 유튜버·크리에이터 · 웹툰작가 · 개발자 · 디자이너 · 자영업 · 프리랜서 — <b>자격증과 실력으로 가는 길이 아주 많습니다.</b> 고졸로 뽑는 공기업·대기업 자리도 있고, 일하다가 나중에 대학에 갈 수도 있어요."
 };
+var PAYBOOK=[["의사",6500],["치과",6500],["한의",5500],["약사",4800],["수의",4000],["변호사",5200],["검사",4800],["판사",5200],
+["회계사",4400],["세무사",3800],["변리사",4800],["간호",3200],["물리치료",2900],["방사선",3200],["임상병리",2900],
+["파일럿",5800],["조종사",5800],["승무원",3000],["항공정비",3400],["소방",3200],["경찰",3200],["군인",2900],
+["교사",3000],["선생",3000],["교수",4400],["유치원",2500],["보육",2300],["개발자",3800],["프로그래머",3800],
+["엔지니어",3500],["데이터",3900],["인공지능",4200],["ai",4200],["보안",3800],["반도체",4200],["로봇",3700],
+["게임",3200],["기획",3100],["디자이너",2700],["웹툰",2400],["만화",2400],["일러스트",2400],["애니메이터",2500],
+["성우",2500],["작가",2200],["번역",2500],["통역",3200],["기자",3200],["아나운서",3800],["피디",3400],["pd",3400],
+["촬영",2700],["편집",2700],["사진",2400],["유튜버",2200],["크리에이터",2200],["마케",3100],["광고",3100],
+["배우",2400],["가수",2400],["아이돌",2400],["댄서",2200],["무용",2200],["연주",2400],["작곡",2500],
+["운동선수",3500],["축구",3500],["야구",3900],["프로게이머",3100],["트레이너",2500],["코치",2700],
+["요리",2500],["셰프",2700],["제빵",2400],["바리스타",2100],["미용",2400],["헤어",2400],
+["건축",3200],["인테리어",2700],["토목",3300],["기계",3400],["전기",3500],["자동차",3400],["정비",2900],
+["조선",3500],["화학",3500],["환경",3000],["농업",2400],["농부",2400],["은행",3500],["증권",3900],["보험",3000],
+["공무원",3000],["사회복지",2500],["상담",2700],["심리",3000],["사서",2500],["연구",3500],
+["호텔",2500],["여행",2400],["부동산",2800],["운전",2800],["목수",3000],["용접",3200]];
+function lookupPay(n){var s=(n||'').toLowerCase().replace(/\s/g,'');if(!s)return null;
+ for(var i=0;i<PAYBOOK.length;i++)if(s.indexOf(PAYBOOK[i][0])>=0)return {k:PAYBOOK[i][0],p:PAYBOOK[i][1]};return null;}
 
-/* 도전별 문구 · 실패 손해 */
-var CH_TEXT={
- uni  :{name:'대학 합격', win:function(n){return '축하합니다!\n'+n+'번째 시도만에 대학에 합격했습니다';},
-        lose:'대학 불합격!', final:'대학 불합격!'},
- job  :{name:'취업', win:function(n){return '축하합니다!\n'+n+'번째 시도만에 취업에 성공했습니다';},
-        lose:'취업 실패!', final:'취업 실패!'},
- biz  :{name:'사업 시작', win:function(n){return '축하합니다!\n'+n+'번째 시도만에 사업을 열었습니다';},
-        lose:'사업 실패!', final:'사업 실패!'},
- marry:{name:'결혼', win:function(n){return '축하합니다!\n'+n+'번째 시도만에 결혼에 골인했습니다';},
-        lose:'결혼 실패!', final:'결혼 실패!'},
- loan :{name:'대출 심사', win:function(n){return '축하합니다!\n'+n+'번째 만에 대출 심사를 통과했습니다';},
-        lose:'대출 거절!', final:'대출 거절!'},
- promo:{name:'승진', win:function(n){return '축하합니다!\n'+n+'번째 시도만에 승진했습니다';},
-        lose:'승진 실패!', final:'승진 실패!'},
- biz2 :{name:'사업 성공', win:function(n){return '대박!\n사업이 자리를 잡았습니다';},
-        lose:'사업이 어렵습니다!', final:'사업 실패!'},
- invest:{name:'투자 결과', win:function(){return '대박!\n투자한 돈이 크게 불었습니다';},
-        lose:'손실!', final:'손실!'}
-};
-var PENALTY={
- uni  :{years:1,cost:500,why:'재수 학원비',label:'1년 늦게 대학에 갑니다'},
- job  :{years:1,cost:300,why:'취업 준비 비용',label:'1년 더 취업 준비를 합니다'},
- biz  :{years:1,cost:800,why:'사업 준비로 날린 돈',label:'1년 늦게 시작합니다'},
- marry:{years:2,cost:0,why:'',label:'결혼이 2년 늦어집니다'},
- loan :{years:1,cost:0,why:'',label:'집 사는 게 1년 늦어집니다'},
- promo:{years:1,cost:0,why:'',label:'승진이 1년 늦어집니다'},
- biz2 :{years:0,cost:0,why:'',label:''},
- invest:{years:0,cost:0,why:'',label:''}
-};
-var FINALFAIL={
- uni:'대학 대신 다른 길로 갑니다 (연봉이 낮아집니다)',
- job:'중소기업에서 시작합니다',
- biz:'사업을 접고 중소기업에 들어갑니다',
- marry:'혼자 살기로 합니다',
- loan:'집은 못 사고 월세로 지냅니다',
- promo:'승진 없이 지금 자리를 지킵니다',
- biz2:'사업 정리 비용 5,000만원이 빚으로 남고 수입이 30% 줄어듭니다',
- invest:'모아둔 돈의 28%를 잃었습니다'
-};
+var REGION={seoul:{n:'서울',c:1.00,home:130000,rent:1320,jeonse:420,jdep:10500},
+            gg:{n:'경기도',c:0.88,home:62000,rent:1020,jeonse:300,jdep:7500},
+            other:{n:'그 밖의 지역',c:0.78,home:35000,rent:780,jeonse:190,jdep:4750}};
+function reg(){return REGION[P(25,'home_where')]||REGION.gg;}
+function pmt(Pr,r,y){var i=r/12,n=y*12;return Pr*i/(1-Math.pow(1+i,-n));}
 
-var WHEELS={
- kid:{title:'아이 키우는 동안 생긴 일',color:['#4a7fc1','#c1734a','#4aa17a','#8b6bb1','#5b6472','#c15a5a'],
-  slots:[
-   {s:'병원비',t:'아이가 자주 아파요',d:'매년 병원비 100만원이 더 나갑니다',kidAdd:100},
-   {s:'학원비',t:'학원비가 올랐어요',d:'매년 200만원이 더 나갑니다',kidAdd:200},
-   {s:'할머니',t:'할머니가 도와주세요',d:'매년 150만원이 덜 나갑니다',kidAdd:-150},
-   {s:'상장',t:'아이가 상을 받았어요',d:'뿌듯한 한 해였습니다 · 만족도 +5',happy:5},
-   {s:'무탈',t:'별일 없이 지나갔어요',d:'무탈한 것도 좋은 일입니다'},
-   {s:'큰 병원비',t:'아이가 크게 아팠어요',d:'병원비 1,000만원이 한 번에 나갑니다',once:1000}]},
- mid:{title:'50대에 생긴 일',color:['#c15a5a','#c1734a','#4aa17a','#4a7fc1','#5b6472','#8b6bb1'],
-  slots:[
-   {s:'회사 사정',t:'회사 사정이 나빠졌어요',d:'연봉이 6% 깎입니다',payMul:.94},
-   {s:'부모님',t:'부모님이 편찮으세요',d:'1,500만원이 한 번에 나갑니다',once:1500},
-   {s:'부수입',t:'취미가 부수입이 됐어요',d:'연봉이 5% 늘었습니다',payMul:1.05},
-   {s:'집값 상승',t:'집값이 크게 올랐어요',d:'집이 있다면 값이 12% 오릅니다',homeMul:1.12},
-   {s:'무탈',t:'별일 없이 지나갔어요',d:'무탈한 것도 좋은 일입니다'},
-   {s:'치료비',t:'몸이 좀 아팠어요',d:'치료비 800만원이 나갑니다',once:800}]}
-};
-
-/* 출발 카드(랜덤) — 내가 고른 게 아닌 조건 */
-var START_HELP=[0,300,700,1200,2000];
-var START_LOAN=[0,0,800,1500];
-var START_HOME=['other','metro','metro','capital'];
-
-/* 인생곡선 — 나이대별 추구미 */
-var AIMS=[
- {age:17,band:'10대',opts:[
-  '공부 빡세게 해서 원하는 곳 가기','하고 싶은 거 하면서 길 찾기','친구들과 보내는 시간이 제일 중요',
-  '벌써 돈 벌기 시작하기','운동·예술로 승부 보기','아직 잘 모르겠다, 일단 해보기']},
- {age:25,band:'20대',opts:[
-  '스펙 쌓고 취업에 올인','여행·연애·취미 다 해보기','일 배우면서 돈 모으기',
-  '내 걸 만들어보기','자격증·시험으로 확실한 길','해외에서 한번 살아보기']},
- {age:35,band:'30대',opts:[
-  '커리어 올려서 인정받기','가정 만들고 안정 찾기','내 집 마련이 제일 큰 목표',
-  '하고 싶은 일로 방향 바꾸기','혼자서 자유롭게 살기','부모님께 보답하기']},
- {age:45,band:'40대',opts:[
-  '갈 수 있는 데까지 올라가보기','아이들한테 시간 쏟기','일 줄이고 나답게 살기',
-  '새로 시작해보기','빚 갚고 돈 굳히기','건강 챙기기 시작']},
- {age:58,band:'50대 이후',opts:[
-  '노후 준비 확실하게','취미와 건강에 투자','가족·친구 자주 만나기',
-  '아직 일하는 게 좋다','배우고 싶던 걸 배우기','조용한 곳으로 옮겨 살기']}
-];
-
-/* ========= 상태 ========= */
-var S={sid:'',idx:0,picks:{},free:{},reasons:{},ch:{},wheel:{},seen:{},start:null,done:false,
-       aim:[null,null,null,null,null], curve:[50,50,50,50,50], moved:[0,0,0,0,0]};
+/* ---- 상태 ---- */
+var S={sid:'',cls:'',idx:0,pick:{},custom:{},goal:{},memo:{},ch:{},ev:{},guess:[0,0,0,0,0,0,0,0],moved:[0,0,0,0,0,0,0,0],done:false};
 var $=function(s){return document.querySelector(s);};
 function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
 function show(id){document.querySelectorAll('.screen').forEach(function(x){x.classList.remove('on');});
-  document.getElementById(id).classList.add('on');window.scrollTo(0,0);}
-function len(s){return (s||'').replace(/\s/g,'').length;}
-function reasonOK(k){return len(S.reasons[k])>=MINLEN;}
-
-/* 금액: 억은 소수 없이, 만원까지 그대로 */
-function won(v){
-  if(v===undefined||v===null||isNaN(v)) return '—';
-  var neg=v<0, a=Math.abs(Math.round(v)), s;
-  if(a>=10000){ var e=Math.floor(a/10000), m=a%10000; s=e+'억'+(m?' '+m.toLocaleString()+'만':''); }
+  document.getElementById(id).classList.add('on');window.scrollTo(0,0);
+  setTimeout(function(){try{fitFoot();}catch(e){}},0);}
+function won(v){if(v===undefined||v===null||isNaN(v))return '—';
+  var neg=v<0,a=Math.abs(Math.round(v)),s;
+  if(a>=10000){var e=Math.floor(a/10000),m=a%10000;s=e+'억'+(m?' '+m.toLocaleString()+'만':'');}
   else s=a.toLocaleString()+'만';
-  return (neg?'빚 ':'')+s+'원';
+  return (neg?'빚 ':'')+s+'원';}
+function shortWon(v){var neg=v<0,a=Math.abs(Math.round(v));
+  return (neg?'−':'')+(a>=10000?(a/10000).toFixed(1)+'억':Math.round(a).toLocaleString()+'만');}
+function perMonth(v){return won(Math.round(v/12));}
+function P(age,slot){return (S.pick[age]||{})[slot];}
+function CU(age,slot){return (S.custom[age]||{})[slot]||'';}
+function setPick(age,slot,v){if(!S.pick[age])S.pick[age]={};S.pick[age][slot]=v;}
+function setCu(age,slot,v){if(!S.custom[age])S.custom[age]={};S.custom[age][slot]=v;}
+function MM(age,slot){return (S.memo[age]||{})[slot]||'';}
+function setMM(age,slot,v){if(!S.memo[age])S.memo[age]={};S.memo[age][slot]=v;}
+function askOf(age,g){var v=P(age,g.k),o=null;
+  (g.opts||[]).forEach(function(z){if(z.v===v&&z.ask)o=z;});return o;}
+function len(s){return (s||'').replace(/\s/g,'').length;}
+/* 여러 개 고르는 칸 */
+function PA(age,slot){var v=P(age,slot);return Array.isArray(v)?v:(v===undefined?[]:[v]);}
+function has(age,slot,v){return PA(age,slot).indexOf(v)>=0;}
+function toggle(age,slot,v){
+  var a=PA(age,slot).slice(),i=a.indexOf(v);
+  if(v==='none'){a=(i>=0)?[]:['none'];}
+  else{ if(i>=0)a.splice(i,1); else a.push(v);
+        var n=a.indexOf('none'); if(n>=0)a.splice(n,1); }
+  setPick(age,slot,a);
 }
-function perMonth(v){ return won(Math.round(v/12)); }
-function shortWon(v){
-  var neg=v<0,a=Math.abs(Math.round(v));
-  return (neg?'−':'')+(a>=10000?(a/10000).toFixed(1)+'억':a.toLocaleString()+'만');
-}
-function pmt(P,r,y){var i=r/12,n=y*12;return P*i/(1-Math.pow(1+i,-n));}
 
-/* ========= 소리 ========= */
+/* ---- 큰 지출 : 한 곳에서만 관리 (o=한 번에, y=1년마다) ---- */
+var BIG={
+ 25:[{v:'none',t:'없음'},
+     {v:'car',t:'차를 산다',o:2500,y:380},
+     {v:'travel',t:'여행 다니기',y:300},
+     {v:'cert',t:'자격증·학원',y:240},
+     {v:'hobby',t:'취미 (운동·악기·게임)',y:200}],
+ 35:[{v:'none',t:'없음'},
+     {v:'car',t:'차를 산다',o:2500,y:380},
+     {v:'travel',t:'가족 여행',y:400},
+     {v:'cert',t:'더 공부한다 (대학원·자격증)',y:300},
+     {v:'hobby',t:'취미',y:200}],
+ 45:[{v:'none',t:'없음'},
+     {v:'car',t:'차를 바꾼다',o:3000,y:380},
+     {v:'travel',t:'여행',y:400},
+     {v:'cert',t:'새로 배운다',y:300},
+     {v:'hobby',t:'취미',y:300}],
+ 55:[{v:'none',t:'없음'},
+     {v:'travel',t:'여행',y:500},
+     {v:'health',t:'운동·건강 관리',y:400,tag:'큰 병에 걸릴 확률이 낮아집니다'},
+     {v:'hobby',t:'취미',y:300},
+     {v:'help',t:'자녀 돕기',y:500}]
+};
+function bigOpts(age){
+  return BIG[age].map(function(o){
+    var m=[];if(o.o)m.push('한 번에 '+o.o.toLocaleString()+'만원');if(o.y)m.push('1년 '+o.y.toLocaleString()+'만원');
+    return {v:o.v,t:o.t,d:o.tag||null,money:m.join(' + ')||'0원'};
+  });
+}
+
+/* ---- 확률로 일어나는 일 (실제 통계를 참고한 추정치) ---- */
+var EV={
+ 45:{n:'부모님이 편찮으시다',
+   txt:'45~54살 사이에 부모님을 돌보느라 <b>돈이 크게 드는 사람</b>은 100명 중 <b>30명</b>쯤입니다.',
+   p:function(){return 30;},
+   hit:'부모님이 편찮으십니다',
+   eff:function(){return '45살부터 10년 동안 1년에 700만원이 더 나갑니다';},
+   miss:'큰일 없이 지나갑니다'},
+ 55:{n:'큰 병',
+   txt:'한국 사람이 평생에 한 번 암 같은 큰 병에 걸릴 확률은 <b>3명 중 1명</b>쯤입니다. 그중 상당수가 50대에 처음 겪습니다.',
+   p:function(){return has(55,'big','health')?12:20;},
+   hit:'큰 병에 걸렸습니다',
+   eff:function(){return '치료비·일 못 한 기간까지 합쳐 한 번에 2,000만원이 나갑니다';},
+   miss:'건강하게 지나갑니다'},
+ 75:{n:'혼자 지내기 어려워짐',
+   txt:'75살이 넘으면 <b>남의 도움 없이 지내기 어려워지는 사람</b>이 100명 중 <b>40명</b>쯤 됩니다.',
+   p:function(){var c=P(65,'care');return (c==='1'||c==='2')?25:40;},
+   hit:'돌봄이 필요해졌습니다',
+   eff:function(){return P(65,'care')==='1'?'보험이 절반을 내줍니다. 1년에 700만원이 더 나갑니다'
+        :'1년에 1,500만원이 더 나갑니다';},
+   miss:'끝까지 스스로 지냅니다'}
+};
+function evHit(age){var s=S.ev[age];return !!(s&&s.done&&s.hit);}
+
+
+/* ---- 소리 ---- */
 var AC=null;
 function actx(){try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC;}catch(e){return null;}}
 function beep(f,st,du,ty,vo){var c=actx();if(!c)return;var o=c.createOscillator(),g=c.createGain();
  o.type=ty||'sine';o.frequency.value=f;g.gain.setValueAtTime(0,c.currentTime+st);
- g.gain.linearRampToValueAtTime(vo||.16,c.currentTime+st+.015);
+ g.gain.linearRampToValueAtTime(vo||.13,c.currentTime+st+.015);
  g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+st+du);
  o.connect(g);g.connect(c.destination);o.start(c.currentTime+st);o.stop(c.currentTime+st+du+.02);}
-function sndRoll(){for(var i=0;i<9;i++)beep(160+Math.random()*220,i*.11,.06,'square',.07);}
-function sndWin(){[523,659,784,1047,1319].forEach(function(f,i){beep(f,i*.085,.34,'triangle',.2);});}
-function sndLose(){beep(320,0,.22,'sawtooth',.13);beep(200,.16,.45,'sawtooth',.13);}
-function sndTick(){beep(900,0,.04,'square',.06);}
-function sndSpin(){for(var i=0;i<22;i++)beep(700+Math.random()*300,i*.14,.03,'square',.05);}
+function noise(st,du,vo,hz){var c=actx();if(!c)return;
+ var n=Math.floor(c.sampleRate*du),b=c.createBuffer(1,n,c.sampleRate),d=b.getChannelData(0);
+ for(var i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);
+ var src=c.createBufferSource();src.buffer=b;
+ var f=c.createBiquadFilter();f.type='bandpass';f.frequency.value=hz||1400;f.Q.value=1.1;
+ var g=c.createGain();g.gain.setValueAtTime(vo||.2,c.currentTime+st);
+ g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+st+du);
+ src.connect(f);f.connect(g);g.connect(c.destination);
+ src.start(c.currentTime+st);src.stop(c.currentTime+st+du+.02);}
+/* 위에서 던져서 데구르르 구르는 소리 */
+function sndRoll(){
+ /* 떨어지는 바람소리 */
+ noise(0,.5,.09,400);
+ /* 바닥에 닿는 첫 소리 */
+ noise(.52,.09,.34,900);beep(120,.52,.1,'sine',.18);
+ /* 데구르르 — 점점 촘촘해졌다가 잦아듦 */
+ var t=.62;
+ for(var i=0;i<16;i++){
+   noise(t,.05,.20-i*.010,1100+Math.random()*900);
+   t+=0.065+ (i<7? -0.003*i : 0.010*(i-6));
+ }
+ noise(t+.05,.12,.12,700);}
+function sndWin(){[523,659,784,1047,1319].forEach(function(f,i){beep(f,i*.085,.32,'triangle',.16);});}
+function sndLose(){beep(310,0,.22,'sawtooth',.11);beep(196,.16,.44,'sawtooth',.11);}
+function sndTick(){beep(880,0,.04,'square',.045);}
+function sndScan(){for(var i=0;i<17;i++)beep(620+i*18,i*.08,.035,'square',.05);}
 
-/* ========= 시작 ========= */
-$('#go1').onclick=function(){actx();show('s-name');try{var v=localStorage.getItem('life_sid');if(v)$('#sid').value=v;}catch(e){}};
+/* ---- 시작 ---- */
+$('#go1').onclick=function(){actx();show('s-intro');drawAvg();};
+$('#go15').onclick=function(){show('s-name');
+  try{var v=localStorage.getItem('life_sid');if(v)$('#sid').value=v;
+      var c=localStorage.getItem('life_cls');if(c)S.cls=c;}catch(e){}
+  renderCls();};
+function renderCls(){
+  $('#clsChips').innerHTML=CLASSES.map(function(c){
+    return '<button class="chip'+(S.cls===c?' on':'')+'" data-cls="'+c+'">'+c+'</button>';}).join('');
+  $('#clsChips').querySelectorAll('[data-cls]').forEach(function(b){
+    b.onclick=function(){S.cls=this.dataset.cls;sndTick();renderCls();
+      if($('#sidErr').textContent==='반을 골라주세요.')$('#sidErr').textContent='';};});
+}
+/* 평균 곡선 */
+function drawAvg(){
+  var g=setup('avgC',250),x=g.x;
+  var mx=Math.max.apply(null,AVG_IN.concat(AVG_OUT))*1.2;
+  ggrid(g,0,mx);
+  [[AVG_OUT,'#c4703f'],[AVG_IN,'#2f5aa8']].forEach(function(L){
+    x.strokeStyle=L[1];x.lineWidth=3.4;x.beginPath();
+    AGES.forEach(function(a,i){var xx=GX(g,a),yy=GY(g,0,mx,L[0][i]);i?x.lineTo(xx,yy):x.moveTo(xx,yy);});
+    x.stroke();
+    AGES.forEach(function(a,i){var xx=GX(g,a),yy=GY(g,0,mx,L[0][i]);
+      x.beginPath();x.arc(xx,yy,4.5,0,7);x.fillStyle=L[1];x.fill();
+      x.strokeStyle='#fff';x.lineWidth=2;x.stroke();x.strokeStyle=L[1];});});
+  var bx=GX(g,45);
+  x.strokeStyle='#b8453c';x.setLineDash([4,4]);x.lineWidth=1.6;
+  x.beginPath();x.moveTo(bx,g.pad.t);x.lineTo(bx,g.h-g.pad.b);x.stroke();x.setLineDash([]);
+  x.fillStyle='#b8453c';x.font='bold 11.5px sans-serif';x.fillText('여기가 꼭대기',bx+6,g.pad.t+13);
+}
 function checkSid(){var v=$('#sid').value.trim().replace(/\s+/g,' ');
  if(!/^\d{5}\s\S{2,}$/.test(v)){$('#sidErr').textContent='20111 김OO 처럼 적어주세요.';return null;}
  $('#sidErr').textContent='';return v;}
 $('#sid').addEventListener('input',function(){if($('#sidErr').textContent)checkSid();});
 $('#sid').addEventListener('keydown',function(e){if(e.key==='Enter')$('#go2').click();});
 $('#go2').onclick=function(){
-  var v=checkSid();if(!v){$('#sid').focus();return;}
-  S.sid=v;try{localStorage.setItem('life_sid',v);}catch(e){}
-  $('#hName').textContent=v;
-  S.start={help:START_HELP[Math.floor(Math.random()*START_HELP.length)],
-           loan:START_LOAN[Math.floor(Math.random()*START_LOAN.length)],
-           home:START_HOME[Math.floor(Math.random()*START_HOME.length)]};
-  S.picks.region=S.start.home;      /* 본가가 있는 곳에서 시작합니다 (나중에 바꿀 수 있어요) */
-  show('s-curve'); renderAims(); drawCurve(); openStartCard();
-};
+ if(!S.cls){$('#sidErr').textContent='반을 골라주세요.';return;}
+ var v=checkSid();if(!v){$('#sid').focus();return;}
+ S.sid=v;try{localStorage.setItem('life_sid',v);localStorage.setItem('life_cls',S.cls);}catch(e){}
+ $('#hName').textContent=S.cls+' '+v;show('s-guess');drawGuess();gateGuess();};
 
-/* ========= 인생곡선 그리기 ========= */
-function renderAims(){
-  $('#aimBox').innerHTML=AIMS.map(function(a,i){
-    return '<div class="band"><p class="bh"><em>'+a.band+' 추구미</em> — 이때 제일 원하는 건?</p><div class="aims">'+
-      a.opts.map(function(o,j){
-        return '<button class="aim'+(S.aim[i]===j?' sel':'')+'" data-i="'+i+'" data-j="'+j+'">'+o+'</button>';
-      }).join('')+'</div></div>';
-  }).join('');
-  $('#aimBox').querySelectorAll('.aim').forEach(function(b){
-    b.onclick=function(){
-      var i=+this.dataset.i;
-      S.aim[i]=+this.dataset.j;
-      $('#aimBox').querySelectorAll('.aim[data-i="'+i+'"]').forEach(function(x){x.classList.remove('sel');});
-      this.classList.add('sel'); sndTick(); drawCurve(); gateCurve();
-    };
-  });
-  gateCurve();
+/* ---- 짐작 곡선 ---- */
+var GMAX=20000;   /* 짐작 곡선 위쪽 끝 = 2억 */
+function gg(){var cv=$('#curveC'),w=cv.clientWidth||320,h=(w>700?400:250),pad={l:52,r:46,t:22,b:32};
+ return {cv:cv,w:w,h:h,pad:pad,
+  X:function(a){return pad.l+(w-pad.l-pad.r)*(a-15)/70;},
+  Y:function(v){return h-pad.b-(h-pad.t-pad.b)*v/GMAX;},
+  toV:function(py){return clamp(Math.round((h-pad.b-py)/(h-pad.t-pad.b)*(GMAX/100))*100,0,GMAX);}};}
+function drawGuess(){
+ var g=gg(),cv=g.cv,dpr=window.devicePixelRatio||1;
+ cv.width=g.w*dpr;cv.height=g.h*dpr;cv.style.height=g.h+'px';
+ var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.lineCap='round';x.lineJoin='round';
+ x.clearRect(0,0,g.w,g.h);
+ var bg=x.createLinearGradient(0,0,0,g.h);
+ bg.addColorStop(0,'#fdfdfb');bg.addColorStop(1,'#f7f4ee');
+ x.fillStyle=bg;x.fillRect(0,0,g.w,g.h);
+ var big=g.w>700;
+ /* 가로 눈금 */
+ x.lineWidth=1;x.font=(big?'13px':'11px')+' sans-serif';
+ [0,5000,10000,15000,20000].forEach(function(v){var yy=g.Y(v);
+   x.strokeStyle='#ece8e1';
+   x.beginPath();x.moveTo(g.pad.l,yy);x.lineTo(g.w-g.pad.r,yy);x.stroke();
+   x.fillStyle='#8d939b';
+   x.fillText(v===0?'0':(v/10000)+'억',4,yy+4);});
+ /* 세로 눈금 + 나이 */
+ AGES.forEach(function(a,i){var xx=g.X(a);
+   x.strokeStyle=S.moved[i]?'#f0ede7':'#dfe9f6';
+   x.lineWidth=S.moved[i]?1:2;
+   x.beginPath();x.moveTo(xx,g.pad.t);x.lineTo(xx,g.h-g.pad.b);x.stroke();
+   x.fillStyle=S.moved[i]?'#8d939b':'#2f5aa8';
+   x.font=(S.moved[i]?'':'bold ')+(big?'13px':'11px')+' sans-serif';
+   x.fillText(a+'살',xx-x.measureText(a+'살').width/2,g.h-9);});
+ /* 평균 안내선 */
+ x.strokeStyle='#a9b0ba';x.lineWidth=2.6;x.setLineDash([6,5]);x.beginPath();
+ AGES.forEach(function(a,i){var xx=g.X(a),yy=g.Y(AVG_IN[i]);i?x.lineTo(xx,yy):x.moveTo(xx,yy);});
+ x.stroke();x.setLineDash([]);
+ x.fillStyle='#8d939b';x.font='bold '+(big?'12.5px':'10.5px')+' sans-serif';
+ x.fillText('우리나라 평균', g.X(70)-10, g.Y(AVG_IN[6])+22);
+ /* 내 곡선 — 부드러운 곡선 */
+ var done=[];S.moved.forEach(function(v,i){if(v)done.push(i);});
+ if(done.length>1){
+   var pts=done.map(function(i){return [g.X(AGES[i]),g.Y(S.guess[i])];});
+   x.strokeStyle='#2f5aa8';x.lineWidth=big?5:4;x.beginPath();
+   x.moveTo(pts[0][0],pts[0][1]);
+   for(var k=0;k<pts.length-1;k++){
+     var p0=pts[k],p1=pts[k+1],mx2=(p0[0]+p1[0])/2;
+     x.bezierCurveTo(mx2,p0[1],mx2,p1[1],p1[0],p1[1]);
+   }
+   x.stroke();
+ }
+ /* 동그란 점 */
+ var R=big?15:11;
+ AGES.forEach(function(a,i){var xx=g.X(a),yy=g.Y(S.guess[i]);
+   if(!S.moved[i]){
+     x.beginPath();x.arc(xx,yy,R+4,0,7);x.fillStyle='rgba(227,161,74,.20)';x.fill();
+     x.beginPath();x.arc(xx,yy,R,0,7);
+     x.fillStyle='#eda94f';x.fill();x.strokeStyle='#fff';x.lineWidth=3;x.stroke();
+     x.fillStyle='#fff';x.font='bold '+(big?'15px':'12px')+' sans-serif';
+     x.fillText('↕',xx-(big?4:3),yy+(big?5:4));
+   }else{
+     x.beginPath();x.arc(xx,yy,R,0,7);
+     x.fillStyle='#3f6fc4';x.fill();x.strokeStyle='#fff';x.lineWidth=3.4;x.stroke();
+     x.beginPath();x.arc(xx-R*0.28,yy-R*0.3,R*0.28,0,7);x.fillStyle='rgba(255,255,255,.5)';x.fill();
+     var t=S.guess[i]===0?'0':shortWon(S.guess[i]);
+     x.font='bold '+(big?'13px':'11px')+' sans-serif';
+     var tw=x.measureText(t).width, ty=yy-R-9;
+     x.fillStyle='rgba(255,255,255,.92)';
+     rrect(x,xx-tw/2-6,ty-13,tw+12,19,9);x.fill();
+     x.fillStyle='#2f5aa8';x.fillText(t,xx-tw/2,ty+1);
+   }});
 }
-function curveGeom(){
-  var cv=$('#curveC'),w=cv.clientWidth||320,h=250,pad={l:38,r:14,t:14,b:30};
-  return {cv:cv,w:w,h:h,pad:pad,
-    X:function(age){return pad.l+(w-pad.l-pad.r)*(age-17)/(60-17);},
-    Y:function(v){return h-pad.b-(h-pad.t-pad.b)*v/100;},
-    toV:function(py){return clamp(Math.round((h-pad.b-py)/(h-pad.t-pad.b)*100),3,100);}};
-}
-function drawCurve(){
-  var g=curveGeom(),cv=g.cv,dpr=window.devicePixelRatio||1;
-  cv.width=g.w*dpr;cv.height=g.h*dpr;
-  var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.lineCap='round';x.lineJoin='round';x.clearRect(0,0,g.w,g.h);
-  x.strokeStyle='#e6e2db';x.fillStyle='#8b93a1';x.font='11px sans-serif';x.lineWidth=1;
-  [0,25,50,75,100].forEach(function(v){
-    var yy=g.Y(v);x.beginPath();x.moveTo(g.pad.l,yy);x.lineTo(g.w-g.pad.r,yy);x.stroke();
-  });
-  x.fillText('많이',4,g.Y(100)+10);x.fillText('만족',4,g.Y(100)+22);
-  x.fillText('별로',4,g.Y(8));
-  AIMS.forEach(function(a){
-    var xx=g.X(a.age);
-    x.strokeStyle='#f0eee9';x.beginPath();x.moveTo(xx,g.pad.t);x.lineTo(xx,g.h-g.pad.b);x.stroke();
-    x.fillStyle='#8b93a1';
-    var lb=a.band.replace(' 이후','+');
-    x.fillText(lb,xx-x.measureText(lb).width/2,g.h-10);
-  });
-  var ready=S.aim.every(function(v){return v!==null;});
-  /* 선 */
-  x.strokeStyle=ready?'#2f6fd0':'#c7cdd8';x.lineWidth=3;x.beginPath();
-  AIMS.forEach(function(a,i){var xx=g.X(a.age),yy=g.Y(S.curve[i]);i?x.lineTo(xx,yy):x.moveTo(xx,yy);});
-  x.stroke();
-  /* 점 */
-  AIMS.forEach(function(a,i){
-    var xx=g.X(a.age),yy=g.Y(S.curve[i]);
-    x.beginPath();x.arc(xx,yy,S.moved[i]?9:11,0,7);
-    x.fillStyle=S.aim[i]===null?'#c7cdd8':(S.moved[i]?'#2f6fd0':'#f0a92c');
-    x.fill();
-    x.strokeStyle='#fff';x.lineWidth=3;x.stroke();
-    if(S.aim[i]!==null&&!S.moved[i]){
-      x.fillStyle='#b06a12';x.font='bold 10.5px sans-serif';
-      x.fillText('↕',xx-3,yy+4);
-    }
-  });
-}
-function curveDrag(e){
-  var g=curveGeom(),r=g.cv.getBoundingClientRect();
-  var px=(e.touches?e.touches[0].clientX:e.clientX)-r.left;
-  var py=(e.touches?e.touches[0].clientY:e.clientY)-r.top;
-  var best=0,bd=1e9;
-  AIMS.forEach(function(a,i){var d=Math.abs(g.X(a.age)-px);if(d<bd){bd=d;best=i;}});
-  if(S.aim[best]===null) return;
-  S.curve[best]=g.toV(py); S.moved[best]=1;
-  drawCurve(); gateCurve();
-}
-(function(){
-  var cv=$('#curveC'),down=false;
-  function start(e){down=true;curveDrag(e);e.preventDefault();}
-  function move(e){if(down){curveDrag(e);e.preventDefault();}}
-  function end(){down=false;}
-  cv.addEventListener('pointerdown',start);cv.addEventListener('pointermove',move);
-  window.addEventListener('pointerup',end);cv.addEventListener('pointerleave',end);
-  cv.addEventListener('touchstart',start,{passive:false});cv.addEventListener('touchmove',move,{passive:false});
-  cv.addEventListener('touchend',end);
-})();
-function gateCurve(){
-  var pickedAll=S.aim.every(function(v){return v!==null;});
-  var movedN=S.moved.reduce(function(s,v){return s+v;},0);
-  var need=S.aim.filter(function(v,i){return v!==null&&!S.moved[i];}).length;
-  $('#curveWrap').classList.toggle('ready',pickedAll);
-  $('#curveHint').textContent = !pickedAll ? '추구미를 다 고르면 점이 생깁니다'
-    : need>0 ? '노란 점 '+need+'개를 위아래로 움직여보세요'
-    : '좋아요! 이게 17살 네가 그린 인생입니다';
-  var ok=pickedAll&&movedN===5,msg='';
-  if(!pickedAll) msg='나이대별 추구미를 '+S.aim.filter(function(v){return v===null;}).length+'개 더 골라주세요.';
-  else if(movedN<5) msg='그래프의 점을 위아래로 움직여야 넘어갈 수 있어요.';
-  $('#curveNext').disabled=!ok;
-  $('#curveNote').textContent=msg;
-}
-$('#curveNext').onclick=function(){ show('s-stage'); renderStage(); };
-window.addEventListener('resize',function(){ if($('#s-curve').classList.contains('on')) drawCurve(); });
+function rrect(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);
+ x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
+function guessDrag(e){
+ var g=gg(),r=g.cv.getBoundingClientRect(),t=e.touches?e.touches[0]:e;
+ var px=t.clientX-r.left,py=t.clientY-r.top,best=0,bd=1e9;
+ AGES.forEach(function(a,i){var d=Math.abs(g.X(a)-px);if(d<bd){bd=d;best=i;}});
+ S.guess[best]=g.toV(py);S.moved[best]=1;drawGuess();gateGuess();}
+(function(){var cv=$('#curveC'),dn=false;
+ function st(e){dn=true;e.preventDefault();guessDrag(e);}
+ function mv(e){if(dn){e.preventDefault();guessDrag(e);}}
+ function en(){dn=false;}
+ cv.addEventListener('pointerdown',st);cv.addEventListener('pointermove',mv);
+ window.addEventListener('pointerup',en);cv.addEventListener('pointerleave',en);
+ cv.addEventListener('touchstart',st,{passive:false});cv.addEventListener('touchmove',mv,{passive:false});
+ cv.addEventListener('touchend',en);})();
+function gateGuess(){
+ var n=0;S.moved.forEach(function(v){if(!v)n++;});
+ $('#curveHint').textContent=n>0?'주황색 동그라미 '+n+'개를 위아래로 움직여보세요':'좋아요. 이제 진짜 인생을 살아봅시다';
+ $('#guessNext').disabled=n>0;$('#guessNote').textContent=n>0?'점 '+n+'개가 남았습니다.':'';}
+$('#guessNext').onclick=function(){show('s-stage');renderStage();};
+window.addEventListener('resize',function(){if($('#s-guess').classList.contains('on'))drawGuess();});
+function guessAt(age){
+ if(age<=15)return S.guess[0];
+ for(var i=1;i<AGES.length;i++)if(age<=AGES[i]){
+   var a=AGES[i-1],b=AGES[i];return S.guess[i-1]+(S.guess[i]-S.guess[i-1])*(age-a)/(b-a);}
+ return S.guess[7];}
 
-/* 5개 점을 나이별로 잇습니다 */
-function expectedAt(age){
-  if(age<=AIMS[0].age) return S.curve[0];
-  for(var i=1;i<AIMS.length;i++){
-    if(age<=AIMS[i].age){
-      var a=AIMS[i-1].age,b=AIMS[i].age,t=(age-a)/(b-a);
-      return S.curve[i-1]+(S.curve[i]-S.curve[i-1])*t;
-    }
-  }
-  return S.curve[S.curve.length-1];
-}
-
-/* ========= 값 ========= */
-function uniName(){return S.picks.uni==='__free__'?(S.free.uniName||'내가 쓴 학교'):S.picks.uni;}
-function isNot4Year(){return NOT4YEAR.indexOf(S.picks.uni)>=0;}
-function majorName(){return S.picks.major==='__free__'?(S.free.majorName||'내가 쓴 전공'):S.picks.major;}
-function majorPay(){
-  if(S.picks.major==='__free__') return clamp(parseFloat(S.free.majorPay)||3500,1500,20000);
-  return MAJORS[S.picks.major]||3500;
-}
-function jobName(){return S.picks.job==='__free__'?(S.free.jobName||'내가 쓴 직업'):S.picks.job;}
-function jobInfo(){
-  if(S.picks.job==='__free__'){
-    var want=clamp(parseFloat(S.free.jobPay)||majorPay(),1500,30000);
-    return {m:want/majorPay(),g:.04,d:0,custom:true};
-  }
-  return JOBS[S.picks.job]||{m:1,g:.04,d:0};
-}
-function firstPay(){return Math.max(2400,Math.round(majorPay()*jobInfo().m));}
-function growWord(g){return g>=.05?'연봉이 빨리 올라요':g>=.04?'연봉이 보통 속도로 올라요':'연봉이 천천히 올라요';}
-function hardWord(d){return d<=-2?'들어가기 아주 어려워요':d<=-1?'들어가기 어려워요':d>=1?'비교적 들어가기 쉬워요':'보통이에요';}
-function chanceWord(n){return {1:'10명 중 2명쯤 됩니다',2:'3명 중 1명쯤 됩니다',3:'2명 중 1명쯤 됩니다',4:'3명 중 2명쯤 됩니다',5:'10명 중 8명쯤 됩니다'}[n]||'';}
-function uniPassed(){return !!(S.ch.uni&&S.ch.uni.pass);}
-function marriedPlan(){return S.picks.marry==='1';}
-function marryOK(){return !!(S.ch.marry&&S.ch.marry.pass);}
-
-/* 직업을 고를 수 있는지 (말 안 되는 조합 막기) */
-function jobLock(key){
-  var J=JOBS[key]; if(!J) return null;
-  var mj=S.picks.major, notUni=isNot4Year()||!uniPassed();
-  if(J.need==='pro'){
-    if(notUni) return '4년제 대학에 합격해야 할 수 있어요';
-    if(mj!=='의약·보건'&&mj!=='사회과학') return '의약·보건 또는 사회과학을 공부해야 해요';
-  }
-  if(J.need==='uni'&&notUni) return '대학을 졸업해야 지원할 수 있어요';
-  return null;
-}
-function investRate(){return (INVEST[S.picks.invest]||INVEST.mid).r;}
-
-/* ========= 도전 난이도 ========= */
-function baseNeed(k){
-  var prep=parseInt(S.picks.prep||'0',10),camp=S.picks.campus;
-  if(k==='uni'){var b=S.picks.strategy==='stable'?4:S.picks.strategy==='fit'?3:2;return clamp(b+prep,1,5);}
-  if(k==='job'||k==='biz'){
-    var J=jobInfo(), spec=(camp==='grade'||camp==='intern')?1:0;
-    var uniPen=uniPassed()?0:-1;
-    return clamp(3+J.d+spec+(prep>0?1:0)+uniPen,1,5);
-  }
-  if(k==='marry') return clamp(3+(S.picks.spend==='1.25'?1:0),1,5);
-  if(k==='loan'){
-    var rich=(firstPay()>=5000)?1:0, far=S.picks.region==='other'?1:S.picks.region==='capital'?-1:0;
-    return clamp(3+rich+far,1,5);
-  }
-  if(k==='promo') return clamp(3+(prep>0?1:0)+(S.picks.campus==='intern'?1:0),1,5);
-  if(k==='biz2') return 2;      /* 사업은 성공이 어렵습니다 */
-  if(k==='invest') return 3;
-  return 3;
-}
-function maxTries(k){return (k==='biz2'||k==='invest')?1:3;}
-function needNow(k){
-  var s=S.ch[k]||{tries:0};
-  if(maxTries(k)===1) return baseNeed(k);
-  return clamp(baseNeed(k)+(s.tries===1?1:s.tries>=2?2:0),1,5);
-}
-
-/* ========= 스테이지 ========= */
+/* ================= 나이대 정의 ================= */
 function jobOpts(){
-  var a=[],bp=majorPay();
+  var a=[],mj=P(25,'major');
   for(var k in JOBS){
-    var J=JOBS[k], why=jobLock(k);
-    a.push({v:k,t:k,d:growWord(J.g)+' · '+hardWord(J.d),
-      money:'첫 연봉 약 '+won(Math.max(2400,Math.round(bp*J.m))),why:why});
+    var J=JOBS[k],why=null;
+    if(J.need&&J.need.indexOf(mj)<0)why=J.need.join(' 또는 ')+'을(를) 공부해야 합니다';
+    else if(J.uni&&mj==='대학 안 감')why='대부분 대학 졸업을 지원 조건으로 둡니다 (고졸 채용은 자리가 적어요)';
+    a.push({v:k,t:k,d:J.s,money:'첫 연봉 '+won(J.p)+' · '+J.ret+'살까지',why:why});
   }
   return a;
 }
-function majorOpts(){var a=[];for(var k in MAJORS)a.push({v:k,t:k,money:'첫 연봉 약 '+won(MAJORS[k])});return a;}
-function homeInfo(){
-  var reg=REGION[S.picks.region]||REGION.metro;
-  return {price:reg.home,loan:reg.home*.7,down:reg.home*.3,monthly:pmt(reg.home*.7,.04,30),n:reg.n};
-}
-function assetAt(age){
-  try{ var r=simulate(); var row=r.series.filter(function(d){return d.age<=age;}).pop(); return row?row.nw:0; }
-  catch(e){ return 0; }
-}
+function majorOpts(){var a=[];for(var k in MAJORS){
+  var o={v:k,t:k,jobs:MAJORS[k]};
+  if(k==='대학 안 감')o.ask='대학에 안 가고 무엇을 하고 싶어요? 왜 그렇게 정했어요?';
+  a.push(o);}
+ return a;}
 
-function STAGES(){
- var reg=REGION[S.picks.region]||REGION.metro, h=homeInfo();
- var kidsMax=marriedPlan()?3:2;
- var kidOpts=[{v:'0',t:'0명',d:'저축을 가장 많이 할 수 있습니다'}];
- for(var i=1;i<=3;i++){
-   kidOpts.push({v:String(i),t:i+'명',
-     money:'1년에 '+won(1100*reg.c*i*(marriedPlan()?1:1.4))+'쯤 듭니다',
-     why:(i>kidsMax)?'혼자 키우기엔 너무 많습니다':null});
- }
- var money36=assetAt(36);
+function cashBefore(idx){try{var r=simulate();return idx>0?r.rows[idx-1].cash:0;}catch(e){return 0;}}
+function PLAN(){
+ var R=reg(),c=R.c,kids=+(P(35,'kids')||0);
+ var down=Math.round(R.home*0.3),loan=Math.round(R.home*0.7),mth=Math.round(pmt(loan,.04,30));
+ var cash35=cashBefore(2),cash45=cashBefore(3);
+ function shortfall(cash){return cash<down?('지금 돈이 '+won(down-cash)+' 모자랍니다 · 모자란 만큼 빚이 됩니다'):null;}
+ var warn35=shortfall(cash35),warn45=shortfall(cash45);
  return [
- {id:'S1',age:17,title:'진로 탐색',q:'17살, 하루를 어떻게 쓸까?',
-  hint:'여기서 정한 게 앞으로 모든 도전에 영향을 줍니다.',
-  picks:[{k:'prep',opts:[
-   {v:'1',t:'공부에 몰입한다',d:'앞으로 모든 도전이 조금 쉬워집니다'},
-   {v:'0',t:'공부와 취미를 반반',d:'무난합니다'},
-   {v:'-1',t:'좋아하는 것에 빠진다',d:'도전은 조금 어려워지지만 사는 게 즐거워집니다'}]}]},
+ {age:15,sub:'지금',desc:'지금도 나에게 1년에 1,400만원쯤 쓰이고 있습니다. 내가 아니라 부모님이 내고 있어요.',
+  slots:[
+   {k:'study',n:'공부와 시간',memo:'must',opts:[
+     {v:'hard',t:'공부에 몰입한다',d:'앞으로 모든 도전이 조금 쉬워집니다'},
+     {v:'half',t:'공부와 취미를 반반',d:'무난합니다'},
+     {v:'fun',t:'좋아하는 것에 빠진다',d:'도전은 조금 어려워지지만 즐겁습니다',
+      ask:'무엇에 빠져 있어요? 왜 좋아요?'}]},
+   {k:'money',n:'용돈과 세뱃돈',s:'지금 모은 돈이 스무 살의 출발선이 됩니다',memo:true,opts:[
+     {v:'0',t:'사고 싶었던 물건을 산다',money:'20살에 0원',ask:'무엇을 사고 싶어요?'},
+     {v:'1',t:'반은 쓰고, 반은 모은다',money:'20살에 약 150만원'},
+     {v:'2',t:'거의 다 모은다',d:'쓰고 싶은 걸 많이 참아야 합니다',money:'20살에 약 400만원'},
+     {v:'3',t:'다 모으고, 심부름·집안일로 더 번다',d:'시간이 꽤 들어갑니다',money:'20살에 약 600만원'}]}],
+  goal:{q:'열다섯의 내 목표는?',chips:['공부 잘하기','하고 싶은 일 찾기','친구','운동·예술','용돈 모으기']}},
 
- {id:'S2',age:18,title:'대학 입시',q:'어디에, 어떻게 지원할까?',
-  hint:'학교 이름은 순위가 아닙니다. 어려움은 아래 "어떻게 지원할까"가 정합니다.',
-  selects:[{k:'uni',label:'학교',type:'uni'}], freeUni:true,
-  picks:[
-   {k:'major',label:'무엇을 공부할까',opts:majorOpts(),free:'major'},
-   {k:'strategy',label:'어떻게 지원할까',opts:[
-     {v:'stable',t:'안정 지원',d:'붙을 가능성이 큽니다'},
-     {v:'fit',t:'적정 지원',d:'반반입니다'},
-     {v:'reach',t:'상향 지원',d:'붙기 어렵지만 붙으면 나중에 연봉이 더 높습니다'}]}],
-  reason:{k:'uni',q:'이 학교와 전공을 고른 이유는?',ph:'예) 로봇 만드는 게 재밌어서 공대에 가고 싶다'},
-  chals:[{k:'uni'}]},
+ {age:25,sub:'사회 초년',desc:'학교를 마치고 처음 돈을 법니다.',
+  slots:[
+   {k:'major',n:'무엇을 공부했나',s:'누르면 어떤 일을 할 수 있는지 나옵니다',wide:true,opts:majorOpts()},
+   {k:'job',n:'일',s:'세금 뗀 뒤 손에 쥐는 돈입니다',wide:true,memo:'must',opts:jobOpts(),free:'job'},
+   {k:'home_where',n:'사는 곳',memo:true,opts:[
+     {v:'seoul',t:'서울',money:'월세 1년 1,320만 · 아파트 평균 13억'},
+     {v:'gg',t:'경기도',money:'월세 1년 1,020만 · 아파트 평균 6억 2,000만'},
+     {v:'other',t:'그 밖의 지역',money:'월세 1년 780만 · 아파트 평균 3억 5,000만'}]},
+   {k:'home',n:'집',s:'20살이 되면 모두 독립합니다',memo:true,opts:[
+     {v:'parents',t:'부모님 집에 산다',d:'눈치는 보이지만 돈이 거의 안 듭니다',money:'1년 300만원'},
+     {v:'monthly',t:'월세로 산다',d:'매달 집주인에게 돈을 냅니다. 목돈 없이 바로 들어갈 수 있어요',money:'1년 '+won(R.rent)},
+     {v:'jeonse',t:'보증금을 맡기고 산다 (전세)',
+      d:'집주인에게 큰 돈('+won(R.jdep)+')을 맡기면 매달 내는 월세가 없습니다. 그 돈을 은행에서 빌려서 <b>이자만</b> 냅니다. 나올 때 맡긴 돈은 돌려받아요.',
+      money:'1년 이자 '+won(R.jeonse)}]},
+   {k:'love',n:'연애',two:true,memo:true,opts:[
+     {v:'0',t:'안 한다',money:'0원'},
+     {v:'1',t:'가끔 만난다',money:'1년 240만원'},
+     {v:'2',t:'열심히 만난다',money:'1년 600만원'},
+     {v:'3',t:'거의 매일',money:'1년 960만원'}]},
+   {k:'big',n:'큰 지출',s:'여러 개 골라도 됩니다',multi:true,add:true,two:true,memo:true,opts:bigOpts(25)}],
+  chal:'job',
+  goal:{q:'스물다섯의 내 목표는?',chips:['취업','독립하기','돈 모으기','연애','자격증 따기','여행']}},
 
- {id:'S3',age:20,title:'스무 살',q:'스무 살, 무엇에 힘을 쏟을까?',
-  picks:[{k:'campus',opts:[
-   {v:'grade',t:'공부 · 자격증',d:'취업이 조금 쉬워집니다'},
-   {v:'intern',t:'인턴 · 대외활동',d:'취업이 쉬워지고 첫 연봉도 조금 오릅니다'},
-   {v:'work',t:'아르바이트로 돈 모으기',money:'1,000만원을 더 들고 시작합니다'},
-   {v:'abroad',t:'해외 경험 · 어학연수',money:'800만원이 들지만 첫 연봉이 7% 오릅니다'}]}]},
+ {age:35,sub:'한창 때',desc:'가장 많은 일이 한꺼번에 몰리는 시기입니다.',
+  slots:[
+   {k:'work',n:'일',memo:true,opts:[
+     {v:'stay',t:'지금 회사를 다닌다',d:'변화 없음'},
+     {v:'promo',t:'승진에 도전한다',d:'성공하면 수입 15% 증가',money:'주사위'},
+     {v:'move',t:'회사를 옮긴다',d:'수입이 바로 10% 오릅니다'},
+     {v:'biz',t:'내 사업을 시작한다',
+      d:'<b>성공하면 수입이 1.45배</b>가 되고 정년 없이 70살까지 일할 수 있습니다.<br><b>실패하면 수입이 0.65배</b>로 줄고 정리 비용 5,000만원이 빚으로 남습니다.',
+      money:'주사위 한 번 · 다시 기회 없음'},
+     {v:'other',t:'다른 걸 해본다',d:'수입은 지금과 비슷합니다',ask:'무엇을 하고 싶어요?'}]},
+   {k:'marry',n:'결혼',two:true,memo:'must',opts:[
+     {v:'1',t:'한다',money:'결혼비용 5,000만원 · 둘이 벌면 수입 1.7배'},
+     {v:'0',t:'안 한다',money:'저축이 늘어납니다'}]},
+   {k:'kids',n:'아이',two:true,memo:true,opts:[
+     {v:'0',t:'0명'},{v:'1',t:'1명',money:'1년 '+won(900*c)},
+     {v:'2',t:'2명',money:'1년 '+won(1800*c)},{v:'3',t:'3명',money:'1년 '+won(2700*c)}]},
+   {k:'home',n:'집',memo:true,opts:[
+     {v:'same',t:'지금처럼 산다',money:'그대로'},
+     {v:'jeonse',t:'보증금을 맡기는 집으로 옮긴다 (전세)',d:'월세는 안 내고 이자만 냅니다',money:'1년 이자 '+won(R.jeonse)},
+     {v:'buy',t:'집을 산다',d:'은행에서 돈을 빌려야 합니다. 심사를 통과해야 해요',
+      money:R.n+' 평균 '+won(R.home)+' · 처음에 '+won(down)+' · 매달 '+won(mth)+'씩 30년',warn:warn35}]},
+   {k:'big',n:'큰 지출',s:'여러 개 골라도 됩니다',multi:true,add:true,two:true,memo:true,opts:bigOpts(35)}],
+  chal:'life',
+  goal:{q:'서른다섯의 내 목표는?',chips:['내 집 마련','결혼','아이 키우기','승진','내 사업','빚 갚기']}},
 
- {id:'S4',age:24,title:'첫 직업',q:'어떤 일을 하며 살까?',
-  hint:'"'+majorName()+'"을(를) 공부했을 때 받을 수 있는 첫 연봉입니다.',
-  picks:[{k:'job',opts:jobOpts(),free:'job'}],
-  reason:{k:'job',q:'이 일을 하고 싶은 이유는?',ph:'예) 사람들 앞에서 설명하는 게 좋아서'},
-  chals:[{k:'job',when:function(){return S.picks.job&&!(JOBS[S.picks.job]||{}).biz;}},
-         {k:'biz',when:function(){return !!(JOBS[S.picks.job]||{}).biz;}}]},
+ {age:45,sub:'가장 많이 버는 때',desc:'수입도 최고, 지출도 최고입니다.',
+  slots:[
+   {k:'work',n:'일',memo:'must',opts:[
+     {v:'stay',t:'계속 다닌다'},
+     {v:'up',t:'더 올라가 본다',d:'수입 10% 증가 · 시간은 없어집니다'},
+     {v:'down',t:'일을 줄인다',d:'수입 20% 감소 · 시간이 생깁니다'},
+     {v:'biz',t:'사업을 시작한다',d:'<b>성공하면 수입 1.45배</b> · <b>실패하면 0.65배 + 5,000만원 빚</b>',money:'주사위 한 번'},
+     {v:'other',t:'다른 걸 해본다',d:'수입은 지금과 비슷합니다',ask:'무엇을 하고 싶어요?'}]},
+   {k:'edu',n:'자녀 교육',s:kids?'아이 '+kids+'명 기준':'아이가 없으면 안 듭니다',memo:true,
+    opts:[{v:'0',t:'학교만 보낸다',money:'0원'},
+     {v:'1',t:'학원 한두 개',money:'1년 '+won(600*kids)},
+     {v:'2',t:'학원 여러 개',money:'1년 '+won(1200*kids)},
+     {v:'3',t:'할 수 있는 건 다',money:'1년 '+won(2000*kids)}]},
+   {k:'home',n:'집',memo:true,opts:[
+     {v:'same',t:'그대로 산다'},
+     {v:'up',t:'넓은 집으로 옮긴다',money:'주거비 1.5배'},
+     {v:'buy',t:'이제 집을 산다',d:'은행 심사를 통과해야 합니다',money:'처음에 '+won(down)+' · 매달 '+won(mth),warn:warn45}]},
+   {k:'big',n:'큰 지출',s:'여러 개 골라도 됩니다',multi:true,add:true,two:true,memo:true,opts:bigOpts(45)}],
+  event:45,
+  goal:{q:'마흔다섯의 내 목표는?',chips:['아이 교육','노후 준비','승진','건강','빚 갚기','여행']}},
 
- {id:'S5',age:27,title:'독립',q:'이제 어떻게 할까?',
-  intro:true,
-  picks:[
-   {k:'region',label:'어디서 살까',opts:[
-     {v:'capital',t:'수도권',d:'생활비가 많이 듭니다',money:'집값 7억 · 월세 1년에 1,125만원쯤'},
-     {v:'metro',t:'광역시',d:'생활비가 보통입니다',money:'집값 4억 2,000만원 · 월세 1년에 945만원쯤'},
-     {v:'other',t:'그 밖의 지역',d:'생활비가 적게 듭니다',money:'집값 3억 · 월세 1년에 810만원쯤'}]},
-   {k:'spend',label:'돈을 어떻게 쓸까',opts:[
-     {v:'0.85',t:'아껴 쓴다',d:'저축이 가장 많이 남습니다'},
-     {v:'1',t:'보통',d:'버는 만큼 쓰고 남는 만큼 저축합니다'},
-     {v:'1.25',t:'즐기며 산다',d:'저축은 줄지만 사는 게 즐겁습니다'}]},
-   {k:'invest',label:'모은 돈을 어디에 둘까',opts:[
-     {v:'safe',t:INVEST.safe.t,d:INVEST.safe.d,money:'1년에 2%씩 불어납니다'},
-     {v:'mid',t:INVEST.mid.t,d:INVEST.mid.d,money:'1년에 4%씩 불어납니다'},
-     {v:'risky',t:INVEST.risky.t,d:INVEST.risky.d,money:'1년에 7%씩 · 50살에 딱 한 번 결과를 봅니다'}]}]},
+ {age:55,sub:'은퇴가 보인다',desc:'',
+  slots:[
+   {k:'work',n:'일',memo:true,opts:[
+     {v:'stay',t:'하던 대로 계속'},
+     {v:'less',t:'천천히 줄인다',d:'수입 30% 감소'},
+     {v:'quit',t:'지금 그만둔다',d:'수입 0 · 연금은 65살부터'}]},
+   {k:'pension',n:'노후 준비',s:'지금 넣는 돈이 65살 이후를 바꿉니다',memo:'must',opts:[
+     {v:'0',t:'따로 안 한다',money:'0원'},
+     {v:'1',t:'조금씩',money:'1년 300만원'},
+     {v:'2',t:'꽤 많이',money:'1년 700만원'},
+     {v:'3',t:'최대한',money:'1년 1,200만원'}]},
+   {k:'kidwed',n:'자녀 결혼',two:true,memo:true,opts:[
+     {v:'1',t:'도와준다',money:'한 명당 3,000만원'},
+     {v:'0',t:'스스로 하게 한다',money:'0원'}]},
+   {k:'big',n:'큰 지출',s:'여러 개 골라도 됩니다',multi:true,add:true,two:true,memo:true,opts:bigOpts(55)}],
+  event:55,
+  goal:{q:'쉰다섯의 내 목표는?',chips:['노후 준비','건강','자녀 결혼','빚 정리','일 줄이기']}},
 
- {id:'S6',age:30,title:'결혼',q:'결혼, 어떻게 할까?',
-  hint:'"안 한다"를 골라도 손해는 없습니다. 오히려 저축이 늘어납니다.',
-  picks:[{k:'marry',opts:[
-   {v:'1',t:'결혼에 도전한다',d:'둘이 벌면 집안 수입이 크게 늘어납니다',money:'결혼할 때 5,000만원쯤 듭니다'},
-   {v:'0',t:'혼자 산다',d:'주사위 없이 넘어갑니다. 저축이 늘어납니다'}]}],
-  reason:{k:'marry',q:'그렇게 정한 이유는?',ph:'예) 혼자보다 같이 사는 게 좋을 것 같아서'},
-  chals:[{k:'marry',when:function(){return S.picks.marry==='1';}}]},
+ {age:65,sub:'일을 놓는 때',desc:'국민연금이 나옵니다. 일할 때 벌던 돈의 3분의 1쯤입니다.',
+  slots:[
+   {k:'work',n:'일',memo:'must',opts:[
+     {v:'no',t:'완전히 쉰다',money:'수입은 연금뿐'},
+     {v:'part',t:'파트타임으로 일한다',money:'1년 1,000만원 더'},
+     {v:'keep',t:'하던 일을 계속한다',d:'몸이 힘듭니다',money:'예전 수입의 절반'}]},
+   {k:'home',n:'집',memo:true,opts:[
+     {v:'same',t:'살던 집에 산다'},
+     {v:'small',t:'작은 집으로 옮긴다',d:'차액이 생깁니다',money:'집이 있으면 목돈 + 주거비 30% 감소'},
+     {v:'kid',t:'자녀와 함께 산다',money:'주거비 거의 0'}]},
+   {k:'care',n:'의료비와 보험',memo:true,opts:[
+     {v:'0',t:'아프면 그때 낸다',money:'1년 300만원'},
+     {v:'1',t:'보험을 들어둔다',money:'1년 600만원'},
+     {v:'2',t:'건강에 투자한다',money:'1년 1,000만원'}]}],
+  goal:{q:'예순다섯, 어떻게 지내고 싶나요?',chips:['편하게 쉬기','건강','취미·여행','손주','계속 일하기']}},
 
- {id:'S7',age:33,title:'가족',q:'아이는 몇 명?',
-  hint:marriedPlan()?'':'혼자 키우면 돈이 1.4배쯤 더 듭니다.',
-  picks:[{k:'kids',two:true,opts:kidOpts}],
-  wheel:{k:'kid',when:function(){return (S.picks.kids||'0')!=='0';}}},
-
- {id:'S8',age:36,title:'집',q:'집은 어떻게 할까?',
-  hint:'"'+h.n+'" 기준입니다. 지금 내 돈은 '+won(money36)+'입니다.',
-  picks:[{k:'housing',opts:[
-   {v:'parents',t:'부모님 집에서 산다',d:'집에 드는 돈이 거의 없습니다',money:'1년에 300만원쯤',
-    why:marryOK()?'결혼했으면 어렵습니다':null},
-   {v:'monthly',t:'월세로 산다',money:'1년에 '+won(900*reg.c)+'쯤'},
-   {v:'jeonse',t:'전세로 산다',d:'이자만 냅니다',money:'1년에 '+won(20000*.035*reg.c*.35)+'쯤'},
-   {v:'buy',t:'집을 산다',d:'은행 대출 심사를 봐야 합니다',
-    money:'집값 '+won(h.price)+' · 계약금 '+won(h.down)+' 필요 · 대출 '+won(h.loan)+' · 매달 '+won(h.monthly)+'씩 30년',
-    why:(money36<h.down)?('계약금 '+won(h.down)+'이 필요한데 지금 '+won(money36)+'뿐이에요'):null}]}],
-  reason:{k:'life',q:'아이 수와 집을 이렇게 정한 이유는?',ph:'예) 아이 둘은 키우고 싶고 회사 가까이 살고 싶어서'},
-  chals:[{k:'loan',when:function(){return S.picks.housing==='buy';}}]},
-
- {id:'S9',age:42,title:'마흔',q:'일을 어떻게 할까?',
-  picks:[{k:'career',opts:[
-   {v:'promo',t:'승진에 도전한다',d:'성공하면 연봉이 15% 오릅니다'},
-   {v:'move',t:'회사를 옮긴다',d:'연봉이 바로 10% 오르지만 이후에는 천천히 오릅니다'},
-   {v:'startup',t:'내 사업을 시작한다',d:'성공하면 크게 벌지만 실패하면 빚이 남습니다',
-     money:'성공 확률은 3명 중 1명입니다 · 다시 도전 없음'},
-   {v:'stay',t:'지금 자리를 지킨다',d:'변화는 없지만 마음이 편합니다'}]}],
-  reason:{k:'career',q:'그렇게 정한 이유는?',ph:'예) 돈보다 시간이 더 중요해서 지금을 지키고 싶다'},
-  chals:[{k:'promo',when:function(){return S.picks.career==='promo';}},
-         {k:'biz2',when:function(){return S.picks.career==='startup';}}]},
-
- {id:'S10',age:50,title:'쉰',q:'남는 돈을 어디에 쓸까?',
-  picks:[{k:'mid',opts:[
-   {v:'edu',t:'아이 교육에 쓴다',d:'돈은 더 나가지만 가족과 가까워집니다'},
-   {v:'parent',t:'부모님을 돕는다',d:'돈은 더 나가지만 마음이 놓입니다'},
-   {v:'retire',t:'노후 준비를 더 한다',d:'모은 돈이 조금 더 빨리 불어납니다'},
-   {v:'health',t:'건강과 취미에 쓴다',d:'돈은 더 나가지만 사는 게 즐겁습니다'}]}],
-  chals:[{k:'invest',when:function(){return S.picks.invest==='risky';}}],
-  wheel:{k:'mid'}}
+ {age:75,sub:'노년',desc:'병원에 가는 일이 늘어납니다.',
+  slots:[
+   {k:'care',n:'의료비',memo:true,opts:[
+     {v:'0',t:'최소한만',money:'1년 500만원'},
+     {v:'1',t:'필요한 만큼',money:'1년 1,000만원'},
+     {v:'2',t:'좋은 병원에서',money:'1년 1,800만원'}]},
+   {k:'live',n:'어떻게 살까',memo:'must',opts:(function(){
+     var hurt=!!(S.ev[75]&&S.ev[75].done&&S.ev[75].hit);
+     return [
+      {v:'self',t:'혼자 지낸다',d:hurt?null:'도움 없이 지냅니다',
+       why:hurt?'혼자 지내기 어려워졌습니다. 누군가의 도움이 필요합니다':null},
+      {v:'kid',t:'자녀와 함께 산다',d:hurt?'자녀가 돌봐줍니다':null,money:'주거비 거의 0'},
+      {v:'helper',t:'집에서 도움을 받는다',d:'요양보호사가 집으로 옵니다',money:'1년 1,200만원'},
+      {v:'care',t:'요양 시설에 들어간다',money:'1년 2,400만원'}];
+   })()}],
+  event:75,
+  goal:{q:'일흔다섯, 무엇이 제일 중요할까요?',chips:['건강','가족','편안함','남겨주기','하고 싶던 것']}}
  ];
 }
 
-/* ========= 그리기 ========= */
-var DOT={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
-
-function renderStage(){
-  var L=STAGES(),st=L[S.idx],h='';
-  h+='<div style="padding-top:4px"><span class="age">'+st.age+'세 · '+st.title+'</span></div>';
-  h+='<div class="q">'+st.q+'</div>';
-  if(st.hint) h+='<p class="hint">'+st.hint+'</p>';
-  h+='<div id="moneyBox"></div>';
-
-  if(st.selects) st.selects.forEach(function(sl){
-    h+='<div class="sect"><div class="slab">'+sl.label+'</div><select id="sel_'+sl.k+'"></select>';
-    if(st.freeUni) h+='<div id="uniFree"></div>';
-    h+='</div>';
-  });
-  (st.picks||[]).forEach(function(g){
-    h+='<div class="sect">'+(g.label?'<div class="slab">'+g.label+'</div>':'')+'<div class="opts'+(g.two?' two':'')+'">';
-    g.opts.forEach(function(o){
-      var lock=o.why?' lock':'';
-      h+='<button class="opt'+(S.picks[g.k]===o.v?' sel':'')+lock+'" data-g="'+g.k+'" data-v="'+o.v+'"'+(o.why?' disabled':'')+'>'+
-         '<b>'+o.t+'</b>'+(o.d?'<span>'+o.d+'</span>':'')+(o.money?'<span class="cost">'+o.money+'</span>':'')+
-         (o.why?'<span class="why">'+o.why+'</span>':'')+'</button>';
-    });
-    if(g.free) h+='<button class="opt'+(S.picks[g.k]==='__free__'?' sel':'')+'" data-g="'+g.k+'" data-v="__free__">'+
-                  '<b>여기 없는 걸 하고 싶어요</b><span>직접 써서 넣을 수 있어요</span></button>';
-    h+='</div><div id="free_'+g.k+'"></div></div>';
-  });
-  if(st.reason){
-    var v=S.reasons[st.reason.k]||'',ok=len(v)>=MINLEN;
-    h+='<div class="reason"><div class="rq">'+st.reason.q+' <em>*</em></div>'+
-       '<div class="rh">'+MINLEN+'자 이상 써야 다음으로 넘어갈 수 있어요.</div>'+
-       '<textarea id="rTa" maxlength="200" placeholder="'+st.reason.ph+'" class="'+(ok?'ok':'')+'">'+
-       v.replace(/</g,'&lt;')+'</textarea><div class="cnt'+(ok?' ok':'')+'" id="rCnt"></div></div>';
+/* ================= 계산 ================= */
+function jobOf(){
+  var v=P(25,'job');
+  if(v==='__free__'){
+    var f=lookupPay(CU(25,'job_name'));
+    var p=clamp(parseFloat(CU(25,'job_pay'))||(f?f.p:3000),800,9000);
+    return {p:p,g:[1,1.45,1.75,1.85],ret:60,d:0,name:CU(25,'job_name')||'내가 쓴 직업'};
   }
-  if(st.chals) h+='<div id="chalBox"></div>';
-  if(st.wheel) h+='<div id="wheelBox"></div>';
-  $('#stageBody').innerHTML=h;
+  var J=JOBS[v];if(!J)return {p:3000,g:[1,1.4,1.7,1.8],ret:60,d:0,name:'—'};
+  var o={};for(var k in J)o[k]=J[k];o.name=v;return o;
+}
+function need(key){
+  var st=P(15,'study'),prep=st==='hard'?1:st==='fun'?-1:0;
+  if(key==='job'){var J=jobOf();return clamp(3+(J.d||0)+prep,1,5);}
+  if(key==='marry')return clamp(3+prep,1,5);
+  if(key==='loan'){var J2=jobOf();return clamp(3+(J2.p>=4000?1:0)+(P(25,'home_where')==='other'?1:P(25,'home_where')==='seoul'?-1:0),1,5);}
+  if(key==='promo')return clamp(3+prep,1,5);
+  if(key==='biz')return 2;
+  return 3;
+}
+function needNow(key){var s=S.ch[key]||{tries:0};
+  if(key==='biz')return need(key);
+  return clamp(need(key)+(s.tries===1?1:s.tries>=2?2:0),1,5);}
+function passed(k){return !!(S.ch[k]&&S.ch[k].pass);}
 
-  if(st.selects) st.selects.forEach(function(sl){
-    var el=document.getElementById('sel_'+sl.k);
-    for(var g in UNIS){
-      var og=document.createElement('optgroup');og.label=g;
-      UNIS[g].forEach(function(n){var o=document.createElement('option');o.value=n;o.textContent=n;og.appendChild(o);});
-      el.appendChild(og);
+function simulate(){
+  var R=reg(),c=R.c,J=jobOf();
+  var kids=+(P(35,'kids')||0),married=(P(35,'marry')==='1')&&passed('marry');
+  var jobOK=passed('job');
+  var rows=[],cash=0,broke=0;
+  var seed=[0,150,400,600][+(P(15,'money')||0)]||0;
+  cash=seed;
+
+  /* 수입 배수 */
+  function payAt(i){                     /* i: 0=25,1=35,2=45,3=55 */
+    var base=J.p*(jobOK?1:0.75);
+    var m=J.g[i];
+    if(i>=1){
+      var w=P(35,'work');
+      if(w==='promo'&&passed('promo'))m*=1.15;
+      if(w==='move')m*=1.10;
+      if(w==='biz')m*=passed('biz')?1.45:0.65;
     }
-    var of=document.createElement('option');of.value='__free__';of.textContent='여기 없는 학교 (직접 쓰기)';el.appendChild(of);
-    if(S.picks[sl.k])el.value=S.picks[sl.k];else S.picks[sl.k]=el.value;
-    el.onchange=function(){S.picks[sl.k]=this.value;renderStage();};
+    if(i>=2){
+      var w2=P(45,'work');
+      if(w2==='up')m*=1.10;
+      if(w2==='down')m*=0.80;
+      if(w2==='biz')m*=passed('biz')?1.45:0.65;
+    }
+    if(i>=3){
+      /* 55~64살: 정년이 지난 만큼 수입이 줄어듭니다 */
+      var frac=clamp((J.ret-55)/10,0,1);
+      m*=frac+(1-frac)*0.4;
+      var w3=P(55,'work');
+      if(w3==='less')m*=0.70;
+      if(w3==='quit')m=0;
+    }
+    return Math.round(base*m*(married&&i>=1?1.7:1));
+  }
+  var pay=[payAt(0),payAt(1),payAt(2),payAt(3)];
+  var peak=Math.max.apply(null,pay);
+  var pen=[0,300,700,1200][+(P(55,'pension')||0)]||0;
+  /* 국민연금: 개인 기준 연 1,500만원(월 125만원) 언저리가 상한.
+     부부면 배우자 몫이 더해지지만 배우자 연금은 대개 더 적습니다. */
+  var pensionIncome=Math.round(Math.min(peak/(married?1.7:1)*0.28,1500)*(married?1.5:1)+pen*0.5);
+
+  /* 주거 */
+  var bought=false,buyAge=0;
+  if(P(35,'home')==='buy'&&passed('loan')){bought=true;buyAge=35;}
+  else if(P(45,'home')==='buy'&&passed('loan')){bought=true;buyAge=45;}
+  var mortgage=Math.round(pmt(R.home*0.7,.04,30)*12);
+  function homeCost(age){
+    var base;
+    if(age<=25){var h=P(25,'home')||'monthly';base=h==='parents'?300:h==='jeonse'?R.jeonse:R.rent;}
+    else{
+      var h25=P(25,'home')||'monthly',h35=P(35,'home');
+      base=h25==='jeonse'?R.jeonse:R.rent;      /* 35살엔 부모님 집에 못 삼 */
+      if(h35==='jeonse')base=R.jeonse;
+      if(bought&&age>=buyAge)base=(age<buyAge+30)?mortgage:Math.round(420*c); /* 30년 뒤 대출 끝, 관리비만 */
+      if(age>=45&&P(45,'home')==='up')base=Math.round(base*1.5);
+      if(age>=65){
+        var h65=P(65,'home');
+        if(h65==='small')base=Math.round(base*0.7);
+        if(h65==='kid')base=Math.round(base*0.15);
+      }
+      if(age>=75&&P(75,'live')==='kid')base=Math.round(base*0.15);
+    }
+    return Math.round(base);
+  }
+  /* 지출 */
+  function liveCost(age){
+    var fam=(married&&age>=35)?1.7:1;
+    var base=1150*c*fam;
+    if(age>=65)base*=0.85;
+    if(age>=75)base*=0.8;
+    return Math.round(base);
+  }
+  function bigYear(a){                 /* a = 25/35/45/55 */
+    var t=0,L=BIG[a]||[];
+    PA(a,'big').forEach(function(v){
+      L.forEach(function(o){if(o.v===v&&o.y)t+=o.y;});});
+    if(has(a,'big','__add__'))t+=clamp(+CU(a,'big_cost')||0,0,5000);
+    return t;
+  }
+  function bigCost(age){
+    var t=0;
+    if(age===25)t=bigYear(25);
+    if(age===35){t=bigYear(35);if(has(25,'big','car'))t+=380;}
+    if(age===45){t=bigYear(45);if(has(35,'big','car'))t+=380;}
+    if(age===55){t=bigYear(55);if(has(45,'big','car'))t+=380;}
+    return Math.round(t*c);
+  }
+  /* 확률로 일어난 일의 비용 */
+  function evCost(age){
+    var t=0;
+    if(age>=45&&age<55&&evHit(45))t+=700;
+    if(age>=75&&evHit(75))t+=(P(65,'care')==='1'?700:1500);
+    return Math.round(t*c);
+  }
+  function kidCost(age){
+    if(!kids)return 0;
+    var t=0;
+    if(age>=35&&age<55)t+=900*c*kids;                       /* 기본 양육 */
+    if(age>=45&&age<65)t+=[0,600,1200,2000][+(P(45,'edu')||0)]*kids;
+    return Math.round(t);
+  }
+  function careCost(age){
+    if(age<55)return Math.round(180*c);
+    if(age<65)return Math.round(300*c);
+    if(age<75)return [300,600,1000][+(P(65,'care')||0)]||300;
+    return ([500,1000,1800][+(P(75,'care')||0)]||500)+(P(75,'live')==='care'?2400:P(75,'live')==='helper'?1200:0);
+  }
+  function pensionPay(age){return (age>=55&&age<65)?pen:0;}
+
+  var LOVE=[0,240,600,960][+(P(25,'love')||0)]||0;
+
+  AGES.forEach(function(age,i){
+    var income=0;
+    if(age===15)income=0;
+    else if(age===25)income=pay[0];
+    else if(age===35)income=pay[1];
+    else if(age===45)income=pay[2];
+    else if(age===55)income=pay[3];
+    else if(age===65){
+      var w=P(65,'work');
+      income=pensionIncome+(w==='part'?1000:w==='keep'?Math.round(pay[3]*0.5):0);
+    }else income=pensionIncome;
+
+    var exp=0;
+    if(age===15){
+      /* 15~24살: 밥·옷·용돈·학원·등록금. 내가 내는 게 아니라 부모님이 냅니다. */
+      exp=Math.round(1450*c);
+    }
+    else{
+      exp=liveCost(age)+homeCost(age)+kidCost(age)+bigCost(age)+careCost(age)+pensionPay(age)+evCost(age);
+      if(age===25)exp+=LOVE;
+    }
+    /* 목돈 */
+    var once=0,ol=[];
+    function OC(label,v,cat){if(!v)return;once+=v;ol.push({l:label,v:v,c:cat});}
+    if(age===25){if(has(25,'big','car'))OC('차 구입',2500,'big');}
+    if(age===35){
+      if(married)OC('결혼 비용',5000,'kid');
+      if(kids)OC('아이 낳기',500*kids,'kid');
+      if(has(35,'big','car'))OC('차 구입',2500,'big');
+      if(bought&&buyAge===35)OC('집 살 때 처음 낸 돈',Math.round(R.home*0.3),'home');
+      if(P(35,'work')==='biz'&&!passed('biz'))OC('사업 실패로 남은 빚',5000,'big');
+    }
+    if(age===45){
+      if(has(45,'big','car'))OC('차 구입',3000,'big');
+      if(bought&&buyAge===45)OC('집 살 때 처음 낸 돈',Math.round(R.home*0.3),'home');
+      if(P(45,'work')==='biz'&&!passed('biz'))OC('사업 실패로 남은 빚',5000,'big');
+    }
+    if(age===55){
+      if(P(55,'kidwed')==='1'&&kids)OC('자녀 결혼 도와주기',3000*kids,'kid');
+      if(evHit(55))OC('큰 병 치료비',2000,'care');
+    }
+    if(age===65){if(P(65,'home')==='small'&&bought)OC('작은 집으로 옮기며 남은 돈',-Math.round(R.home*0.25),'home');}
+
+    var years=(age===85)?1:10;
+    /* 15살 구간의 지출은 부모님 몫이라 내 통장에서 빠지지 않습니다 */
+    var mine=(age===15)?0:(income-exp);
+    var save=mine*years-once;
+    cash+=save;
+    rows.push({age:age,income:income,exp:exp,once:once,onceList:ol,save:save,cash:Math.round(cash),years:years,
+      byParent:(age===15),
+      live:age===15?Math.round(1450*c):liveCost(age),home:0,kid:age===15?0:kidCost(age),
+      big:age===15?0:bigCost(age)+(age===25?LOVE:0),
+      care:age===15?0:careCost(age)+evCost(age),pen:pensionPay(age)});
+    if(age!==15)rows[rows.length-1].home=homeCost(age);
   });
+
+  /* 끝까지 회복하지 못한 첫 시점을 '바닥'으로 봅니다 */
+  var lastOK=-1;
+  rows.forEach(function(r,i){if(r.cash>=0)lastOK=i;});
+  if(lastOK<rows.length-1){
+    var i2=lastOK+1,r0=rows[lastOK],r1=rows[i2];
+    var per=r1.income-r1.exp;
+    if(per<0){var y=Math.ceil(((r0?r0.cash:0)-r1.once)/(-per));broke=clamp(r1.age+clamp(y,0,r1.years),25,85);}
+    else broke=r1.age;
+  }
+  var w65=P(65,'work');
+  var retire=(P(55,'work')==='quit')?55:(w65==='keep'||w65==='part')?75:J.ret;
+  var startWork=25;
+  var totalIn=0,totalOut=0,parentPaid=0;
+  var cat={home:0,live:0,kid:0,care:0,big:0,pen:0};
+  rows.forEach(function(r){
+    if(r.byParent){parentPaid+=r.exp*r.years;return;}
+    totalIn+=r.income*r.years;totalOut+=r.exp*r.years+Math.max(0,r.once);
+    cat.home+=r.home*r.years;cat.live+=r.live*r.years;cat.kid+=r.kid*r.years;
+    cat.care+=r.care*r.years;cat.big+=r.big*r.years;cat.pen+=r.pen*r.years;
+    (r.onceList||[]).forEach(function(o){if(o.v>0)cat[o.c]+=o.v;});
+  });
+  for(var ck in cat)cat[ck]=Math.round(cat[ck]);
+  return {rows:rows,broke:broke,cash85:rows[7].cash,cat:cat,parentPaid:Math.round(parentPaid),
+    totalIn:Math.round(totalIn),totalOut:Math.round(totalOut),
+    pay:pay,pensionIncome:pensionIncome,retire:retire,startWork:startWork,homeValue:R.home,
+    workYears:Math.max(0,retire-startWork),spendYears:85-15,
+    married:married,kids:kids,bought:bought,job:J.name,region:R.n,jobOK:jobOK};
+}
+
+/* ================= 화면 ================= */
+var DOT={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+var bgTurn=0,bgNow='';
+function setBg(src){
+  if(!src||src===bgNow)return;
+  var a=document.getElementById('bgA'),b=document.getElementById('bgB');
+  var show=(bgTurn%2===0)?a:b, hide=(bgTurn%2===0)?b:a;
+  var probe=new Image();
+  probe.onload=function(){show.style.backgroundImage='url("'+src+'")';
+    show.classList.add('on');hide.classList.remove('on');bgTurn++;bgNow=src;};
+  probe.onerror=function(){show.classList.remove('on');hide.classList.remove('on');bgNow=src;};
+  probe.src=src;
+}
+setBg(IMG.title);
+function renderStage(){
+  var L=PLAN(),st=L[S.idx];
+  var keepY=window.scrollY;
+  $('#hAge').innerHTML=st.age+'살 <small>'+st.sub+'</small>';
+  $('#hDesc').textContent=st.desc||'';
+  $('#hStep').textContent=(S.idx+1)+' / '+L.length;
+  setBg(IMG[st.age]);
+  $('#backBtn').disabled=(S.idx===0);
+
+  function slotHTML(g){
+    var h='<div class="slot'+(g.wide?' wide':'')+'"><p class="sh"><i></i>'+g.n+'</p>'+(g.s?'<p class="ss">'+g.s+'</p>':'');
+    h+='<div class="opts'+(g.two?' two':'')+'">';
+    g.opts.forEach(function(o){
+      if(o.why&&!g.multi&&P(st.age,g.k)===o.v){delete S.pick[st.age][g.k];}
+      var on=g.multi?has(st.age,g.k,o.v):(P(st.age,g.k)===o.v);
+      h+='<button class="opt'+(on?' sel':'')+(o.why?' lock':'')+'" data-g="'+g.k+'" data-m="'+(g.multi?1:0)+'" data-v="'+o.v+'"'+(o.why?' disabled':'')+'>'+
+        '<b>'+o.t+'</b>'+((o.d&&!g.wide)?'<span>'+o.d+'</span>':'')+
+        (o.money?'<span class="cost">'+o.money+'</span>':'')+
+        ((o.warn&&!g.wide)?'<span class="why">'+o.warn+'</span>':'')+
+        ((o.why&&!g.wide)?'<span class="why">'+o.why+'</span>':'')+'</button>';
+    });
+    if(g.free)h+='<button class="opt'+(P(st.age,g.k)==='__free__'?' sel':'')+'" data-g="'+g.k+'" data-m="0" data-v="__free__">'+
+      '<b>여기 없는 일을 하고 싶어요</b>'+(g.wide?'':'<span>직접 써서 넣기</span>')+'</button>';
+    if(g.add)h+='<button class="opt'+(has(st.age,g.k,'__add__')?' sel':'')+'" data-g="'+g.k+'" data-m="1" data-v="__add__">'+
+      '<b>＋ 직접 추가하기</b><span>하고 싶은 걸 써서 넣기</span></button>';
+    h+='</div>';
+    h+='<div class="slotinfo" id="info_'+g.k+'">'+slotInfoHTML(st,g)+'</div>';
+    h+='<div id="free_'+g.k+'"></div><div id="ask_'+g.k+'"></div>';
+    if(g.memo){
+      var must=(g.memo==='must'||MEMO_ALL),mv=MM(st.age,g.k),mn=len(mv);
+      h+='<div class="memo"><div class="ml">왜 이걸 골랐나요? 이유를 한 줄로 적어보세요.'+(must?' <em>*</em>':'')+
+        '<span class="mc'+(mn>=MEMOLEN?' ok':'')+'">'+
+          (mn>=MEMOLEN?'좋아요 ✓':(MEMOLEN-mn)+'자 더')+'</span></div>'+
+        '<input id="memo_'+g.k+'" maxlength="80" placeholder="예) 돈은 적어도 하고 싶은 일이라서" value="'+
+        String(mv).replace(/"/g,'&quot;')+'"></div>';
+    }
+    h+='</div>';
+    return h;
+  }
+
+  /* 넓은 슬롯은 위쪽 전체 폭, 나머지는 세 칸에 고르게 */
+  var wide=[],narrow=[];
+  st.slots.forEach(function(g){(g.wide?wide:narrow).push(g);});
+  var blocks=narrow.map(function(g){return {w:(g.opts.length||3)+2,h:slotHTML(g)};});
+  if(st.chal)blocks.push({w:4,h:'<div id="chalBox"></div>'});
+  if(st.event)blocks.push({w:5,h:'<div id="evBox"></div>'});
+  if(st.goal){
+    var gv=(S.goal[st.age]||'');
+    blocks.push({w:6,h:'<div class="goal"><p class="gq">'+st.goal.q+' <em>*</em></p>'+
+      '<div class="chips">'+st.goal.chips.map(function(ch){return '<button class="chip" data-c="'+ch+'">'+ch+'</button>';}).join('')+'</div>'+
+      '<textarea id="goalTa" maxlength="120" placeholder="직접 써도 되고, 위에서 눌러도 됩니다">'+gv.replace(/</g,'&lt;')+'</textarea>'+
+      '<div class="cnt" id="goalCnt"></div></div>'});
+  }
+  var total=blocks.reduce(function(a,b){return a+b.w;},0), per=total/3;
+  var cols=[[],[],[]],acc=0,ci=0;
+  blocks.forEach(function(b){
+    if(ci<2&&acc>=per*(ci+1)-b.w/2){ci++;}
+    cols[ci].push(b.h);acc+=b.w;
+  });
+  var h=wide.map(function(g){return '<div class="wideband">'+slotHTML(g)+'</div>';}).join('')+
+    cols.map(function(c){return '<div class="stackcol">'+c.join('')+'</div>';}).join('');
+  $('#stageBody').innerHTML=h;
 
   $('#stageBody').querySelectorAll('.opt').forEach(function(b){
     b.onclick=function(){
       if(this.classList.contains('lock'))return;
-      var g=this.dataset.g;
-      S.picks[g]=this.dataset.v; sndTick();
-      if(g==='major'||g==='region'||g==='marry'||g==='job'||g==='invest'){ renderStage(); return; }
-      $('#stageBody').querySelectorAll('.opt[data-g="'+g+'"]').forEach(function(x){x.classList.remove('sel');});
-      this.classList.add('sel');
-      renderFree(); refresh();
+      if(this.dataset.m==='1')toggle(st.age,this.dataset.g,this.dataset.v);
+      else setPick(st.age,this.dataset.g,this.dataset.v);
+      sndTick();renderStage();
     };
   });
-  if(st.reason) document.getElementById('rTa').addEventListener('input',function(){
-    S.reasons[st.reason.k]=this.value;
-    this.className=(len(this.value)>=MINLEN)?'ok':'';
-    refresh();
-  });
-  renderFree(); refresh();
-  if(st.intro && !S.seen[st.id]){ S.seen[st.id]=1; setTimeout(openMoneyPop,220); }
+  if(st.goal){
+    $('#stageBody').querySelectorAll('.chip').forEach(function(b){
+      b.onclick=function(){
+        var ta=document.getElementById('goalTa');
+        ta.value=(ta.value?ta.value.replace(/\s*$/,'')+', ':'')+this.dataset.c;
+        S.goal[st.age]=ta.value;refresh();ta.focus();
+      };
+    });
+    document.getElementById('goalTa').addEventListener('input',function(){S.goal[st.age]=this.value;refresh();});
+  }
+  renderFree();refresh();fitFoot();
+  window.scrollTo(0,keepY);
 }
-
+/* 고른 보기의 설명을 슬롯 아래 같은 자리에 보여줍니다 (카드 크기가 안 변하도록) */
+function slotInfoHTML(st,g){
+  if(!g.wide)return '';
+  var v=P(st.age,g.k);
+  if(v===undefined)return '<div class="box" style="background:#f6f4f0;border-color:#e9e5dd;color:#8d939b">위에서 하나 골라보세요</div>';
+  if(v==='__free__')return '';
+  var o=null;g.opts.forEach(function(z){if(z.v===v)o=z;});
+  if(!o)return '';
+  return '<div class="box"><div class="t">'+o.t+'</div>'+
+    (o.jobs?'이런 일을 할 수 있어요<br><b>'+o.jobs+'</b>':'')+
+    (o.d?(o.jobs?'<br>':'')+o.d:'')+
+    (o.money?'<div class="c">'+o.money+'</div>':'')+'</div>';
+}
+/* 아래 버튼 줄과 겹치지 않게 여백을 맞춥니다 */
+function fitFoot(){
+  var sc=document.querySelector('.screen.on');if(!sc)return;
+  var f=sc.querySelector('.foot');if(!f)return;
+  var app=document.querySelector('.app'),v=(f.offsetHeight+18)+'px';
+  if(app.style.paddingBottom!==v)app.style.paddingBottom=v;   /* 값이 같으면 건드리지 않습니다 */
+}
+window.addEventListener('resize',fitFoot);
 function renderFree(){
-  var st=STAGES()[S.idx];
-  if(st.freeUni){
-    var box=document.getElementById('uniFree');
-    if(box){
-      if(S.picks.uni==='__free__'){
-        box.innerHTML='<div class="free"><div class="fl">학교 이름을 써주세요</div>'+
-          '<input id="fUni" placeholder="예) OO대학교, 해외 OO대, 미용 학원" value="'+(S.free.uniName||'').replace(/"/g,'')+'"></div>';
-        document.getElementById('fUni').oninput=function(){S.free.uniName=this.value;refresh();};
-      } else box.innerHTML='';
+  var st=PLAN()[S.idx];
+  st.slots.forEach(function(g){
+    /* 선택지에 딸린 질문 */
+    var ab2=document.getElementById('ask_'+g.k),ao=askOf(st.age,g);
+    if(ab2){
+      if(ao){
+        var cur=CU(st.age,g.k+'_ask');
+        ab2.innerHTML='<div class="askbox"><div class="al">'+ao.ask+' <em>*</em></div>'+
+          '<input id="ask_i_'+g.k+'" maxlength="60" placeholder="한 줄로 적어주세요" value="'+String(cur).replace(/"/g,'&quot;')+'"></div>';
+        document.getElementById('ask_i_'+g.k).oninput=function(){setCu(st.age,g.k+'_ask',this.value);refresh();};
+      }else ab2.innerHTML='';
     }
-  }
-  (st.picks||[]).forEach(function(g){
+    /* 선택 이유 메모 */
+    var mi=document.getElementById('memo_'+g.k);
+    if(mi)mi.oninput=function(){setMM(st.age,g.k,this.value);
+      var n=len(this.value),box=this.closest('.memo'),c=box.querySelector('.mc');
+      var must=!!box.querySelector('.ml em');
+      if(c){c.textContent=n>=MEMOLEN?'좋아요 ✓':(MEMOLEN-n)+'자 더';
+            c.className='mc'+(n>=MEMOLEN?' ok':'');}
+      refresh();};
+    if(g.add){
+      var ab=document.getElementById('free_'+g.k);
+      if(ab&&has(st.age,g.k,'__add__')){
+        var an=CU(st.age,'big_name'),ac=CU(st.age,'big_cost');
+        ab.innerHTML='<div class="addbox"><div class="fl" style="font-size:12.5px;font-weight:650;color:var(--ink2)">무엇을 하고 싶어요?</div>'+
+          '<div class="row"><input id="aN" placeholder="예) 유학, 반려동물, 봉사활동, 콘서트" value="'+String(an).replace(/"/g,'')+'">'+
+          '<input id="aC" type="number" inputmode="numeric" placeholder="1년에 만원" value="'+ac+'"></div>'+
+          '<div class="tiny" style="margin-top:6px">오른쪽은 <b>1년에 드는 돈</b>(만원). 예) 1년에 200만원이면 <b>200</b></div></div>';
+        document.getElementById('aN').oninput=function(){setCu(st.age,'big_name',this.value);refresh();};
+        document.getElementById('aC').oninput=function(){setCu(st.age,'big_cost',this.value);refresh();};
+      }else if(ab&&!g.free)ab.innerHTML='';
+    }
     if(!g.free)return;
-    var box=document.getElementById('free_'+g.k); if(!box)return;
-    if(S.picks[g.k]!=='__free__'){box.innerHTML='';return;}
-    var isJob=g.free==='job';
-    var nm=isJob?(S.free.jobName||''):(S.free.majorName||'');
-    var py=isJob?(S.free.jobPay||''):(S.free.majorPay||'');
-    var found=lookupPay(nm);
-    box.innerHTML='<div class="free"><div class="fl">'+(isJob?'어떤 일을 하고 싶어요?':'무엇을 공부하고 싶어요?')+'</div>'+
-      '<input id="fN" placeholder="'+(isJob?'예) 웹툰 작가, 소방관, 수의사, 프로게이머':'예) 요리, 항공정비, 애니메이션, 수의학')+'" value="'+String(nm).replace(/"/g,'')+'">'+
-      (found?'<div class="found">✓ 비슷한 직업을 찾았어요 · 첫 연봉 약 '+won(found.pay)+' (바꿔도 됩니다)</div>':'')+
-      '<div class="fl2">처음 1년에 얼마쯤 벌 것 같아요? (만원)</div>'+
-      '<input id="fP" type="number" inputmode="numeric" placeholder="'+(found?found.pay:3500)+'" value="'+py+'">'+
-      '<div class="tiny" style="margin-top:5px">잘 모르겠으면 비워두세요. 위에서 찾은 금액으로 계산합니다.</div></div>';
+    var box=document.getElementById('free_'+g.k);if(!box)return;
+    if(P(st.age,g.k)!=='__free__'){box.innerHTML='';return;}
+    var nm=CU(25,'job_name'),py=CU(25,'job_pay'),f=lookupPay(nm);
+    box.innerHTML='<div class="free"><div class="fl">어떤 일을 하고 싶어요?</div>'+
+      '<input id="fN" placeholder="예) 웹툰 작가, 소방관, 수의사, 프로게이머" value="'+String(nm).replace(/"/g,'')+'">'+
+      (f?'<div class="found">✓ 비슷한 직업을 찾았어요 · 첫 연봉 약 '+won(f.p)+'</div>':'')+
+      '<div class="fl" style="margin-top:10px">1년에 얼마쯤 벌 것 같아요? (만원, 세금 뗀 뒤)</div>'+
+      '<input id="fP" type="number" inputmode="numeric" placeholder="'+(f?f.p:3000)+'" value="'+py+'">'+
+      '<div class="tiny" style="margin-top:6px">비워두면 위에서 찾은 금액으로 계산합니다.</div></div>';
     document.getElementById('fN').oninput=function(){
-      var f=lookupPay(this.value);
-      if(isJob){S.free.jobName=this.value; if(f&&!S.free.jobPay) S.free.jobPay='';}
-      else {S.free.majorName=this.value; if(f&&!S.free.majorPay) S.free.majorPay='';}
-      renderFree(); refresh();
-      var el=document.getElementById('fN'); if(el){el.focus(); el.setSelectionRange(el.value.length,el.value.length);}
-    };
-    document.getElementById('fP').oninput=function(){
-      if(isJob)S.free.jobPay=this.value; else S.free.majorPay=this.value; refresh();
-    };
+      setCu(25,'job_name',this.value);renderFree();refresh();
+      var el=document.getElementById('fN');if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);}};
+    document.getElementById('fP').oninput=function(){setCu(25,'job_pay',this.value);refresh();};
   });
 }
-
-/* 비운 채로 두면 사전 값 사용 */
-function freeAutoPay(kind){
-  var f=lookupPay(kind==='job'?S.free.jobName:S.free.majorName);
-  return f?f.pay:null;
-}
-
-/* ========= 내 돈 상황 ========= */
-function moneyHTML(age,titleOverride){
-  if(!S.picks.job) return '<div class="money"><div class="h">지금 내 돈</div>'+
-    '<div class="mrow"><span>아직 돈을 벌기 전이에요</span><b>'+won(S.start?S.start.help:0)+'</b></div>'+
-    '<div class="tiny" style="margin-top:6px">저축 = <b>버는 돈 − 쓰는 돈</b>. 이 남는 돈이 매년 쌓입니다.</div></div>';
-  var r;try{r=simulate();}catch(e){return '';}
-  var row=r.series.filter(function(d){return d.age<=age;}).pop();
-  if(!row) return '<div class="money"><div class="h">지금 내 돈</div><div class="mrow"><span>아직 일을 시작하기 전이에요</span><b>'+won(r.startCash)+'</b></div></div>';
-  var rate=Math.round(investRate()*1000)/10;
-  return '<div class="money"><div class="h">'+(titleOverride||row.age+'살, 내 돈 상황')+'</div>'+
-    '<div class="mrow plus"><span>1년에 버는 돈</span><b>+'+won(row.income)+'<span class="sm">한 달 '+perMonth(row.income)+'</span></b></div>'+
-    '<div class="mrow minus"><span>생활비</span><b>−'+won(row.living)+'<span class="sm">한 달 '+perMonth(row.living)+'</span></b></div>'+
-    (row.child>0?'<div class="mrow minus"><span>아이 키우는 돈</span><b>−'+won(row.child)+'<span class="sm">한 달 '+perMonth(row.child)+'</span></b></div>':'')+
-    '<div class="mrow minus"><span>집에 드는 돈</span><b>−'+won(row.housing)+'<span class="sm">한 달 '+perMonth(row.housing)+'</span></b></div>'+
-    '<div class="mrow big '+(row.save>=0?'plus':'minus')+'"><span>1년에 남는 돈</span><b>'+(row.save>=0?'+':'−')+won(Math.abs(row.save))+
-      '<span class="sm">'+(row.save>=0?'한 달에 '+perMonth(row.save)+'씩 저축':'매달 '+perMonth(-row.save)+'씩 모자람')+'</span></b></div>'+
-    '<div class="mrow big"><span>'+(row.nw>=0?'지금까지 모은 돈':'지금 빚')+'</span><b class="'+(row.nw<0?'debt':'')+'">'+won(row.nw)+'</b></div>'+
-    '<div class="tiny" style="margin-top:7px">저축 = 버는 돈 − 쓰는 돈. 쌓인 돈은 1년에 '+rate+'%씩 스스로도 불어납니다.'+
-    (row.nw<0?' <b style="color:var(--bad)">돈이 모자라면 빚이 되고 매년 5%씩 이자가 붙습니다.</b>':'')+'</div></div>';
-}
-function renderMoney(){
-  var box=document.getElementById('moneyBox'); if(!box)return;
-  box.innerHTML=moneyHTML(STAGES()[S.idx].age);
-}
-
-/* ========= 도전 ========= */
-function renderChal(){
-  var st=STAGES()[S.idx],box=document.getElementById('chalBox'); if(!box)return;
-  var out='';
-  (st.chals||[]).forEach(function(c){
-    if(c.when&&!c.when())return;
-    var T=CH_TEXT[c.k],P=PENALTY[c.k],mx=maxTries(c.k);
-    var s=S.ch[c.k]||{tries:0,pass:false,done:false}; S.ch[c.k]=s;
-    var need=needNow(c.k),gate=st.reason?reasonOK(st.reason.k):true;
-    var body;
-    if(s.done){
-      body=s.pass?'<div class="done ok">'+T.name+' 성공!</div>'
-        :'<div class="done bad">'+T.final+'</div><div class="need">'+FINALFAIL[c.k]+'</div>';
-    } else {
-      var dots='';for(var i=0;i<mx;i++)dots+=(i<mx-s.tries)?'●':'○';
-      body='<div class="need">주사위가 <b>1 ~ '+need+'</b> 이면 성공<br>'+chanceWord(need)+'</div>'+
-        '<div class="dots">'+dots+'</div>'+
-        '<div class="risk">'+(mx===1?'딱 한 번만 굴릴 수 있어요 · 실패하면 '+FINALFAIL[c.k]
-          :'실패하면 → '+P.label+(P.cost?' · '+won(P.cost)+'이 나갑니다':''))+'</div>'+
-        '<button class="btn dark big" id="roll_'+c.k+'" style="margin-top:12px"'+(gate?'':' disabled')+'>'+
-        (s.tries===0?'주사위 굴리기':'다시 도전하기 ('+(s.tries+1)+'번째)')+'</button>'+
-        (gate?'':'<div class="lockmsg">이유를 먼저 써야 굴릴 수 있어요</div>');
-    }
-    out+='<div class="chal'+(gate?'':' locked')+'"><div class="chname">'+T.name+' 도전</div>'+body+'</div>';
-  });
-  box.innerHTML=out;
-  (st.chals||[]).forEach(function(c){
-    var b=document.getElementById('roll_'+c.k);
-    if(b) b.onclick=function(){ openRoll(c.k); };
-  });
-}
-function renderWheel(){
-  var st=STAGES()[S.idx],box=document.getElementById('wheelBox'); if(!box)return;
-  var w=st.wheel;
-  if(w.when&&!w.when()){box.innerHTML='';return;}
-  var got=S.wheel[w.k];
-  if(got!==undefined){
-    var sl=WHEELS[w.k].slots[got];
-    box.innerHTML='<div class="chal"><div class="chname">'+sl.t+'</div><div class="need">'+sl.d+'</div></div>';
-  } else {
-    box.innerHTML='<div class="chal"><div class="chname">'+WHEELS[w.k].title+'</div>'+
-      '<div class="need">인생에는 내가 못 정하는 일도 생깁니다.<br>룰렛을 돌려보세요.</div>'+
-      '<button class="btn dark big" id="spinBtn" style="margin-top:12px">룰렛 돌리기</button></div>';
-    document.getElementById('spinBtn').onclick=function(){openWheel(w.k);};
+/* 도전 */
+var CHT={job:['취업','취업 성공!','취업 실패!','원하던 곳에 못 가고, <b>월급이 25% 적은 곳</b>에서 시작합니다. 평생 그 차이가 따라옵니다.'],
+ marry:['결혼','결혼 성공!','결혼 실패!','혼자 살기로 합니다'],
+ loan:['집 대출 심사','대출 통과!','대출 거절!','집은 못 사고 전월세로 지냅니다'],
+ promo:['승진','승진 성공!','승진 실패!','승진 없이 지금 자리를 지킵니다'],
+ biz:['사업','사업이 자리 잡았습니다!','사업 실패!','정리 비용 5,000만원이 빚으로 남고 수입이 줄어듭니다']};
+function chalList(){
+  var st=PLAN()[S.idx],out=[];
+  if(st.chal==='job')out.push('job');
+  if(st.chal==='life'){
+    if(P(35,'marry')==='1')out.push('marry');
+    if(P(35,'home')==='buy')out.push('loan');
+    if(P(35,'work')==='promo')out.push('promo');
+    if(P(35,'work')==='biz')out.push('biz');
   }
+  return out;
 }
-
-/* ========= 팝업 ========= */
+function renderChal(){
+  var box=document.getElementById('chalBox');if(!box)return;
+  var list=chalList();
+  if(!list.length){box.innerHTML='';return;}
+  box.innerHTML=list.map(function(k){
+    var T=CHT[k],s=S.ch[k]||{tries:0,pass:false,done:false};S.ch[k]=s;
+    var mx=(k==='biz')?1:3,n=needNow(k);
+    if(s.done)return '<div class="chal"><div class="chname">'+T[0]+' 도전</div>'+
+      (s.pass?'<div class="done ok">'+T[1]+'</div>':'<div class="done bad">'+T[2]+'</div><div class="need">'+T[3]+'</div>')+'</div>';
+    var dots='';for(var i=0;i<mx;i++)dots+=(i<mx-s.tries)?'●':'○';
+    return '<div class="chal"><div class="chname">'+T[0]+' 도전</div>'+
+      '<div class="need">주사위가 <b>1 ~ '+n+'</b> 이면 성공</div><div class="dots">'+dots+'</div>'+
+      '<div class="risk">'+(mx===1?'딱 한 번입니다':'실패하면 다음 판에 성공 범위가 하나 넓어집니다')+'</div>'+
+      '<button class="btn dark big" data-roll="'+k+'" style="margin-top:12px">'+
+      (s.tries===0?'주사위 굴리기':'다시 도전 ('+(s.tries+1)+'번째)')+'</button></div>';
+  }).join('');
+  box.querySelectorAll('[data-roll]').forEach(function(b){b.onclick=function(){openRoll(this.dataset.roll);};});
+}
 var popDone=null;
-function closePop(){$('#pop').classList.remove('on');if(popDone){var f=popDone;popDone=null;f();}}
-$('#popBtn').onclick=closePop;
+$('#popBtn').onclick=function(){$('#pop').classList.remove('on');if(popDone){var f=popDone;popDone=null;f();}};
 function pips(n,cls){var s='';for(var i=0;i<9;i++)s+='<i style="visibility:'+((n&&DOT[n].indexOf(i)>=0)?'visible':'hidden')+'"></i>';
  return '<div class="bigdice'+(cls||'')+'">'+s+'</div>';}
-
-function openStartCard(){
-  var st=S.start,homeName=REGION[st.home].n;
-  $('#popTitle').textContent='출발 카드';
-  $('#popNeed').innerHTML='누구나 시작점은 조금씩 다릅니다.<br>이건 내가 고른 게 아니에요.';
-  $('#popStage').innerHTML='<div class="startcard">'+
-    '<div class="sr"><span>가족이 도와줄 수 있는 돈</span><b>'+won(st.help)+'</b></div>'+
-    '<div class="sr"><span>우리 집이 있는 곳</span><b>'+homeName+'</b></div>'+
-    '<div class="sr"><span>대학에 가면 갚아야 할 돈</span><b>'+(st.loan?won(st.loan):'없음')+'</b></div>'+
-    '</div>';
-  $('#popRes').textContent=''; $('#popRes').className='popres';
-  $('#popSub').textContent='나머지는 전부 네가 정합니다.';
-  $('#popPenal').style.display='none';
-  $('#popBtn').textContent='시작하기';
-  $('#popBtn').style.visibility='visible';
-  $('#pop').classList.add('on');
-  popDone=function(){$('#popBtn').textContent='확인';};
-}
-function openMoneyPop(){
-  $('#popTitle').textContent='27살, 지금 내 돈';
-  $('#popNeed').innerHTML='여기서부터가 진짜 시작입니다.';
-  $('#popStage').innerHTML='<div class="popcard">'+moneyHTML(27,'1년 기준')+'</div>';
-  $('#popRes').textContent=''; $('#popRes').className='popres';
-  $('#popSub').textContent='';
-  $('#popPenal').style.display='none';
-  $('#popBtn').textContent='그럼 이제 어떻게 할까?';
-  $('#popBtn').style.visibility='visible';
-  $('#pop').classList.add('on');
-  popDone=function(){$('#popBtn').textContent='확인';};
-}
-
 function openRoll(key){
-  var st=STAGES()[S.idx];
-  if(st.reason&&!reasonOK(st.reason.k))return;
-  var s=S.ch[key]; if(s.done)return;
-  var T=CH_TEXT[key],P=PENALTY[key],mx=maxTries(key),need=needNow(key);
-  $('#popTitle').textContent=T.name+' 도전'+(mx>1?' '+(s.tries+1)+'번째':'');
-  $('#popNeed').innerHTML='주사위가 <b>1 ~ '+need+'</b> 이면 성공';
-  $('#popStage').innerHTML=pips(0,' spin');
+  var s=S.ch[key];if(s.done)return;
+  var T=CHT[key],mx=(key==='biz')?1:3,n=needNow(key);
+  $('#popTitle').textContent=T[0]+' 도전'+(mx>1?' '+(s.tries+1)+'번째':'');
+  $('#popNeed').innerHTML='주사위가 <b>1 ~ '+n+'</b> 이면 성공';
+  $('#popStage').innerHTML=pips(1+Math.floor(Math.random()*6),' throwin');
   $('#popRes').textContent='';$('#popRes').className='popres';
   $('#popSub').textContent='';$('#popPenal').style.display='none';
-  $('#popBtn').style.visibility='hidden';
-  $('#pop').classList.add('on'); sndRoll();
-
-  var t=0,iv=setInterval(function(){
+  $('#popBtn').style.visibility='hidden';$('#pop').classList.add('on');sndRoll();
+  var t=0,iv=null;
+  setTimeout(function(){ iv=setInterval(tick,95); },640);
+  function tick(){
     $('#popStage').innerHTML=pips(1+Math.floor(Math.random()*6),' spin');
-    if(++t>13){
-      clearInterval(iv);
-      var die=1+Math.floor(Math.random()*6);
-      s.tries+=1;s.die=die;
-      var pass=die<=need;
+    if(++t>10){clearInterval(iv);
+      var die=1+Math.floor(Math.random()*6);s.tries+=1;
+      var pass=die<=n;
       $('#popStage').innerHTML=pips(die,' land');
-      if(pass){
-        s.pass=true;s.done=true;
-        $('#popRes').innerHTML=T.win(s.tries).replace(/\n/g,'<br>');
-        $('#popRes').className='popres ok show';
-        $('#popSub').textContent='주사위 '+die+' · 1~'+need+' 안에 들어왔어요';
-        sndWin();
-      } else if(s.tries>=mx){
-        s.pass=false;s.done=true;
-        $('#popRes').textContent=T.final;
-        $('#popRes').className='popres bad show';
-        $('#popSub').textContent='주사위 '+die+(mx>1?' · 3번 모두 실패했습니다':' · 아쉽게 됐습니다');
-        $('#popPenal').innerHTML='<div class="ph">이제 이렇게 됩니다</div>'+FINALFAIL[key];
-        $('#popPenal').style.display='block';
-        sndLose();
-      } else {
-        $('#popRes').textContent=T.lose;
-        $('#popRes').className='popres bad show';
-        $('#popSub').textContent='주사위 '+die+' · 아직 '+(mx-s.tries)+'번의 기회가 남았습니다';
-        $('#popPenal').innerHTML='<div class="ph">이번 실패로 생긴 일</div>'+P.label+
-          (P.cost?'<br>'+P.why+' '+won(P.cost)+'이 나갑니다':'')+
-          '<br>다음 도전은 성공 범위가 하나 넓어집니다';
-        $('#popPenal').style.display='block';
-        sndLose();
-      }
+      if(pass){s.pass=true;s.done=true;
+        $('#popRes').textContent=T[1];$('#popRes').className='popres ok show';
+        $('#popSub').textContent='주사위 '+die+' · 1~'+n+' 안에 들어왔어요';sndWin();
+      }else if(s.tries>=mx){s.pass=false;s.done=true;
+        $('#popRes').textContent=T[2];$('#popRes').className='popres bad show';
+        $('#popSub').textContent='주사위 '+die;
+        $('#popPenal').innerHTML='<div class="ph">이제 이렇게 됩니다</div>'+T[3];
+        $('#popPenal').style.display='block';sndLose();
+      }else{
+        $('#popRes').textContent=T[2];$('#popRes').className='popres bad show';
+        $('#popSub').textContent='주사위 '+die+' · 아직 '+(mx-s.tries)+'번 남았습니다';
+        $('#popPenal').innerHTML='<div class="ph">다음 도전</div>성공 범위가 하나 넓어집니다';
+        $('#popPenal').style.display='block';sndLose();}
       $('#popBtn').style.visibility='visible';
-      popDone=function(){renderStage();save();};
-    }
-  },95);
+      popDone=function(){renderStage();};}
+  }
 }
-
-function openWheel(kind){
-  var W=WHEELS[kind],n=W.slots.length,seg=360/n;
-  var grad=W.color.map(function(c,i){return c+' '+(seg*i)+'deg '+(seg*(i+1))+'deg';}).join(',');
-  var labs='';
-  W.slots.forEach(function(sl,i){
-    var a=seg*i+seg/2;
-    labs+='<div class="wlab" data-a="'+a+'" style="transform:rotate('+a+'deg) translateY(-74px) rotate('+(-a)+'deg)">'+sl.s+'</div>';
-  });
-  $('#popTitle').textContent=W.title;
-  $('#popNeed').innerHTML='어떤 일이 생길지는 아무도 모릅니다';
-  $('#popStage').innerHTML='<div class="wheelwrap"><div class="needle"></div>'+
-    '<div class="wheel" id="wh" style="background:conic-gradient('+grad+')"></div>'+
-    '<div class="wlabs" id="whLab">'+labs+'</div></div>';
+/* 확률 이벤트 */
+function g100(p,me){var s='';for(var i=0;i<100;i++)s+='<i class="'+(i<p?'r':'')+(i===me?' me':'')+'"></i>';
+ return '<div class="g100">'+s+'</div>';}
+function minig(p){var s='';for(var i=0;i<100;i++)s+='<i class="'+(i<p?'r':'')+'"></i>';
+ return '<div class="minig">'+s+'</div>';}
+function slotDone(age,g){
+  var ao=askOf(age,g);
+  if(ao&&!CU(age,g.k+'_ask').trim())return false;
+  if(g.memo&&(g.memo==='must'||MEMO_ALL)&&len(MM(age,g.k))<MEMOLEN)return false;
+  if(g.multi){
+    if(!PA(age,g.k).length)return false;
+    if(has(age,g.k,'__add__')&&(!CU(age,'big_name').trim()||!(+CU(age,'big_cost')>0)))return false;
+    return true;
+  }
+  return P(age,g.k)!==undefined;
+}
+function renderEvent(){
+  var box=document.getElementById('evBox');if(!box)return;
+  var st=PLAN()[S.idx],E=EV[st.event];if(!E){box.innerHTML='';return;}
+  var s=S.ev[st.event];
+  if(s&&s.done){
+    box.innerHTML='<div class="evbox"><div class="evn">'+E.n+'</div>'+
+      (s.hit?'<div class="evd bad">'+E.hit+'</div><div class="evt">'+s.eff+'</div>'
+            :'<div class="evd ok">'+E.miss+'</div>')+
+      '<div class="evt" style="margin-top:7px">100명 중 '+s.p+'명 · 내 번호는 '+(s.roll+1)+'번이었습니다</div></div>';
+    return;
+  }
+  var ready=true;st.slots.forEach(function(g){if(!slotDone(st.age,g))ready=false;});
+  if(!ready){box.innerHTML='<div class="evbox"><div class="evn">'+E.n+'</div>'+
+    '<div class="evt">위에서 다 고르면 확인할 수 있어요</div></div>';return;}
+  var p=E.p();
+  box.innerHTML='<div class="evbox"><div class="evn">'+E.n+'</div>'+
+    '<div class="evt">'+E.txt+'</div>'+minig(p)+
+    '<div class="evt" style="margin-top:9px">내가 그 <b>'+p+'명</b>에 들어갈까요?</div>'+
+    '<button class="btn dark big" id="evBtn" style="margin-top:12px">내 번호 뽑기</button></div>';
+  document.getElementById('evBtn').onclick=function(){openEvent(st.event);};
+}
+function openEvent(age){
+  var E=EV[age],p=E.p();
+  $('#popTitle').textContent=E.n;
+  $('#popNeed').innerHTML='100명 중 <b>'+p+'명</b>에게 일어납니다';
+  $('#popStage').innerHTML=g100(p,-1);
   $('#popRes').textContent='';$('#popRes').className='popres';
   $('#popSub').textContent='';$('#popPenal').style.display='none';
-  $('#popBtn').style.visibility='hidden';
-  $('#pop').classList.add('on');
-
-  var pick=Math.floor(Math.random()*n), target=360*5+(360-(seg*pick+seg/2));
-  setTimeout(function(){
-    document.getElementById('wh').style.transform='rotate('+target+'deg)';
-    document.querySelectorAll('#whLab .wlab').forEach(function(el){
-      var a=parseFloat(el.dataset.a)+target;
-      el.style.transform='rotate('+a+'deg) translateY(-74px) rotate('+(-a)+'deg)';
-    });
-    sndSpin();
+  $('#popBtn').style.visibility='hidden';$('#pop').classList.add('on');sndScan();
+  var t=0,iv=setInterval(function(){
+    $('#popStage').innerHTML=g100(p,Math.floor(Math.random()*100));
+    if(++t>16){clearInterval(iv);
+      var roll=Math.floor(Math.random()*100),hit=roll<p;
+      $('#popStage').innerHTML=g100(p,roll);
+      S.ev[age]={done:true,hit:hit,roll:roll,p:p,eff:E.eff()};
+      if(hit){$('#popRes').textContent=E.hit;$('#popRes').className='popres bad show';
+        $('#popSub').textContent='내 번호 '+(roll+1)+'번 · 빨간 칸이었습니다';
+        $('#popPenal').innerHTML='<div class="ph">이제 이렇게 됩니다</div>'+S.ev[age].eff;
+        $('#popPenal').style.display='block';sndLose();}
+      else{$('#popRes').textContent=E.miss;$('#popRes').className='popres ok show';
+        $('#popSub').textContent='내 번호 '+(roll+1)+'번';sndWin();}
+      $('#popBtn').style.visibility='visible';
+      popDone=function(){renderStage();};}
   },80);
-  setTimeout(function(){
-    var sl=W.slots[pick]; S.wheel[kind]=pick;
-    $('#popRes').textContent=sl.t;
-    $('#popRes').style.fontSize='25px';
-    $('#popRes').className='popres '+((sl.once||sl.payMul<1||sl.kidAdd>0)?'bad':'ok')+' show';
-    $('#popSub').textContent=sl.d;
-    if(sl.once)sndLose();else sndWin();
-    $('#popBtn').style.visibility='visible';
-    popDone=function(){$('#popRes').style.fontSize='';renderStage();save();};
-  },3900);
 }
 
-/* ========= 진행 ========= */
+/* 하단 생애표 */
+function renderFoot(){
+  var r;try{r=simulate();}catch(e){return;}
+  var st=PLAN()[S.idx];
+  var mx=Math.max.apply(null,r.rows.map(function(x){return Math.max(x.income,x.exp);}))||1;
+  $('#lifeBar').innerHTML=r.rows.map(function(x,i){
+    var ih=Math.round(x.income/mx*38),eh=Math.round(x.exp/mx*38);
+    return '<div class="lb'+(AGES[i]===st.age?' now':'')+'"><div class="bars">'+
+      '<i class="inc" style="height:'+Math.max(2,ih)+'px"></i>'+
+      '<i class="exp" style="height:'+Math.max(2,eh)+'px"></i></div>'+
+      '<span class="ag">'+AGES[i]+'</span></div>';
+  }).join('');
+  var cur=r.rows[S.idx]||r.rows[0];
+  if(cur.byParent){
+    $('#nowLine').innerHTML='<span class="a">버는 돈 <b>0</b></span>'+
+      '<span class="b2">쓰는 돈 <b>'+shortWon(cur.exp)+'</b></span>'+
+      '<span style="color:var(--accent);font-weight:750">이 돈은 부모님이 내주십니다</span>'+
+      '<span>모은 돈 <b>'+shortWon(cur.cash)+'</b></span>';
+    return;}
+  $('#nowLine').innerHTML='<span class="a">버는 돈 <b>'+shortWon(cur.income)+'</b></span>'+
+    '<span class="b2">쓰는 돈 <b>'+shortWon(cur.exp)+'</b></span>'+
+    '<span class="c'+(cur.income-cur.exp<0?' neg':'')+'">남는 돈 <b>'+shortWon(cur.income-cur.exp)+'</b></span>'+
+    '<span>모은 돈 <b>'+shortWon(cur.cash)+'</b></span>';
+}
 function refresh(){
-  var L=STAGES(),st=L[S.idx];
-  $('#hStep').textContent=st.age+'세 · '+(S.idx+1)+'/'+(L.length+1);
-  $('#hBar').style.width=(S.idx/L.length*100)+'%';
-  $('#backBtn').disabled=(S.idx===0);
-  renderMoney();
-  if(st.reason){
-    var n=len(S.reasons[st.reason.k]),c=document.getElementById('rCnt');
-    if(c){c.textContent=(n>=MINLEN)?'좋아요 ('+n+'자)':(MINLEN-n)+'자 더 써주세요';c.className='cnt'+(n>=MINLEN?' ok':'');}
-  }
-  renderChal(); renderWheel();
-
+  var L=PLAN(),st=L[S.idx];
+  renderChal();renderEvent();renderFoot();
   var ok=true,msg='';
-  (st.picks||[]).forEach(function(g){if(S.picks[g.k]===undefined){ok=false;msg='위에서 하나를 골라주세요.';}});
-  if(ok&&S.picks.uni==='__free__'&&!(S.free.uniName||'').trim()){ok=false;msg='학교 이름을 써주세요.';}
-  if(ok&&S.picks.major==='__free__'&&!(S.free.majorName||'').trim()){ok=false;msg='무엇을 공부할지 써주세요.';}
-  if(ok&&S.picks.job==='__free__'&&!(S.free.jobName||'').trim()){ok=false;msg='어떤 일을 하고 싶은지 써주세요.';}
-  if(ok&&st.reason&&!reasonOK(st.reason.k))
-    {ok=false;msg='왜 그렇게 골랐는지 '+(MINLEN-len(S.reasons[st.reason.k]))+'자 더 써야 넘어갈 수 있어요.';}
-  if(ok&&st.chals) st.chals.forEach(function(c){
-    if(c.when&&!c.when())return;
-    var s=S.ch[c.k]; if(!s||!s.done){ok=false;msg='주사위를 굴려야 넘어갈 수 있어요.';}
-  });
-  if(ok&&st.wheel&&(!st.wheel.when||st.wheel.when())&&S.wheel[st.wheel.k]===undefined)
-    {ok=false;msg='룰렛을 돌려야 넘어갈 수 있어요.';}
-  $('#nextBtn').disabled=!ok;
-  $('#footNote').textContent=msg;
-  $('#nextBtn').textContent=(S.idx===L.length-1)?'60세 결산 보기':'다음';
-  save();
-}
-function save(){try{localStorage.setItem('life_state',JSON.stringify(S));}catch(e){}}
-$('#nextBtn').onclick=function(){var L=STAGES();if(S.idx<L.length-1){S.idx+=1;renderStage();}else finish();};
-$('#backBtn').onclick=function(){if(S.idx>0){S.idx-=1;renderStage();}};
-
-/* ========= 계산 ========= */
-function taxRate(s){return s<=3000?.09:s<=5000?.13:s<=8000?.18:s<=12000?.24:.30;}
-
-function simulate(){
-  var p=S.picks,reg=REGION[p.region]||REGION.metro;
-  var startInfo=S.start||{help:0,loan:0,home:'metro'};
-  var spend=parseFloat(p.spend||'1'),kids=parseInt(p.kids||'0',10),prep=parseInt(p.prep||'0',10);
-  var C={uni:S.ch.uni||{},job:S.ch.job||{},biz:S.ch.biz||{},marry:S.ch.marry||{},
-         loan:S.ch.loan||{},promo:S.ch.promo||{},biz2:S.ch.biz2||{},invest:S.ch.invest||{}};
-
-  /* 직접 입력 직업의 자동 연봉 */
-  var J;
-  if(p.job==='__free__'){
-    var want=parseFloat(S.free.jobPay)||freeAutoPay('job')||majorPay();
-    want=clamp(want,1500,30000);
-    J={m:want/majorPay(),g:.04,d:0};
-  } else J=JOBS[p.job]||{m:1,g:.04,d:0};
-  var mp=(p.major==='__free__')?clamp(parseFloat(S.free.majorPay)||freeAutoPay('major')||3500,1500,20000):(MAJORS[p.major]||3500);
-
-  var isBiz=!!(JOBS[p.job]||{}).biz;
-  var uniPass=!!C.uni.pass;
-  var jobPass=isBiz?!!C.biz.pass:!!C.job.pass;
-  var wantMarry=p.marry==='1',marryPass=wantMarry&&!!C.marry.pass;
-  var wantBuy=p.housing==='buy',loanPass=wantBuy&&!!C.loan.pass;
-  var promoPass=(p.career==='promo')&&!!C.promo.pass;
-  var bizGo=(p.career==='startup'),bizWin=bizGo&&!!C.biz2.pass;
-  var invRisky=(p.invest==='risky'),invWin=invRisky&&!!C.invest.pass;
-
-  var uniLate=Math.max(0,(C.uni.tries||1)-1);
-  var jobLate=Math.max(0,((isBiz?C.biz.tries:C.job.tries)||1)-1);
-  var marryLate=Math.max(0,(C.marry.tries||1)-1)*PENALTY.marry.years;
-  var loanLate=Math.max(0,(C.loan.tries||1)-1),promoLate=Math.max(0,(C.promo.tries||1)-1);
-  var penaltyCost=uniLate*PENALTY.uni.cost+jobLate*(isBiz?PENALTY.biz.cost:PENALTY.job.cost);
-
-  var uniAdj=uniPass?(p.strategy==='reach'?1.08:p.strategy==='fit'?1.00:.96):.88;
-  var campAdj=p.campus==='intern'?1.04:p.campus==='abroad'?1.07:1.00;
-  var jobAdj=jobPass?1.00:.78;
-  var growth=jobPass?J.g:Math.max(.03,J.g-.01);
-
-  var careerMul=1,careerAt=42+promoLate;
-  if(p.career==='move'){careerMul=1.10;growth=Math.max(.025,growth-.005);}
-  if(bizGo){ careerMul=bizWin?1.30:0.70; growth=bizWin?.050:.028; }
-  if(promoPass)careerMul=1.15;
-
-  var salary0=Math.max(2400,mp*J.m*uniAdj*campAdj*jobAdj);
-  var startAge=24+uniLate+jobLate+(jobPass?0:1);
-
-  /* 시작 돈 */
-  var asset=startInfo.help;
-  if(!isNot4Year()) asset-=startInfo.loan;      /* 대학에 갔으면 학자금 */
-  if(p.campus==='work')asset+=1000;
-  if(p.campus==='abroad')asset-=800;
-  asset-=penaltyCost;
-  var startCash=asset;
-
-  var kw=(kids>0&&S.wheel.kid!==undefined)?WHEELS.kid.slots[S.wheel.kid]:{};
-  var mw=(S.wheel.mid!==undefined)?WHEELS.mid.slots[S.wheel.mid]:{};
-  var kidAdd=kw.kidAdd||0,wheelHappy=kw.happy||0;
-  var midPayMul=mw.payMul||1,midHomeMul=mw.homeMul||1;
-  var soloKid=(!marryPass&&kids>0)?1.4:1;
-
-  var mid=p.mid;
-  var midCostMul=mid==='edu'?1.12:mid==='parent'?1.08:mid==='health'?1.06:1.00;
-  var baseRate=investRate()+(mid==='retire'?.008:0);
-  var DEBT=.05, BASE=700, CREEP=.40, SPOUSE=1.7, PLATEAU=50, LATE=.01;
-
-  var homeVal=0,loanBal=0,annualPay=0,bought=false,infl=1;
-  var marryAge=30+marryLate,kidFrom=33,buyAge=36+loanLate;
-  var series=[];
-
-  for(var age=startAge;age<=60;age++){
-    var yrs=age-startAge;
-    var grow=(age<=PLATEAU)?Math.pow(1+growth,yrs)
-            :Math.pow(1+growth,PLATEAU-startAge)*Math.pow(1+LATE,age-PLATEAU);
-    var salary=salary0*grow*(age>=careerAt?careerMul:1)*(age>=50?midPayMul:1);
-    var net=salary*(1-taxRate(salary));
-    var married=marryPass&&age>=marryAge;
-    var household=net*(married?SPOUSE:1);
-
-    var living=BASE*reg.c*spend*(married?1.6:1)*infl*(age>=50?midCostMul:1);
-    var wantSpend=household*CREEP*spend;
-
-    var child=0;
-    for(var i=0;i<kids;i++){var born=kidFrom+i*2;
-      if(age>=born&&age<born+22) child+=(1100*reg.c+kidAdd)*infl*soloKid;}
-
-    var housing=0,hs=p.housing;
-    if(age<buyAge) housing=(hs==='parents')?300*infl:900*reg.c*infl;
-    else if(hs==='parents') housing=300*infl;
-    else if(hs==='monthly') housing=900*reg.c*infl;
-    else if(hs==='jeonse') housing=20000*.035*reg.c*.35;
-    else if(hs==='buy'){
-      if(loanPass){
-        if(!bought){bought=true;homeVal=reg.home*Math.pow(1.025,age-24);loanBal=homeVal*.70;
-          asset-=Math.min(Math.max(asset,0),homeVal*.30);annualPay=pmt(loanBal,.04,30)*12;}
-        housing=annualPay;
-        loanBal=Math.max(0,loanBal*1.04-annualPay);
-        homeVal=homeVal*1.025*(age===50?midHomeMul:1);
-      } else housing=900*reg.c*infl;
-    }
-
-    var oneOff=0;
-    if(married&&age===marryAge)oneOff+=5000;
-    for(var k2=0;k2<kids;k2++) if(age===kidFrom+k2*2) oneOff+=500;
-    if(age===33&&kids>0&&kw.once)oneOff+=kw.once;
-    if(age===50&&mw.once)oneOff+=mw.once;
-    if(age===42&&bizGo&&!bizWin)oneOff+=5000;        /* 사업 실패 정리 비용 */
-
-    /* 남는 돈 중 최소한 이만큼은 반드시 저축합니다 (돈 쓰는 습관이 정합니다) */
-    var keep=spend===0.85?.45:spend===1?.30:.15;
-    var must=living+child+housing+oneOff;
-    var room=household-must;
-    var realSpend=Math.max(0,Math.min(wantSpend,room*(1-keep)));
-    var sv=room-realSpend;
-
-    /* 돈이 없으면 빚 — 빚에는 이자가 더 세게 붙습니다 */
-    asset = asset*(1+(asset>=0?baseRate:DEBT)) + sv;
-    if(age===50&&invRisky) asset = asset*(invWin?1.35:0.72);
-    infl*=1.02;
-
-    /* 그 나이의 만족도 — 예상 곡선과 겹쳐 보려고 해마다 계산합니다 */
-    var nwNow=asset+homeVal-loanBal;
-    var kidsNow=0;
-    for(var k3=0;k3<kids;k3++) if(age>=kidFrom+k3*2) kidsNow++;
-    var relY=(married?30:20)+kidsNow*12+((age>=50&&(mid==='edu'||mid==='parent'))?10:0);
-    var leiY=(spend===1.25?34:spend===1?22:13)+(hs==='parents'?4:9)
-           +((age>=careerAt&&p.career==='stay')?12:0)
-           +((age>=50&&mid==='health')?14:0)+(prep<0?8:prep>0?-4:0);
-    var stabY=Math.max(0,Math.min(1,nwNow/60000))*100-((bought&&loanBal>0)?8:0)-(nwNow<0?20:0);
-    var achY=((promoPass&&age>=careerAt)?15:0)+(jobPass?20:12)+(uniPass?12:8)
-           +((age>=careerAt&&bizGo)?(bizWin?18:4):0);
-    var hpY=Math.round(clamp(.25*clamp(relY,0,100)+.25*clamp(leiY*1.7,0,100)
-           +.30*clamp(stabY,0,100)+.20*clamp(achY*1.7,0,100)
-           +((age>=33&&kids>0)?wheelHappy:0),0,100));
-
-    series.push({age:age,salary:Math.round(salary),income:Math.round(household),
-      living:Math.round(living+realSpend),child:Math.round(child),housing:Math.round(housing+oneOff),
-      spend:Math.round(must+realSpend),save:Math.round(sv),nw:Math.round(nwNow),hp:hpY});
+  st.slots.forEach(function(g){if(!slotDone(st.age,g)){ok=false;
+    var ao=askOf(st.age,g);
+    msg=(P(st.age,g.k)!==undefined&&g.memo&&(g.memo==='must'||MEMO_ALL)&&len(MM(st.age,g.k))<MEMOLEN)?('\u300c'+g.n+'\u300d\uc744 왜 골랐는지 한 줄 적어주세요.')
+      :(ao&&!CU(st.age,g.k+'_ask').trim())?('\u300c'+ao.ask+'\u300d\uc5d0 답해주세요.')
+      :(g.multi&&has(st.age,g.k,'__add__')&&PA(st.age,g.k).length)?'직접 추가한 것의 이름과 돈을 써주세요.':'위에서 고르지 않은 게 있어요.';}});
+  if(ok&&P(25,'job')==='__free__'&&!CU(25,'job_name').trim()){ok=false;msg='어떤 일을 하고 싶은지 써주세요.';}
+  if(ok&&st.event){var es=S.ev[st.event];if(!es||!es.done){ok=false;msg='내가 어느 쪽인지 뽑아야 넘어갑니다.';}}
+  if(ok&&st.goal){
+    var n=len(S.goal[st.age]);
+    var c=document.getElementById('goalCnt');
+    if(c){c.textContent=n>=MINLEN?'좋아요 ('+n+'자)':(MINLEN-n)+'자 더 써주세요';c.className='cnt'+(n>=MINLEN?' ok':'');}
+    if(n<MINLEN){ok=false;msg='목표를 '+(MINLEN-n)+'자 더 써야 넘어갑니다.';}
   }
-
-  var last=series[series.length-1];
-  var totalSave=0,totalIncome=0;
-  series.forEach(function(x){totalSave+=x.save;totalIncome+=x.income;});
-  function at(a){return series.filter(function(x){return x.age===a;})[0]||series[0];}
-
-  var rel=(marryPass?30:20)+kids*12+(mid==='edu'||mid==='parent'?10:0);
-  var lei=(spend===1.25?34:spend===1?22:13)+(p.housing==='parents'?4:9)+(p.career==='stay'?12:0)
-        +(mid==='health'?14:0)+(prep<0?8:prep>0?-4:0);
-  var stab=Math.max(0,Math.min(1,last.nw/60000))*100-(bought&&loanBal>0?8:0)-(last.nw<0?20:0);
-  var ach=(promoPass?15:0)+(jobPass?20:12)+(uniPass?12:8)+(bizWin?18:bizGo?4:0);
-  var Rel=clamp(rel,0,100),Lei=clamp(lei*1.7,0,100),Stab=clamp(stab,0,100),Ach=clamp(ach*1.7,0,100);
-  var happy=Math.round(clamp(.25*Rel+.25*Lei+.30*Stab+.20*Ach+wheelHappy,0,100));
-
-  return {series:series,last:last,happy:happy,startCash:Math.round(startCash),
-    parts:{rel:Math.round(Rel),lei:Math.round(Lei),stab:Math.round(Stab),ach:Math.round(Ach)},
-    salary0:Math.round(salary0),startAge:startAge,uniPass:uniPass,jobPass:jobPass,isBiz:isBiz,
-    marryPass:marryPass,wantMarry:wantMarry,loanPass:loanPass,promoPass:promoPass,
-    bizGo:bizGo,bizWin:bizWin,invRisky:invRisky,invWin:invWin,
-    kids:kids,bought:bought,homeVal:Math.round(homeVal),loanBal:Math.round(loanBal),
-    asset:Math.round(asset),region:reg.n,save35:at(35).save,save50:at(50).save,
-    totalSave:Math.round(totalSave),saveRate:totalIncome>0?Math.round(totalSave/totalIncome*100):0,
-    monthlySave:Math.round(totalSave/series.length/12),
-    uniLate:uniLate,jobLate:jobLate,marryLate:marryLate,loanLate:loanLate};
+  if(ok){var cl=chalList();cl.forEach(function(k){var s=S.ch[k];if(!s||!s.done){ok=false;msg='주사위를 굴려야 넘어갑니다.';}});}
+  $('#nextBtn').disabled=!ok;$('#footNote').textContent=msg;fitFoot();
+  $('#nextBtn').textContent=(S.idx===L.length-1)?'85살까지 살아보기':'다음';
 }
+$('#nextBtn').onclick=function(){var L=PLAN();if(S.idx<L.length-1){S.idx++;renderStage();window.scrollTo(0,0);}else finish();};
+$('#backBtn').onclick=function(){if(S.idx>0){S.idx--;renderStage();window.scrollTo(0,0);}};
 
+/* ================= 결산 ================= */
 function endingOf(r){
-  var nw=r.last.nw;
-  if(nw<0) return ['빚을 진 채로','계획보다 많이 썼거나 벌이가 모자랐습니다'];
-  if(nw>=150000&&r.happy>=70) return ['균형 만점형','돈도 삶의 만족도 함께 챙겼습니다'];
-  if(nw>=150000) return ['자산 집중형','모은 돈은 크지만 여유는 적었습니다'];
-  if(r.happy>=70) return ['삶의 질 우선형','돈보다 관계와 여유를 택했습니다'];
-  if(r.bizGo&&r.bizWin) return ['사업 성공형','위험을 걸고 이겼습니다'];
-  if(r.bizGo&&!r.bizWin) return ['다시 일어서는 중','사업은 잘 안 됐지만 아직 끝이 아닙니다'];
-  if(!r.jobPass) return ['돌아가는 길','첫 시작은 어긋났지만 경력으로 회복했습니다'];
-  if(r.wantMarry&&!r.marryPass) return ['혼자의 길','계획과 달랐지만 저축 여력은 커졌습니다'];
-  return ['성장 진행형','60세 기준 평균 구간에 있습니다'];
+  if(r.broke&&r.broke<=70)return ['너무 일찍 바닥났습니다',r.broke+'살에 돈이 떨어졌습니다. 계획이 필요했어요'];
+  if(r.broke)return ['아슬아슬했습니다',r.broke+'살에 돈이 떨어졌습니다'];
+  if(r.cash85>=50000)return ['넉넉한 노년','85살까지 쓰고도 '+won(r.cash85)+'이 남았습니다'];
+  if(r.cash85>=10000)return ['계획대로','끝까지 돈이 모자라지 않았습니다'];
+  return ['빠듯하게','겨우 맞췄습니다'];
 }
-
-/* ========= 결산 ========= */
-function kv(a,b){return '<div class="kv"><span>'+a+'</span><b>'+b+'</b></div>';}
 function finish(){
-  var r=simulate(),e=endingOf(r),p=S.picks;
-  S.done=true;
+  var r=simulate(),e=endingOf(r);S.done=true;
   $('#rName').textContent=S.sid;
   $('#endName').textContent=e[0];$('#endDesc').textContent=e[1];
-  $('#r1').textContent=won(r.salary0);$('#r2').textContent=won(r.last.salary);
-  $('#r3').textContent=won(r.last.nw);$('#r4').textContent=r.happy+'점';
-  $('#r5').textContent=won(r.monthlySave);$('#r6').textContent=r.saveRate+'%';
+  setBg(IMG[85]);
+  $('#rBroke').textContent=r.broke?r.broke+'살':'끝까지 안 바닥남';
+  $('#r1').textContent=won(r.totalIn);$('#r2').textContent=won(r.totalOut);
+  $('#r3').textContent=r.workYears+'년';$('#r4').textContent=r.spendYears+'년';
+  $('#r5').textContent=won(r.parentPaid);
+  $('#r1L').textContent=r.married?'우리 집이 평생 번 돈':'평생 번 돈';
+  $('#r2L').textContent=r.married?'우리 집이 평생 쓴 돈':'평생 쓴 돈';
+  $('#wy').textContent=r.workYears;$('#sy').textContent=r.spendYears;
+  /* 항목별 합계 */
+  var CATN=[['home','주거비','#2f5aa8'],['live','생활비','#c4703f'],['kid','결혼·자녀','#2a7a55'],
+            ['care','병원비·보험','#b8453c'],['big','큰 지출·기타','#8a6bbf'],['pen','노후 준비','#7b8794']];
+  var cmax=1;CATN.forEach(function(c){if(r.cat[c[0]]>cmax)cmax=r.cat[c[0]];});
+  $('#brk').innerHTML=CATN.map(function(c){
+    var v=r.cat[c[0]];
+    return '<div class="brkrow"><span class="bn">'+c[1]+'</span>'+
+      '<span class="bb"><i style="width:'+Math.round(v/cmax*100)+'%;background:'+c[2]+'"></i></span>'+
+      '<span class="bv">'+shortWon(v)+'</span></div>';}).join('');
+  var homeNote=r.bought?'주거비에 평생 '+won(r.cat.home)+'을 썼습니다. 대출 30년을 다 갚은 뒤에는 확 줄었고, 그 대신 '+won(r.homeValue)+'짜리 집이 내 것으로 남습니다. (위 계산에는 안 들어간 재산입니다)'
+    :'집을 사지 않았기 때문에 주거비가 <b>85살까지 한 번도 멈추지 않았습니다.</b> 평생 '+won(r.cat.home)+'입니다.';
+  $('#calcNote').innerHTML=
+    '<b>평생 번 돈</b> = 25살부터 나이대마다 1년에 번 돈 × 10년을 모두 더한 값<br>'+
+    '<b>평생 쓴 돈</b> = 25살부터 나이대마다 1년에 쓴 돈 × 10년 + 한 번에 크게 나간 돈<br>'+
+    '<b>15~24살은 빠져 있습니다.</b> 그 10년 동안 나에게 <b>'+won(r.parentPaid)+'</b>이 쓰였지만, 내가 번 게 아니라 부모님이 내주셨기 때문입니다.<br>'+
+    '<span style="color:var(--accent)">'+homeNote+'</span>';
+  var ol='';
+  r.rows.forEach(function(x){(x.onceList||[]).forEach(function(o){
+    ol+='<div class="kv"><span>'+x.age+'살 · '+o.l+'</span><b'+(o.v<0?' style="color:var(--ok)"':'')+'>'+
+      (o.v<0?'+'+won(-o.v):won(o.v))+'</b></div>';});});
+  $('#onceList').innerHTML=ol||'<p class="tiny" style="margin:6px 0 0">한 번에 크게 나간 돈이 없습니다.</p>';
 
-  var hn={parents:'부모님 집',monthly:'월세',jeonse:'전세',buy:'내 집'}[p.housing];
-  if(p.housing==='buy'&&!r.loanPass)hn='대출 거절 → 월세';
-  var cn={promo:'승진 도전',move:'이직',startup:'창업',stay:'현상 유지'}[p.career];
-  if(p.career==='promo')cn+=r.promoPass?' (성공)':' (실패)';
-  if(p.career==='startup')cn+=r.bizWin?' (성공)':' (실패)';
-
-  var late='';
-  if(r.uniLate)late+='재수 '+r.uniLate+'년 · ';
-  if(r.jobLate)late+='취업 준비 '+r.jobLate+'년 · ';
-  if(r.marryLate)late+='결혼 '+r.marryLate+'년 늦음 · ';
-  if(r.loanLate)late+='집 '+r.loanLate+'년 늦음 · ';
-  late=late?late.replace(/ · $/,''):'없음';
-  var inv=INVEST[p.invest]||INVEST.mid;
-
+  var rw=r.rows.filter(function(x){return x.age>=65;});
+  var avg=Math.round(rw.reduce(function(s,x){return s+x.exp;},0)/rw.length);
+  $('#flowNote').innerHTML='일을 놓은 뒤에도 <b>1년에 '+won(avg)+'씩</b> 나갑니다. 20년이면 <b>'+won(avg*20)+'</b>이 필요합니다.';
+  var gsum=0;[1,2,3,4,5,6,7].forEach(function(i){gsum+=(r.rows[i].income-S.guess[i]);});
+  var ga=Math.round(gsum/7);
+  $('#gapNote').innerHTML=ga<=-300?'너는 실제보다 <b>1년에 '+won(-ga)+'쯤 더 벌 거라고</b> 짐작했습니다. 대부분이 그렇습니다.'
+    :ga>=300?'실제가 짐작보다 <b>1년에 '+won(ga)+'쯤 많았습니다.</b>':'짐작과 실제가 꽤 비슷했습니다.';
+  var th='<tr><th>나이</th><th>버는 돈</th><th>쓰는 돈</th><th>남는 돈</th><th>모은 돈</th></tr>';
+  r.rows.forEach(function(x){
+    if(x.byParent){
+      th+='<tr style="background:#fdfbf5"><td>'+x.age+'살</td><td>0</td>'+
+        '<td>'+shortWon(x.exp)+'</td><td colspan="2" style="color:var(--accent);font-weight:650">부모님이 내주심</td></tr>';
+      return;}
+    th+='<tr><td>'+x.age+'살</td><td>'+shortWon(x.income)+'</td><td>'+shortWon(x.exp)+'</td>'+
+      '<td class="'+(x.income-x.exp<0?'':'g')+'" style="color:'+(x.income-x.exp<0?'var(--bad)':'var(--ok)')+'">'+
+      shortWon(x.income-x.exp)+'</td><td><b>'+shortWon(x.cash)+'</b></td></tr>';});
+  $('#lifeTable').innerHTML=th;
+  var h25=({parents:'부모님 집',monthly:'월세',jeonse:'전세'})[P(25,'home')]||'—';
   $('#detail').innerHTML=
-    kv('출발 카드','지원금 '+won(S.start.help)+' · 학자금 '+(S.start.loan?won(S.start.loan):'없음'))+
-    kv('학교 · 전공',uniName()+' · '+majorName()+(r.uniPass?'':' (불합격)'))+
-    kv('직업',jobName()+(r.jobPass?'':(r.isBiz?' (사업 실패 → 중소기업)':' (탈락 → 중소기업)')))+
-    kv('일을 시작한 나이',r.startAge+'세')+
-    kv('주사위 실패로 늦어진 것',late)+
-    kv('결혼 · 아이',(r.marryPass?'결혼':(r.wantMarry?'결혼 못 함':'혼자 살기'))+' · 아이 '+r.kids+'명')+
-    kv('사는 곳 · 집',r.region+' · '+hn)+
-    kv('모은 돈을 둔 곳',inv.t+(r.invRisky?(r.invWin?' (크게 벌었습니다)':' (28% 잃었습니다)'):''))+
-    kv('40대 선택',cn)+
-    kv('35세 때 저축','1년 '+won(r.save35)+' · 한 달 '+perMonth(r.save35))+
-    kv('50세 때 저축','1년 '+won(r.save50)+' · 한 달 '+perMonth(r.save50))+
-    kv('평생 저축한 돈',won(r.totalSave))+
-    kv(r.asset>=0?'60세 통장의 돈':'60세 빚',won(r.asset))+
-    (r.bought?kv('60세 집값 · 남은 대출',won(r.homeVal)+' · '+won(r.loanBal)):'');
-
-  var SB=[['가족·친구',r.parts.rel],['여유',r.parts.lei],['안정',r.parts.stab],['이룬 것',r.parts.ach]];
-  $('#satBars').innerHTML=SB.map(function(x){
-    return '<div class="satrow"><span class="nm">'+x[0]+'</span><span class="satbar"><i style="width:'+x[1]+'%"></i></span><span class="vv">'+x[1]+'</span></div>';
-  }).join('');
-  var RQ=[['대학 · 전공','uni'],['직업','job'],['결혼','marry'],['아이와 집','life'],['40대','career']];
-  $('#rlist').innerHTML=RQ.map(function(x){
-    return '<div class="it"><div class="h">'+x[0]+'</div><div class="b">'+String(S.reasons[x[1]]||'').replace(/</g,'&lt;')+'</div></div>';
-  }).join('');
-  /* 예상 vs 실제 */
-  var gapSum=0,gapN=0,over=0;
-  r.series.forEach(function(d){
-    var e2=expectedAt(d.age);gapSum+=(d.hp-e2);gapN++;if(d.hp<e2)over++;
-  });
-  var avgGap=gapN?Math.round(gapSum/gapN):0;
-  var overPc=gapN?Math.round(over/gapN*100):0;
-  $('#gapNote').innerHTML = (avgGap<=-8)
-      ? '17살의 너는 실제보다 <b>평균 '+Math.abs(avgGap)+'점 높게</b> 그렸습니다. 인생의 '+overPc+
-        '%는 생각보다 힘들었어요. <b>대부분이 그렇습니다.</b>'
-    : (avgGap>=8)
-      ? '실제가 예상보다 <b>평균 '+avgGap+'점 높았습니다.</b> 네가 너무 겸손하게 그렸거나, 운이 좋았습니다.'
-      : '예상과 실제가 꽤 비슷했습니다 (평균 차이 '+Math.abs(avgGap)+'점). 감이 좋은데요?';
-
-  try{drawFlow(r.series);drawSpend(r.series);drawNW(r.series);drawHopeVsReal(r.series);}catch(e2){}
+    kvv('전공',P(25,'major')||'—')+kvv('직업',r.job+(r.jobOK?'':' (탈락 → 월급 25% 적게 시작)'))+
+    kvv('사는 곳',r.region)+kvv('25살 집',h25)+
+    kvv('결혼 · 아이',(r.married?'결혼':'혼자')+' · 아이 '+r.kids+'명')+
+    kvv('내 집',r.bought?'샀습니다':'못 샀습니다')+
+    kvv('일한 기간',r.startWork+'살 ~ '+r.retire+'살')+
+    kvv('노후 준비',['안 함','조금씩','꽤 많이','최대한'][+(P(55,'pension')||0)])+
+    kvv('65살 이후 연금',won(r.pensionIncome)+' / 1년')+
+    kvv('큰 지출',bigSummary()||'없음')+
+    kvv('내게 일어난 일',evSummary()||'—');
+  $('#goals').innerHTML=[15,25,35,45,55,65,75].map(function(a){
+    return S.goal[a]?'<div class="kv"><span>'+a+'살</span><b style="font-weight:500;text-align:right">'+
+      String(S.goal[a]).replace(/</g,'&lt;')+'</b></div>':'';}).join('');
+  renderSrc();
+  try{drawFlow(r);drawCash(r);drawGap(r);}catch(e2){}
   show('s-result');sendToServer(r);
 }
-
-/* 그래프 */
-function setup(id){
-  var cv=document.getElementById(id),dpr=window.devicePixelRatio||1,w=cv.clientWidth||320,h=200;
+var SRC = [
+ ['임금 · 첫 연봉','고용노동부 <b>고용형태별 근로실태조사(2023)</b>, 통계청 <b>일자리행정통계(2023)</b>의 연령대별 평균임금을 세후로 바꿔 반올림'],
+ ['주된 직장을 그만두는 나이 52.9살','통계청 <b>경제활동인구조사 고령층 부가조사(2025년 5월)</b> — 가장 오래 근무한 일자리를 그만둘 당시 평균 연령 52.9세, 평균 근속 17년 7개월'],
+ ['실제 은퇴 나이 65살 안팎','<b>OECD Pensions at a Glance 2023</b> 실효 은퇴연령'],
+ ['아파트 값 · 월세','<b>KB부동산</b>, <b>한국부동산원</b> 월간 주택가격동향의 지역별 평균'],
+ ['자녀 양육비 · 교육비','<b>한국보건사회연구원</b> 자녀 양육비 조사, 통계청 <b>초중고 사교육비 조사</b>'],
+ ['국민연금','<b>국민연금공단</b> 노령연금 통계 — 20년 이상 가입자 평균 월 100만원대. 이 앱에서는 한 사람 최대 연 1,500만원(월 125만원)으로 두었습니다'],
+ ['15~24살에 나에게 쓰이는 돈','<b>한국보건사회연구원</b> 자녀 양육비 조사를 바탕으로 1년 약 1,400만원으로 잡았습니다'],
+ ['큰 병에 걸릴 확률','<b>국가암등록통계</b>(중앙암등록본부) — 기대수명까지 살면 3명 중 1명 정도가 암에 걸립니다. 여기에 뇌·심혈관 질환을 더해 50대 구간 확률로 잡았습니다'],
+ ['돌봄이 필요해질 확률','<b>국민건강보험공단 노인장기요양보험 통계</b> — 나이가 많을수록 인정률이 크게 올라갑니다'],
+ ['부모님 돌봄 30%','정확한 공식 통계가 없어 <b>수업용으로 정한 값</b>입니다']
+];
+function renderSrc(){
+  $('#srcBox').innerHTML=SRC.map(function(x){
+    return '<div style="margin-bottom:7px"><b>'+x[0]+'</b><br>'+x[1]+'</div>';}).join('')+
+    '<div style="margin-top:9px;padding-top:9px;border-top:1px solid #eee8dc">'+
+    '모든 금액은 <b>지금 물가 기준</b>, <b>세금을 뺀 뒤</b> 금액입니다.<br>'+
+    '<b>이번 시간에는 이자와 투자를 0으로 두었습니다.</b> 번 돈을 그냥 모으기만 한 결과입니다. 투자는 다음 시간에 배웁니다.<br>'+
+    '실제 통계를 바탕으로 했지만 <b>수업에서 쓰기 쉽게 반올림하고 단순하게 만든 값</b>입니다. 정확한 예측이 아닙니다.</div>';
+}
+function kvv(a,b){return '<div class="kv"><span>'+a+'</span><b>'+b+'</b></div>';}
+function bigSummary(){
+  var out=[];
+  [25,35,45,55].forEach(function(a){
+    PA(a,'big').forEach(function(v){
+      if(v==='none')return;
+      if(v==='__add__'){out.push(a+'살 '+(CU(a,'big_name')||'직접 추가'));return;}
+      (BIG[a]||[]).forEach(function(o){if(o.v===v)out.push(a+'살 '+o.t);});
+    });});
+  return out.join(', ');
+}
+function evSummary(){
+  var out=[];
+  [45,55,75].forEach(function(a){var s=S.ev[a];if(s&&s.done&&s.hit)out.push(a+'살 '+EV[a].hit);});
+  return out.length?out.join(', '):'큰일 없이 지나감';
+}
+function setup(id,h){
+  var cv=document.getElementById(id),dpr=window.devicePixelRatio||1,w=cv.clientWidth||320;
   cv.width=w*dpr;cv.height=h*dpr;
   var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.lineCap='round';x.lineJoin='round';x.clearRect(0,0,w,h);
-  return {x:x,w:w,h:h,pad:{l:50,r:8,t:10,b:22}};
+  return {x:x,w:w,h:h,pad:{l:44,r:10,t:12,b:24}};
 }
-function X(g,s,i){return g.pad.l+(g.w-g.pad.l-g.pad.r)*i/(s.length-1);}
-function Y(g,mn,mx,v){return g.h-g.pad.b-(g.h-g.pad.t-g.pad.b)*(v-mn)/(mx-mn);}
-function axes(g,mn,mx,s){
-  var x=g.x;x.strokeStyle='#e6e2db';x.fillStyle='#8b93a1';x.font='11px sans-serif';x.lineWidth=1;
-  for(var i=0;i<=4;i++){var v=mn+(mx-mn)*i/4,yy=Y(g,mn,mx,v);
-    x.beginPath();x.moveTo(g.pad.l,yy);x.lineTo(g.w-g.pad.r,yy);x.stroke();x.fillText(shortWon(v),4,yy+4);}
-  s.forEach(function(d,i){if(d.age%10===0||i===s.length-1)x.fillText(d.age+'세',X(g,s,i)-11,g.h-6);});
+function GX(g,a){return g.pad.l+(g.w-g.pad.l-g.pad.r)*(a-15)/70;}
+function GY(g,mn,mx,v){return g.h-g.pad.b-(g.h-g.pad.t-g.pad.b)*(v-mn)/(mx-mn);}
+function ggrid(g,mn,mx){
+  var x=g.x;x.strokeStyle='#eeeae3';x.fillStyle='#9aa0a8';x.font='10.5px sans-serif';x.lineWidth=1;
+  for(var i=0;i<=4;i++){var v=mn+(mx-mn)*i/4,yy=GY(g,mn,mx,v);
+    x.beginPath();x.moveTo(g.pad.l,yy);x.lineTo(g.w-g.pad.r,yy);x.stroke();x.fillText(shortWon(v),3,yy+4);}
+  AGES.forEach(function(a){x.fillText(a,GX(g,a)-6,g.h-8);});
 }
-function line(g,s,mn,mx,k,c){var x=g.x;x.strokeStyle=c;x.lineWidth=2.4;x.beginPath();
- s.forEach(function(d,i){var yy=Y(g,mn,mx,d[k]);i?x.lineTo(X(g,s,i),yy):x.moveTo(X(g,s,i),yy);});x.stroke();}
-function drawFlow(s){
-  var g=setup('ch1'),x=g.x;
-  var mx=Math.max.apply(null,s.map(function(d){return Math.max(d.income,d.spend);}))*1.1,mn=0;
-  axes(g,mn,mx,s);
-  x.beginPath();
-  s.forEach(function(d,i){var yy=Y(g,mn,mx,d.income);i?x.lineTo(X(g,s,i),yy):x.moveTo(X(g,s,i),yy);});
-  for(var i=s.length-1;i>=0;i--)x.lineTo(X(g,s,i),Y(g,mn,mx,s[i].spend));
-  x.closePath();x.fillStyle='rgba(23,122,74,.28)';x.fill();
-  line(g,s,mn,mx,'income','#2f6fd0');line(g,s,mn,mx,'spend','#c0392b');
+function drawFlow(r){
+  var g=setup('ch1',200),x=g.x,s=r.rows;
+  var mx=Math.max.apply(null,s.map(function(d){return Math.max(d.income,d.exp);}))*1.15||1000;
+  ggrid(g,0,mx);
+  s.forEach(function(d,i){
+    if(i===0)return;
+    var p0=s[i-1],x0=GX(g,p0.age),x1=GX(g,d.age);
+    var up=(p0.income>=p0.exp&&d.income>=d.exp),dn=(p0.income<p0.exp&&d.income<d.exp);
+    if(!up&&!dn)return;
+    x.beginPath();x.moveTo(x0,GY(g,0,mx,p0.income));x.lineTo(x1,GY(g,0,mx,d.income));
+    x.lineTo(x1,GY(g,0,mx,d.exp));x.lineTo(x0,GY(g,0,mx,p0.exp));x.closePath();
+    x.fillStyle=up?'rgba(42,122,85,.28)':'rgba(184,69,60,.2)';x.fill();});
+  [['exp','#c4703f'],['income','#2f5aa8']].forEach(function(L){
+    x.strokeStyle=L[1];x.lineWidth=2.8;x.beginPath();
+    s.forEach(function(d,i){var xx=GX(g,d.age),yy=GY(g,0,mx,d[L[0]]);i?x.lineTo(xx,yy):x.moveTo(xx,yy);});x.stroke();});
 }
-function drawSpend(s){
-  var g=setup('ch2'),x=g.x;
-  var mx=Math.max.apply(null,s.map(function(d){return d.living+d.child+d.housing;}))*1.12,mn=0;
-  axes(g,mn,mx,s);
-  var base=s.map(function(){return 0;});
-  [['living','#7c9cc4'],['child','#e3a857'],['housing','#9b7ec4']].forEach(function(L){
-    x.beginPath();
-    s.forEach(function(d,i){var yy=Y(g,mn,mx,base[i]+d[L[0]]);i?x.lineTo(X(g,s,i),yy):x.moveTo(X(g,s,i),yy);});
-    for(var i=s.length-1;i>=0;i--)x.lineTo(X(g,s,i),Y(g,mn,mx,base[i]));
-    x.closePath();x.fillStyle=L[1];x.fill();
-    s.forEach(function(d,i){base[i]+=d[L[0]];});
-  });
-}
-/* ④ 예상 곡선 vs 실제 만족도 */
-function drawHopeVsReal(s){
-  var cv=document.getElementById('ch4'),dpr=window.devicePixelRatio||1;
-  var w=cv.clientWidth||320,h=210;cv.width=w*dpr;cv.height=h*dpr;
-  var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.lineCap='round';x.lineJoin='round';x.clearRect(0,0,w,h);
-  var pad={l:36,r:12,t:12,b:26};
-  var X=function(age){return pad.l+(w-pad.l-pad.r)*(age-17)/(60-17);};
-  var Y=function(v){return h-pad.b-(h-pad.t-pad.b)*v/100;};
-  x.strokeStyle='#e6e2db';x.fillStyle='#8b93a1';x.font='11px sans-serif';x.lineWidth=1;
-  [0,50,100].forEach(function(v){var yy=Y(v);
-    x.beginPath();x.moveTo(pad.l,yy);x.lineTo(w-pad.r,yy);x.stroke();x.fillText(v,6,yy+4);});
-  [17,30,40,50,60].forEach(function(a){x.fillText(a+'세',X(a)-11,h-8);});
-  /* 예상 */
-  x.strokeStyle='#9aa3b0';x.lineWidth=2.4;x.setLineDash([6,4]);x.beginPath();
-  for(var a=17;a<=60;a++){var xx=X(a),yy=Y(expectedAt(a));a===17?x.moveTo(xx,yy):x.lineTo(xx,yy);}
-  x.stroke();x.setLineDash([]);
-  /* 실제 */
-  x.strokeStyle='#2f6fd0';x.lineWidth=3;x.beginPath();
-  s.forEach(function(d,i){var xx=X(d.age),yy=Y(d.hp);i?x.lineTo(xx,yy):x.moveTo(xx,yy);});
-  x.stroke();
-}
-function drawNW(s){
-  var g=setup('ch3'),x=g.x,vals=s.map(function(d){return d.nw;});
-  var mx=Math.max.apply(null,vals),mn=Math.min.apply(null,vals.concat([0]));
-  var sp=(mx-mn)||1;mx+=sp*.1;mn-=sp*.06;
-  axes(g,mn,mx,s);
-  if(mn<0&&mx>0){x.strokeStyle='#c0392b';x.setLineDash([4,3]);
-    x.beginPath();x.moveTo(g.pad.l,Y(g,mn,mx,0));x.lineTo(g.w-g.pad.r,Y(g,mn,mx,0));x.stroke();x.setLineDash([]);}
+function drawCash(r){
+  var g=setup('ch2',200),x=g.x,s=r.rows;
+  var v=s.map(function(d){return d.cash;});
+  var mx=Math.max.apply(null,v),mn=Math.min.apply(null,v.concat([0]));
+  var sp=(mx-mn)||1;mx+=sp*.12;mn-=sp*.1;
+  ggrid(g,mn,mx);
+  if(mn<0){x.strokeStyle='#b8453c';x.setLineDash([4,3]);
+    x.beginPath();x.moveTo(g.pad.l,GY(g,mn,mx,0));x.lineTo(g.w-g.pad.r,GY(g,mn,mx,0));x.stroke();x.setLineDash([]);}
   var grd=x.createLinearGradient(0,g.pad.t,0,g.h-g.pad.b);
-  grd.addColorStop(0,'rgba(47,111,208,.24)');grd.addColorStop(1,'rgba(47,111,208,0)');
+  grd.addColorStop(0,'rgba(47,90,168,.22)');grd.addColorStop(1,'rgba(47,90,168,0)');
   x.beginPath();
-  s.forEach(function(d,i){var yy=Y(g,mn,mx,d.nw);i?x.lineTo(X(g,s,i),yy):x.moveTo(X(g,s,i),yy);});
-  x.lineTo(X(g,s,s.length-1),g.h-g.pad.b);x.lineTo(X(g,s,0),g.h-g.pad.b);x.closePath();
+  s.forEach(function(d,i){var xx=GX(g,d.age),yy=GY(g,mn,mx,d.cash);i?x.lineTo(xx,yy):x.moveTo(xx,yy);});
+  x.lineTo(GX(g,85),GY(g,mn,mx,Math.max(0,mn)));x.lineTo(GX(g,15),GY(g,mn,mx,Math.max(0,mn)));x.closePath();
   x.fillStyle=grd;x.fill();
-  line(g,s,mn,mx,'nw','#2f6fd0');
+  x.strokeStyle='#2f5aa8';x.lineWidth=3;x.beginPath();
+  s.forEach(function(d,i){var xx=GX(g,d.age),yy=GY(g,mn,mx,d.cash);i?x.lineTo(xx,yy):x.moveTo(xx,yy);});x.stroke();
+  if(r.broke){var bx=GX(g,r.broke);
+    x.strokeStyle='#b8453c';x.lineWidth=2;x.setLineDash([3,3]);
+    x.beginPath();x.moveTo(bx,g.pad.t);x.lineTo(bx,g.h-g.pad.b);x.stroke();x.setLineDash([]);
+    x.fillStyle='#b8453c';x.font='bold 11px sans-serif';x.fillText(r.broke+'살 바닥',Math.min(bx+5,g.w-72),g.pad.t+12);}
+}
+function drawGap(r){
+  var g=setup('ch3',190),x=g.x,s=r.rows;
+  var mx=Math.max(Math.max.apply(null,s.map(function(d){return d.income;})),Math.max.apply(null,S.guess))*1.15||1000;
+  ggrid(g,0,mx);
+  x.strokeStyle='#9aa0a8';x.lineWidth=2.4;x.setLineDash([6,4]);x.beginPath();
+  AGES.forEach(function(a,i){var xx=GX(g,a),yy=GY(g,0,mx,S.guess[i]);i?x.lineTo(xx,yy):x.moveTo(xx,yy);});x.stroke();x.setLineDash([]);
+  x.strokeStyle='#2f5aa8';x.lineWidth=3;x.beginPath();
+  s.forEach(function(d,i){var xx=GX(g,d.age),yy=GY(g,0,mx,d.income);i?x.lineTo(xx,yy):x.moveTo(xx,yy);});x.stroke();
 }
 
-/* ========= 저장 ========= */
+/* 저장 */
 function payload(r){
-  return {name:S.sid,at:new Date().toISOString(),
-    출발지원금:S.start.help,출발학자금:S.start.loan,
-    학교:uniName(),전공:majorName(),지원전략:S.picks.strategy,직업:jobName(),
-    사는곳:r.region,집:S.picks.housing,결혼:r.marryPass,아이수:r.kids,사십대:S.picks.career,투자:S.picks.invest,
-    대학합격:r.uniPass,취업합격:r.jobPass,대출통과:r.loanPass,승진:r.promoPass,사업성공:r.bizWin,
-    첫연봉:r.salary0,육십세순자산:r.last.nw,만족도:r.happy,저축률:r.saveRate,
-    월평균저축:r.monthlySave,평생저축액:r.totalSave,엔딩:endingOf(r)[0],
-    예상곡선:S.curve.join(','),
-    추구미_10대:AIMS[0].opts[S.aim[0]]||'',추구미_20대:AIMS[1].opts[S.aim[1]]||'',
-    추구미_30대:AIMS[2].opts[S.aim[2]]||'',추구미_40대:AIMS[3].opts[S.aim[3]]||'',
-    추구미_50대:AIMS[4].opts[S.aim[4]]||'',
-    실제만족도곡선:r.series.filter(function(d){return [25,35,45,58].indexOf(d.age)>=0;})
-      .map(function(d){return d.hp;}).join(','),
-    이유_대학:S.reasons.uni||'',이유_직업:S.reasons.job||'',이유_결혼:S.reasons.marry||'',
-    이유_자녀주거:S.reasons.life||'',이유_커리어:S.reasons.career||''};
+  var mm={},ak={};
+  [15,25,35,45,55,65,75].forEach(function(a){
+    var m=S.memo[a]||{};for(var k in m)if(String(m[k]).trim())mm[a+'_'+k]=m[k];
+    var c=S.custom[a]||{};for(var k2 in c)if(/_ask$/.test(k2)&&String(c[k2]).trim())ak[a+'_'+k2.replace(/_ask$/,'')]=c[k2];
+  });
+  return {name:S.sid,반:S.cls,at:new Date().toISOString(),
+    메모:JSON.stringify(mm),직접답:JSON.stringify(ak),
+    전공:P(25,'major')||'',직업:r.job,사는곳:r.region,집:P(25,'home')||'',내집:r.bought,
+    결혼:r.married,아이수:r.kids,노후준비:['안 함','조금씩','꽤 많이','최대한'][+(P(55,'pension')||0)],
+    취업성공:r.jobOK,승진:passed('promo'),대출통과:passed('loan'),사업성공:passed('biz'),
+    일한기간:r.workYears,은퇴나이:r.retire,돈바닥나이:r.broke||0,
+    평생번돈:r.totalIn,평생쓴돈:r.totalOut,팔십오세현금:r.cash85,엔딩:endingOf(r)[0],
+    큰지출:bigSummary()||'없음',일어난일:evSummary(),
+    부모님이낸돈:r.parentPaid,
+    주거비총액:r.cat.home,생활비총액:r.cat.live,자녀비총액:r.cat.kid,
+    의료비총액:r.cat.care,큰지출총액:r.cat.big,노후준비총액:r.cat.pen,
+    예상소득곡선:S.guess.join(','),
+    실제소득곡선:r.rows.map(function(x){return x.income;}).join(','),
+    목표_15:S.goal[15]||'',목표_25:S.goal[25]||'',목표_35:S.goal[35]||'',목표_45:S.goal[45]||'',
+    목표_55:S.goal[55]||'',목표_65:S.goal[65]||'',목표_75:S.goal[75]||''};
 }
 function sendToServer(r){
   var line=$('#saveline');
-  if(!FIREBASE_CONFIG.apiKey){
-    line.textContent='(선생님 설정 전이라 이 기기에만 저장됐어요)';
-    try{localStorage.setItem('life_result',JSON.stringify(payload(r)));}catch(e){}
-    return;
-  }
+  if(!FIREBASE_CONFIG.apiKey){line.textContent='(선생님 설정 전이라 저장 안 됨)';return;}
   line.textContent='결과를 보내는 중…';
   import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js').then(function(a){
     return import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js').then(function(f){
       var db=f.getFirestore(a.initializeApp(FIREBASE_CONFIG));
-      return f.setDoc(f.doc(db,COLLECTION,S.sid),payload(r));
-    });
+      return f.setDoc(f.doc(db,COLLECTION,S.sid),payload(r));});
   }).then(function(){line.textContent='선생님께 결과가 전달됐어요.';})
-   .catch(function(){line.textContent='전송에 실패했어요. 화면을 선생님께 보여주세요.';});
+   .catch(function(){line.textContent='전송 실패. 화면을 선생님께 보여주세요.';});
 }
-
-/* ========= 100번 살아보기 ========= */
-function rollOnce(key){
-  var mx=maxTries(key),b=baseNeed(key);
-  for(var t=1;t<=mx;t++){
-    var need=(mx===1)?b:clamp(b+(t===2?1:t>=3?2:0),1,5);
-    if(1+Math.floor(Math.random()*6)<=need) return {tries:t,pass:true,done:true};
-  }
-  return {tries:mx,pass:false,done:true};
-}
-function manyLives(n){
-  var keepCh=S.ch,keepW=S.wheel,L=STAGES(),ck=[],wk=[];
-  L.forEach(function(st){
-    (st.chals||[]).forEach(function(c){ if(!c.when||c.when()) ck.push(c.k); });
-    if(st.wheel&&(!st.wheel.when||st.wheel.when())) wk.push(st.wheel.k);
-  });
-  var out=[];
-  for(var i=0;i<n;i++){
-    var ch={};ck.forEach(function(k){ch[k]=rollOnce(k);});S.ch=ch;
-    var w={};wk.forEach(function(k){w[k]=Math.floor(Math.random()*WHEELS[k].slots.length);});S.wheel=w;
-    try{var r=simulate();out.push({nw:r.last.nw,hp:r.happy});}catch(e){}
-  }
-  S.ch=keepCh;S.wheel=keepW;
-  return out;
-}
-function drawHist(vals,mine){
-  var cv=document.getElementById('histC'),dpr=window.devicePixelRatio||1;
-  var w=cv.clientWidth||320,h=190;cv.width=w*dpr;cv.height=h*dpr;
-  var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.lineCap='round';x.lineJoin='round';x.clearRect(0,0,w,h);
-  var mn=Math.min.apply(null,vals.concat([mine])),mx=Math.max.apply(null,vals.concat([mine]));
-  if(mx===mn)mx=mn+1;
-  var B=12,pad={l:8,r:8,t:8,b:34},bw=(w-pad.l-pad.r)/B;
-  var bins=new Array(B).fill(0);
-  vals.forEach(function(v){bins[clamp(Math.floor((v-mn)/(mx-mn)*B),0,B-1)]++;});
-  var top=Math.max.apply(null,bins)||1;
-  var myB=clamp(Math.floor((mine-mn)/(mx-mn)*B),0,B-1);
-  for(var i=0;i<B;i++){
-    var bh=(h-pad.t-pad.b)*bins[i]/top;
-    x.fillStyle=(i===myB)?'#c0392b':'#9fb8dc';
-    var bx=pad.l+i*bw+1, bwd=bw-2, rr=Math.min(6,bwd/2,bh/2);
-    if(x.roundRect){ x.beginPath(); x.roundRect(bx,h-pad.b-bh,bwd,bh,[rr,rr,0,0]); x.fill(); }
-    else x.fillRect(bx,h-pad.b-bh,bwd,bh);
-  }
-  x.strokeStyle='#c9ced8';x.beginPath();x.moveTo(pad.l,h-pad.b);x.lineTo(w-pad.r,h-pad.b);x.stroke();
-  x.fillStyle='#8b93a1';x.font='11px sans-serif';
-  x.fillText(shortWon(mn),pad.l,h-pad.b+15);
-  var t2=shortWon(mx);x.fillText(t2,w-pad.r-x.measureText(t2).width,h-pad.b+15);
-  x.fillStyle='#c0392b';x.font='bold 11.5px sans-serif';
-  var lbl='나 '+shortWon(mine);
-  var lx=clamp(pad.l+myB*bw+bw/2-x.measureText(lbl).width/2,0,w-x.measureText(lbl).width);
-  x.fillText(lbl,lx,h-8);
-}
-$('#manyBtn').onclick=function(){
-  var btn=this;btn.disabled=true;btn.textContent='100번 사는 중…';
-  setTimeout(function(){
-    var me=simulate(),mine=me.last.nw;
-    var runs=manyLives(100);
-    var nws=runs.map(function(r){return r.nw;}).sort(function(a,b){return a-b;});
-    var hps=runs.map(function(r){return r.hp;}).sort(function(a,b){return a-b;});
-    var med=nws[Math.floor(nws.length/2)],lo=nws[0],hi=nws[nws.length-1];
-    var better=nws.filter(function(v){return v>mine;}).length;
-    var rank=better+1;
-    document.getElementById('manyOut').innerHTML=
-      '<canvas id="histC" height="190" style="margin-top:12px"></canvas>'+
-      '<p class="tiny" style="margin:2px 0 10px">가로: 60세에 남은 돈 · 빨간 칸이 이번 인생</p>'+
-      '<div class="kv"><span>가장 흔한 결과</span><b>'+won(med)+'</b></div>'+
-      '<div class="kv"><span>가장 나빴을 때</span><b>'+won(lo)+'</b></div>'+
-      '<div class="kv"><span>가장 좋았을 때</span><b>'+won(hi)+'</b></div>'+
-      '<div class="kv"><span>만족도 (가장 흔한 값)</span><b>'+hps[Math.floor(hps.length/2)]+'점</b></div>'+
-      '<div class="kv"><span>이번 인생의 등수</span><b>100번 중 '+rank+'등</b></div>'+
-      '<p class="tiny" style="margin-top:10px">같은 선택으로 살아도 '+won(lo)+'부터 '+won(hi)+'까지 갈립니다.<br>'+
-      '<b>선택이 정하는 건 범위이고, 그 안 어디에 떨어질지는 운입니다.</b></p>';
-    try{drawHist(nws,mine);}catch(e){}
-    btn.style.display='none';
-  },60);
-};
-
 $('#againBtn').onclick=function(){
-  var k=S.sid;
-  var keepAim=S.aim.slice(),keepCurve=S.curve.slice(),keepMoved=S.moved.slice();
-  S={sid:k,idx:0,picks:{},free:{},reasons:{},ch:{},wheel:{},seen:{},done:false,
-     aim:keepAim,curve:keepCurve,moved:keepMoved,
-     start:{help:START_HELP[Math.floor(Math.random()*START_HELP.length)],
-            loan:START_LOAN[Math.floor(Math.random()*START_LOAN.length)],
-            home:START_HOME[Math.floor(Math.random()*START_HOME.length)]}};
-  S.picks.region=S.start.home;
-  $('#hName').textContent=k;show('s-stage');renderStage();openStartCard();
-};
+  var k=S.sid,g=S.guess.slice(),m=S.moved.slice();
+  S={sid:k,cls:S.cls,idx:0,pick:{},custom:{},goal:{},memo:{},ch:{},ev:{},guess:g,moved:m,done:false};
+  $('#hName').textContent=k;show('s-stage');renderStage();};
 window.addEventListener('resize',function(){
-  if($('#s-result').classList.contains('on')&&S.done){
-    try{var r=simulate();drawFlow(r.series);drawSpend(r.series);drawNW(r.series);drawHopeVsReal(r.series);}catch(e){}
-  }
-});
+  if($('#s-result').classList.contains('on')&&S.done){try{var r=simulate();drawFlow(r);drawCash(r);drawGap(r);}catch(e){}}});
 </script>
 </body>
 </html>
