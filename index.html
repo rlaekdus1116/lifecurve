@@ -215,6 +215,16 @@ table.life td.g{color:var(--ink2)}
 .src{font-size:11.5px;color:var(--ink2);line-height:1.7;margin-top:10px}
 .src b{color:var(--ink)}
 
+/* 기다리는 화면 */
+.waitwrap{min-height:72vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.waitname{font-size:17px;font-weight:700;color:var(--ink2)}
+.waitmsg{font-size:23px;font-weight:750;letter-spacing:-.5px}
+.dots3{display:flex;gap:11px}
+.dots3 i{width:15px;height:15px;border-radius:50%;background:var(--pri);opacity:.25;animation:bob 1.1s infinite}
+.dots3 i:nth-child(2){animation-delay:.16s}
+.dots3 i:nth-child(3){animation-delay:.32s}
+@keyframes bob{0%,60%,100%{opacity:.25;transform:translateY(0)}30%{opacity:1;transform:translateY(-9px)}}
+
 /* 배경 사진 */
 #bgA,#bgB{position:fixed;inset:0;z-index:-3;background:center/cover no-repeat;
   opacity:0;transition:opacity .5s ease}
@@ -334,6 +344,22 @@ table.life td.g{color:var(--ink2)}
   <div class="foot"><div class="in"><button class="btn pri big" id="go1">시작하기</button></div></div>
 </section>
 
+<!-- 이름 -->
+<section class="screen" id="s-name">
+  <div style="padding:30px 0 0">
+    <h2>반 · 학번 · 이름</h2>
+    <div class="card" style="margin-top:12px">
+      <div class="tiny" style="font-weight:700;color:var(--ink);margin-bottom:7px">우리 반</div>
+      <div class="chips" id="clsChips"></div>
+      <div class="tiny" style="font-weight:700;color:var(--ink);margin:12px 0 7px">학번과 이름</div>
+      <input type="text" id="sid" placeholder="20111 김OO" autocomplete="off">
+      <div class="err" id="sidErr"></div>
+      <p class="tiny" style="margin:0">예) <b>20111 김다연</b></p>
+    </div>
+  </div>
+  <div class="foot"><div class="in"><button class="btn pri big" id="go2">시작</button></div></div>
+</section>
+
 <!-- 평균은 이렇다 -->
 <section class="screen" id="s-intro">
   <div style="padding:20px 0 0">
@@ -374,20 +400,13 @@ table.life td.g{color:var(--ink2)}
   <div class="foot"><div class="in"><button class="btn pri big" id="go15">알겠어요</button></div></div>
 </section>
 
-<!-- 이름 -->
-<section class="screen" id="s-name">
-  <div style="padding:30px 0 0">
-    <h2>반 · 학번 · 이름</h2>
-    <div class="card" style="margin-top:12px">
-      <div class="tiny" style="font-weight:700;color:var(--ink);margin-bottom:7px">우리 반</div>
-      <div class="chips" id="clsChips"></div>
-      <div class="tiny" style="font-weight:700;color:var(--ink);margin:12px 0 7px">학번과 이름</div>
-      <input type="text" id="sid" placeholder="20111 김OO" autocomplete="off">
-      <div class="err" id="sidErr"></div>
-      <p class="tiny" style="margin:0">예) <b>20111 김다연</b></p>
-    </div>
+<!-- 기다리는 화면 -->
+<section class="screen" id="s-wait">
+  <div class="waitwrap">
+    <div class="waitname" id="wName">—</div>
+    <div class="dots3"><i></i><i></i><i></i></div>
+    <div class="waitmsg" id="wMsg">잠시만요</div>
   </div>
-  <div class="foot"><div class="in"><button class="btn pri big" id="go2">시작</button></div></div>
 </section>
 
 <!-- 예상 곡선 (1분) -->
@@ -724,12 +743,88 @@ function sndLose(){beep(310,0,.22,'sawtooth',.11);beep(196,.16,.44,'sawtooth',.1
 function sndTick(){beep(880,0,.04,'square',.045);}
 function sndScan(){for(var i=0;i<17;i++)beep(620+i*18,i*.08,.035,'square',.05);}
 
+
+/* ================= 교사가 진도를 넘겨줍니다 =================
+   단계 0=이름/대기  1=평균 보기  2=예상 소득 그리기
+        3~9=15·25·35·45·55·65·75살   10=결산        99=자유 진행  */
+var CTRL_DOC='__control__';
+var DB=null, FS=null, ALLOW=0, FREE=false, CONNECTED=false;
+function curStep(){
+  var on=document.querySelector('.screen.on');if(!on)return 0;
+  if(on.id==='s-intro')return 1;
+  if(on.id==='s-guess')return 2;
+  if(on.id==='s-stage')return 3+S.idx;
+  if(on.id==='s-result')return 10;
+  return 0;
+}
+function allowed(step){return FREE||!CONNECTED||step<=ALLOW;}
+var WANT=null;               /* 교사가 열어주면 가려던 곳 */
+function goStep(step){
+  if(!allowed(step)){WANT=step;showWait(step);return false;}
+  WANT=null;enterStep(step);return true;
+}
+function enterStep(step){
+  if(step===1){show('s-intro');drawAvg();}
+  else if(step===2){show('s-guess');drawGuess();gateGuess();}
+  else if(step>=3&&step<=9){S.idx=step-3;show('s-stage');renderStage();}
+  else if(step===10){finish();return;}
+  setTimeout(refreshGate,0);
+}
+var WAITMSG={1:'곧 시작합니다',2:'곧 시작합니다',10:'모두 기다리는 중'};
+function showWait(step){
+  $('#wName').textContent=(S.cls?S.cls+' ':'')+S.sid;
+  $('#wMsg').textContent=WAITMSG[step]||'잠시만요';
+  show('s-wait');
+}
+function onAllow(){
+  /* 교사가 넘기면, 갈 곳이 정해져 있던 학생은 자동으로 넘어갑니다 */
+  if(WANT!==null&&allowed(WANT)){var w=WANT;WANT=null;enterStep(w);saveProgress(w);return;}
+  refreshGate();
+}
+var curStepSaved=0;
+function refreshGate(){
+  /* 지금 화면의 '다음' 버튼이 눌릴 수 있는지 다시 봅니다 */
+  var on=document.querySelector('.screen.on');if(!on)return;
+  if(on.id==='s-intro'){var g=allowed(2);
+    $('#go15').disabled=!g;$('#go15').textContent=g?'알겠어요':'기다리는 중…';}
+  if(on.id==='s-guess')gateGuess();
+  if(on.id==='s-stage')refresh();
+}
+
+function connectFB(){
+  if(!FIREBASE_CONFIG.apiKey)return Promise.resolve();
+  return import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js').then(function(a){
+    return import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js').then(function(f){
+      FS=f;DB=f.getFirestore(a.initializeApp(FIREBASE_CONFIG));CONNECTED=true;
+      f.onSnapshot(f.doc(DB,COLLECTION,CTRL_DOC),function(d){
+        var v=(d.exists&&d.exists())?d.data():{};
+        ALLOW=(typeof v.step==='number')?v.step:0;
+        FREE=(ALLOW===99)||!!v.free;
+        onAllow();
+      },function(){});
+    });
+  }).catch(function(){CONNECTED=false;});
+}
+/* 단계마다 저장 — 교사가 중간에도 볼 수 있게 */
+var STEPNAME=['시작','평균 보기','예상 소득','15살','25살','35살','45살','55살','65살','75살','결산'];
+function saveProgress(step){
+  curStepSaved=step;
+  if(!DB||!S.sid)return;
+  var d;
+  try{d=payload(simulate());}catch(e){d={name:S.sid};}
+  d.name=S.sid;d.반=S.cls;d.at=new Date().toISOString();
+  d.진행=STEPNAME[step]||('단계 '+step);d.진행단계=step;d.완료=(step>=10);
+  d.예상소득곡선=S.guess.join(',');
+  d.예상최고액=Math.max.apply(null,S.guess);
+  try{FS.setDoc(FS.doc(DB,COLLECTION,S.sid),d,{merge:true});}catch(e){}
+}
+
 /* ---- 시작 ---- */
-$('#go1').onclick=function(){actx();show('s-intro');drawAvg();};
-$('#go15').onclick=function(){show('s-name');
+$('#go1').onclick=function(){actx();show('s-name');
   try{var v=localStorage.getItem('life_sid');if(v)$('#sid').value=v;
       var c=localStorage.getItem('life_cls');if(c)S.cls=c;}catch(e){}
-  renderCls();};
+  renderCls();connectFB();};
+$('#go15').onclick=function(){if(goStep(2))saveProgress(2);};
 function renderCls(){
   $('#clsChips').innerHTML=CLASSES.map(function(c){
     return '<button class="chip'+(S.cls===c?' on':'')+'" data-cls="'+c+'">'+c+'</button>';}).join('');
@@ -763,7 +858,9 @@ $('#go2').onclick=function(){
  if(!S.cls){$('#sidErr').textContent='반을 골라주세요.';return;}
  var v=checkSid();if(!v){$('#sid').focus();return;}
  S.sid=v;try{localStorage.setItem('life_sid',v);localStorage.setItem('life_cls',S.cls);}catch(e){}
- $('#hName').textContent=S.cls+' '+v;show('s-guess');drawGuess();gateGuess();};
+ $('#hName').textContent=S.cls+' '+v;
+ saveProgress(0);
+ if(goStep(1))saveProgress(1);};
 
 /* ---- 짐작 곡선 ---- */
 var GMAX=20000;   /* 짐작 곡선 위쪽 끝 = 2억 */
@@ -853,8 +950,11 @@ function guessDrag(e){
 function gateGuess(){
  var n=0;S.moved.forEach(function(v){if(!v)n++;});
  $('#curveHint').textContent=n>0?'주황색 동그라미 '+n+'개를 위아래로 움직여보세요':'좋아요. 이제 진짜 인생을 살아봅시다';
- $('#guessNext').disabled=n>0;$('#guessNote').textContent=n>0?'점 '+n+'개가 남았습니다.':'';}
-$('#guessNext').onclick=function(){show('s-stage');renderStage();};
+ var gate=allowed(3);
+ $('#guessNext').disabled=(n>0)||!gate;
+ $('#guessNext').textContent=(n===0&&!gate)?'기다리는 중…':'다 찍었어요';
+ $('#guessNote').textContent=n>0?'점 '+n+'개가 남았습니다.':'';}
+$('#guessNext').onclick=function(){if(goStep(3))saveProgress(3);};
 window.addEventListener('resize',function(){if($('#s-guess').classList.contains('on'))drawGuess();});
 function guessAt(age){
  if(age<=15)return S.guess[0];
@@ -1590,10 +1690,16 @@ function refresh(){
     if(n<MINLEN){ok=false;msg='목표를 '+(MINLEN-n)+'자 더 써야 넘어갑니다.';}
   }
   if(ok){var cl=chalList();cl.forEach(function(k){var s=S.ch[k];if(!s||!s.done){ok=false;msg='주사위를 굴려야 넘어갑니다.';}});}
-  $('#nextBtn').disabled=!ok;$('#footNote').textContent=msg;fitFoot();
-  $('#nextBtn').textContent=(S.idx===L.length-1)?'85살까지 살아보기':'다음';
+  var target=(S.idx<L.length-1)?(3+S.idx+1):10;
+  var gate=allowed(target);
+  $('#nextBtn').disabled=!ok||!gate;$('#footNote').textContent=msg;fitFoot();
+  $('#nextBtn').textContent=(!gate&&ok)?'기다리는 중…':((S.idx===L.length-1)?'85살까지 살아보기':'다음');
 }
-$('#nextBtn').onclick=function(){var L=PLAN();if(S.idx<L.length-1){S.idx++;renderStage();window.scrollTo(0,0);}else finish();};
+$('#nextBtn').onclick=function(){
+  var L=PLAN(),target=(S.idx<L.length-1)?(3+S.idx+1):10;
+  saveProgress(3+S.idx);                    /* 지금 단계 제출 */
+  if(goStep(target))saveProgress(target);
+  window.scrollTo(0,0);};
 $('#backBtn').onclick=function(){if(S.idx>0){S.idx--;renderStage();window.scrollTo(0,0);}};
 
 /* ================= 결산 ================= */
@@ -1671,7 +1777,7 @@ function finish(){
       String(S.goal[a]).replace(/</g,'&lt;')+'</b></div>':'';}).join('');
   renderSrc();
   try{drawFlow(r);drawCash(r);drawGap(r);}catch(e2){}
-  show('s-result');sendToServer(r);
+  show('s-result');sendToServer(r);saveProgress(10);
 }
 var SRC = [
  ['임금 · 첫 연봉','고용노동부 <b>고용형태별 근로실태조사(2023)</b>, 통계청 <b>일자리행정통계(2023)</b>의 연령대별 평균임금을 세후로 바꿔 반올림'],
@@ -1807,7 +1913,7 @@ function sendToServer(r){
 $('#againBtn').onclick=function(){
   var k=S.sid,g=S.guess.slice(),m=S.moved.slice();
   S={sid:k,cls:S.cls,idx:0,pick:{},custom:{},goal:{},memo:{},ch:{},ev:{},guess:g,moved:m,done:false};
-  $('#hName').textContent=k;show('s-stage');renderStage();};
+  $('#hName').textContent=(S.cls?S.cls+' ':'')+k;goStep(3);};
 window.addEventListener('resize',function(){
   if($('#s-result').classList.contains('on')&&S.done){try{var r=simulate();drawFlow(r);drawCash(r);drawGap(r);}catch(e){}}});
 </script>
