@@ -540,7 +540,7 @@ var FIREBASE_CONFIG={apiKey:"AIzaSyApUKeVhJ0EnOm_wu1vcT-14yeax7iQR7I",authDomain
 var COLLECTION="life_students", MINLEN=8, MEMOLEN=5;
 /* 이유 쓰기 —  true 로 바꾸면 모든 항목이 필수가 됩니다.
    지금은 화면마다 별표(*) 붙은 한 칸만 필수이고, 나머지는 쓰고 싶은 사람만 씁니다. */
-var MEMO_ALL=true;
+var MEMO_ALL=false;
 /* 나이대 그림.
    index.html 옆에 img/ 폴더를 만들고 아래 이름으로 넣으면 자동으로 붙습니다.
    img/title.png  img/15.png  img/25.png  img/35.png
@@ -1019,7 +1019,7 @@ function PLAN(){
      {v:'gg',t:'경기도',money:'월세 1년 1,020만 · 아파트 평균 6억 2,000만'},
      {v:'other',t:'그 밖의 지역',money:'월세 1년 780만 · 아파트 평균 3억 5,000만'}]},
    {k:'home',n:'집',s:'20살이 되면 모두 독립합니다',memo:true,opts:[
-     {v:'parents',t:'부모님 집에 산다',d:'눈치는 보이지만 돈이 거의 안 듭니다',money:'1년 300만원'},
+     {v:'parents',t:'부모님 집에 산다',d:'돈은 거의 안 들지만, <b>35살부터는 반드시 독립해서 나가야 합니다</b>',money:'1년 300만원'},
      {v:'monthly',t:'월세로 산다',d:'매달 집주인에게 돈을 냅니다. 목돈 없이 바로 들어갈 수 있어요',money:'1년 '+won(R.rent)},
      {v:'jeonse',t:'보증금을 맡기고 산다 (전세)',
       d:'집주인에게 큰 돈('+won(R.jdep)+')을 맡기면 매달 내는 월세가 없습니다. 그 돈을 은행에서 빌려서 <b>이자만</b> 냅니다. 나올 때 맡긴 돈은 돌려받아요.',
@@ -1049,8 +1049,8 @@ function PLAN(){
    {k:'kids',n:'아이',two:true,memo:true,opts:[
      {v:'0',t:'0명'},{v:'1',t:'1명',money:'1년 '+won(900*c)},
      {v:'2',t:'2명',money:'1년 '+won(1800*c)},{v:'3',t:'3명',money:'1년 '+won(2700*c)}]},
-   {k:'home',n:'집',memo:true,opts:[
-     {v:'same',t:'지금처럼 산다',money:'그대로'},
+   {k:'home',n:'집',s:'이제 부모님 집에서는 나와야 합니다',memo:true,opts:[
+     {v:'same',t:'월세·전세로 산다',d:'부모님 집에서 살았다면 이제 나와서 세를 냅니다',money:'그대로'},
      {v:'jeonse',t:'보증금을 맡기는 집으로 옮긴다 (전세)',d:'월세는 안 내고 이자만 냅니다',money:'1년 이자 '+won(R.jeonse)},
      {v:'buy',t:'집을 산다',d:'은행에서 돈을 빌려야 합니다. 심사를 통과해야 해요',
       money:R.n+' 평균 '+won(R.home)+' · 처음에 '+won(down)+' · 매달 '+won(mth)+'씩 30년',warn:warn35}]},
@@ -1064,7 +1064,7 @@ function PLAN(){
      {v:'stay',t:'계속 다닌다'},
      {v:'up',t:'더 올라가 본다',d:'수입 10% 증가 · 시간은 없어집니다'},
      {v:'down',t:'일을 줄인다',d:'수입 20% 감소 · 시간이 생깁니다'},
-     {v:'biz',t:'사업을 시작한다',d:'<b>성공하면 수입 1.45배</b> · <b>실패하면 0.65배 + 5,000만원 빚</b>',money:'주사위 한 번'},
+     {v:'biz',t:'새 사업을 시작한다',d:'<b>성공하면 수입 1.45배</b> · <b>실패하면 0.65배 + 5,000만원 빚</b><br>35살에 한 사업과는 <b>따로</b> 새로 주사위를 굴립니다',money:'주사위 한 번'},
      {v:'other',t:'다른 걸 해본다',d:'수입은 지금과 비슷합니다',ask:'무엇을 하고 싶어요?'}]},
    {k:'edu',n:'자녀 교육',s:kids?'아이 '+kids+'명 기준':'아이가 없으면 안 듭니다',memo:true,
     opts:[{v:'0',t:'학교만 보낸다',money:'0원'},
@@ -1076,6 +1076,7 @@ function PLAN(){
      {v:'up',t:'넓은 집으로 옮긴다',money:'주거비 1.5배'},
      {v:'buy',t:'이제 집을 산다',d:'은행 심사를 통과해야 합니다',money:'처음에 '+won(down)+' · 매달 '+won(mth),warn:warn45}]},
    {k:'big',n:'큰 지출',s:'여러 개 골라도 됩니다',multi:true,add:true,two:true,memo:true,opts:bigOpts(45)}],
+  chal:'life45',
   event:45,
   goal:{q:'마흔다섯의 내 목표는?',chips:['아이 교육','노후 준비','승진','건강','빚 갚기','여행']}},
 
@@ -1150,11 +1151,11 @@ function need(key){
   if(key==='marry')return clamp(3+prep,1,5);
   if(key==='loan'){var J2=jobOf();return clamp(3+(J2.p>=4000?1:0)+(P(25,'home_where')==='other'?1:P(25,'home_where')==='seoul'?-1:0),1,5);}
   if(key==='promo')return clamp(3+prep,1,5);
-  if(key==='biz')return 2;
+  if(key==='biz'||key==='biz45')return 2;
   return 3;
 }
 function needNow(key){var s=S.ch[key]||{tries:0};
-  if(key==='biz')return need(key);
+  if(key==='biz'||key==='biz45')return need(key);
   return clamp(need(key)+(s.tries===1?1:s.tries>=2?2:0),1,5);}
 function passed(k){return !!(S.ch[k]&&S.ch[k].pass);}
 
@@ -1180,7 +1181,7 @@ function simulate(){
       var w2=P(45,'work');
       if(w2==='up')m*=1.10;
       if(w2==='down')m*=0.80;
-      if(w2==='biz')m*=passed('biz')?1.45:0.65;
+      if(w2==='biz')m*=passed('biz45')?1.45:0.65;
     }
     if(i>=3){
       /* 55~64살: 정년이 지난 만큼 수입이 줄어듭니다 */
@@ -1304,7 +1305,7 @@ function simulate(){
     if(age===45){
       if(has(45,'big','car'))OC('차 구입',3000,'big');
       if(bought&&buyAge===45)OC('집 살 때 처음 낸 돈',Math.round(R.home*0.3),'home');
-      if(P(45,'work')==='biz'&&!passed('biz'))OC('사업 실패로 남은 빚',5000,'big');
+      if(P(45,'work')==='biz'&&!passed('biz45'))OC('사업 실패로 남은 빚',5000,'big');
     }
     if(age===55){
       if(P(55,'kidwed')==='1'&&kids)OC('자녀 결혼 도와주기',3000*kids,'kid');
@@ -1527,7 +1528,8 @@ var CHT={job:['취업','취업 성공!','취업 실패!','원하던 곳에 못 �
  marry:['결혼','결혼 성공!','결혼 실패!','혼자 살기로 합니다'],
  loan:['집 대출 심사','대출 통과!','대출 거절!','집은 못 사고 전월세로 지냅니다'],
  promo:['승진','승진 성공!','승진 실패!','승진 없이 지금 자리를 지킵니다'],
- biz:['사업','사업이 자리 잡았습니다!','사업 실패!','정리 비용 5,000만원이 빚으로 남고 수입이 줄어듭니다']};
+ biz:['사업','사업이 자리 잡았습니다!','사업 실패!','정리 비용 5,000만원이 빚으로 남고 수입이 줄어듭니다'],
+ biz45:['새 사업','새 사업이 자리 잡았습니다!','새 사업 실패!','정리 비용 5,000만원이 빚으로 남고 수입이 줄어듭니다']};
 function chalList(){
   var st=PLAN()[S.idx],out=[];
   if(st.chal==='job')out.push('job');
@@ -1537,6 +1539,9 @@ function chalList(){
     if(P(35,'work')==='promo')out.push('promo');
     if(P(35,'work')==='biz')out.push('biz');
   }
+  if(st.chal==='life45'){
+    if(P(45,'work')==='biz')out.push('biz45');
+  }
   return out;
 }
 function renderChal(){
@@ -1545,7 +1550,7 @@ function renderChal(){
   if(!list.length){box.innerHTML='';return;}
   box.innerHTML=list.map(function(k){
     var T=CHT[k],s=S.ch[k]||{tries:0,pass:false,done:false};S.ch[k]=s;
-    var mx=(k==='biz')?1:3,n=needNow(k);
+    var mx=(k==='biz'||k==='biz45')?1:3,n=needNow(k);
     if(s.done)return '<div class="chal"><div class="chname">'+T[0]+' 도전</div>'+
       (s.pass?'<div class="done ok">'+T[1]+'</div>':'<div class="done bad">'+T[2]+'</div><div class="need">'+T[3]+'</div>')+'</div>';
     var dots='';for(var i=0;i<mx;i++)dots+=(i<mx-s.tries)?'●':'○';
@@ -1563,7 +1568,7 @@ function pips(n,cls){var s='';for(var i=0;i<9;i++)s+='<i style="visibility:'+((n
  return '<div class="bigdice'+(cls||'')+'">'+s+'</div>';}
 function openRoll(key){
   var s=S.ch[key];if(s.done)return;
-  var T=CHT[key],mx=(key==='biz')?1:3,n=needNow(key);
+  var T=CHT[key],mx=(key==='biz'||key==='biz45')?1:3,n=needNow(key);
   $('#popTitle').textContent=T[0]+' 도전'+(mx>1?' '+(s.tries+1)+'번째':'');
   $('#popNeed').innerHTML='주사위가 <b>1 ~ '+n+'</b> 이면 성공';
   $('#popStage').innerHTML=pips(1+Math.floor(Math.random()*6),' throwin');
@@ -1809,6 +1814,33 @@ function renderSrc(){
     '실제 통계를 바탕으로 했지만 <b>수업에서 쓰기 쉽게 반올림하고 단순하게 만든 값</b>입니다. 정확한 예측이 아닙니다.</div>';
 }
 function kvv(a,b){return '<div class="kv"><span>'+a+'</span><b>'+b+'</b></div>';}
+/* 각 나이대에서 항목마다 무엇을 골랐는지 사람이 읽을 수 있는 말로 (교사 화면용) */
+function labelFor(st,g){
+  if(g.multi){
+    var names=[];
+    PA(st.age,g.k).forEach(function(v){
+      if(v==='none'){names.push('없음');return;}
+      if(v==='__add__'){var nm=CU(st.age,'big_name');names.push(nm?('직접: '+nm):'직접 추가');return;}
+      g.opts.forEach(function(o){if(o.v===v)names.push(o.t);});
+    });
+    return names.join(', ');
+  }
+  var v=P(st.age,g.k);
+  if(v===undefined||v===null)return '';
+  if(v==='__free__'){var jn=CU(25,'job_name');return jn?('직접: '+jn):'직접 입력';}
+  var t='';g.opts.forEach(function(o){if(o.v===v)t=o.t;});
+  var ask=CU(st.age,g.k+'_ask');
+  return t+(ask?' — '+ask:'');
+}
+function choiceMap(){
+  var out={};
+  PLAN().forEach(function(st){
+    var o={};
+    st.slots.forEach(function(g){var lb=labelFor(st,g);if(lb)o[g.n]=lb;});
+    if(Object.keys(o).length)out[st.age]=o;
+  });
+  return out;
+}
 function bigSummary(){
   var out=[];
   [25,35,45,55].forEach(function(a){
@@ -1896,7 +1928,8 @@ function payload(r){
     메모:JSON.stringify(mm),직접답:JSON.stringify(ak),
     전공:P(25,'major')||'',직업:r.job,사는곳:r.region,집:P(25,'home')||'',내집:r.bought,
     결혼:r.married,아이수:r.kids,노후준비:['안 함','조금씩','꽤 많이','최대한'][+(P(55,'pension')||0)],
-    취업성공:r.jobOK,승진:passed('promo'),대출통과:passed('loan'),사업성공:passed('biz'),
+    취업성공:r.jobOK,승진:passed('promo'),대출통과:passed('loan'),사업성공:passed('biz'),사업성공45:passed('biz45'),
+    선택:JSON.stringify(choiceMap()),
     일한기간:r.workYears,은퇴나이:r.retire,돈바닥나이:r.broke||0,
     평생번돈:r.totalIn,평생쓴돈:r.totalOut,팔십오세현금:r.cash85,엔딩:endingOf(r)[0],
     큰지출:bigSummary()||'없음',일어난일:evSummary(),
