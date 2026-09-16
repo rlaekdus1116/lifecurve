@@ -301,7 +301,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 <div class="card">
   <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
     <div>
-      <h2>한 학생의 인생 그래프 띄우기</h2>
+      <h2 id="oneTitle">한 학생의 인생 그래프</h2>
       <p class="sub" style="margin:2px 0 0">한 학생이 <b>어떤 선택을 했고</b>, 그게 모여 <b>어떤 결과</b>를 냈는지 한자리에 봅니다.</p>
     </div>
     <button class="btn dark" id="oneRefresh">새로고침 (R)</button>
@@ -452,6 +452,8 @@ function renderClsTabs(){
 var HOUSE={parents:'부모님 집',monthly:'월세',jeonse:'전세(보증금)'};
 var OX=function(v){return v?'성공':'실패';};
 function shortName(n){return String(n||'').split(' ').slice(-1)[0];}
+/* 이름에서 성(첫 글자)을 뺀 이름만 — "20111 김다연" → "다연" */
+function givenName(n){var s=shortName(n);return s.length>1?s.slice(1):s;}
 
 /* 그 학생이 무엇을 골랐는지 한 줄 요약 (목표 탭별) */
 function choiceOf(r,tab){
@@ -869,11 +871,13 @@ function oneDetailHTML(r){
 function renderOne(){
   var L=oneList(),sel=document.getElementById('oneSel');
   if(!L.length){sel.innerHTML='<option>아직 응답이 없습니다</option>';ONE=null;drawOne('oneC',null,300);
+    var tt=$('#oneTitle');if(tt)tt.textContent='한 학생의 인생 그래프';
     $('#oneNote').textContent='';var t0=$('#oneTags'),d0=$('#oneDetail');if(t0)t0.innerHTML='';if(d0)d0.innerHTML='';return;}
   if(!ONE||!DATA[ONE]||L.map(function(r){return r.name;}).indexOf(ONE)<0)ONE=L[0].name;
   sel.innerHTML=L.map(function(r){
     return '<option value="'+esc(r.name)+'"'+(r.name===ONE?' selected':'')+'>'+esc(r.name)+'</option>';}).join('');
   drawOne('oneC',DATA[ONE],300);
+  var tt=$('#oneTitle');if(tt)tt.textContent=givenName(ONE)+'의 인생 그래프';
   var r=DATA[ONE],g=nums(r.예상소득곡선),a=nums(r.실제소득곡선);
   var gap=0,n=0;for(var i=1;i<8;i++){if(g[i]!==undefined&&a[i]!==undefined){gap+=a[i]-g[i];n++;}}
   gap=n?Math.round(gap/n):0;
@@ -1059,7 +1063,7 @@ function bindOne(){
     if(L.length){ONE=L[(i+1)%L.length].name;renderOne();}};
   document.getElementById('oneBig').onclick=function(){
     if(!ONE||!DATA[ONE])return;var r=DATA[ONE];
-    document.getElementById('obName').textContent=r.name;
+    document.getElementById('obName').textContent=givenName(r.name)+'의 인생 그래프';
     document.getElementById('obSub').textContent=(r.반||'')+' · '+(r.직업||'')+' · '+(r.엔딩||'');
     document.getElementById('oneBigPop').classList.add('on');
     setTimeout(function(){drawOne('obC',r,520,true);},30);};

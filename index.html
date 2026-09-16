@@ -1959,10 +1959,13 @@ function sendToServer(r){
   var line=$('#saveline');
   if(!FIREBASE_CONFIG.apiKey){line.textContent='(선생님 설정 전이라 저장 안 됨)';return;}
   line.textContent='결과를 보내는 중…';
+  var d=payload(r);
+  d.진행='결산';d.진행단계=10;d.완료=true;   /* 결산까지 끝냈다는 표시가 지워지지 않도록 함께 저장 */
+  d.예상소득곡선=S.guess.join(',');d.예상최고액=Math.max.apply(null,S.guess);
   import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js').then(function(a){
     return import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js').then(function(f){
       var db=f.getFirestore(a.initializeApp(FIREBASE_CONFIG));
-      return f.setDoc(f.doc(db,COLLECTION,S.sid),payload(r));});
+      return f.setDoc(f.doc(db,COLLECTION,S.sid),d);});
   }).then(function(){line.textContent='선생님께 결과가 전달됐어요.';})
    .catch(function(){line.textContent='전송 실패. 화면을 선생님께 보여주세요.';});
 }
