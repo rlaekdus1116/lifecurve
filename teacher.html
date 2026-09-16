@@ -856,7 +856,9 @@ function oneDetailHTML(r){
         drow('평생 번 돈',shortWon(r.평생번돈||0))+
         drow('평생 쓴 돈',shortWon(r.평생쓴돈||0))+
         drow('일한 기간',(r.일한기간||0)+'년')+
-        drow('85살에 남은 돈',shortWon(r.팔십오세현금||0))+'</div>'
+        drow('85살 현금',shortWon(r.팔십오세현금||0))+
+        (r.집자산?drow('집(자산)',shortWon(r.집자산)):'')+
+        drow('집 포함 순재산',shortWon(r.순재산!==undefined?r.순재산:r.팔십오세현금||0))+'</div>'
     : '<div class="dcard"><div class="tiny">아직 <b>'+esc(r.진행||'진행 중')+'</b> 단계입니다. 학생이 끝까지 마치면 여기에 <b>결과</b>가 나옵니다.</div></div>';
   var ages=[15,25,35,45,55,65,75].filter(function(a){return picks[a];});
   var tabs='';

@@ -829,6 +829,12 @@ function saveProgress(step){
   try{FS.setDoc(FS.doc(DB,COLLECTION,S.sid),d,{merge:true}).catch(function(e){console.warn('저장 실패',e);});}
   catch(e){console.warn('저장 실패',e);}
 }
+/* 이 기기에도 저장 — 새로고침·튕김 뒤 다시 들어오면 이어서 하도록 */
+function persist(){
+  try{localStorage.setItem('life_S',JSON.stringify({
+    sid:S.sid,cls:S.cls,idx:S.idx,pick:S.pick,custom:S.custom,goal:S.goal,memo:S.memo,
+    ch:S.ch,ev:S.ev,guess:S.guess,moved:S.moved,done:S.done}));}catch(e){}
+}
 
 /* ---- 시작 ---- */
 $('#go1').onclick=function(){actx();show('s-name');
@@ -870,8 +876,18 @@ $('#go2').onclick=function(){
  var v=checkSid();if(!v){$('#sid').focus();return;}
  S.sid=v;try{localStorage.setItem('life_sid',v);localStorage.setItem('life_cls',S.cls);}catch(e){}
  $('#hName').textContent=S.cls+' '+v;
+ /* 튕겼다가 다시 들어온 경우: 이 기기에 저장된 선택을 되살립니다 */
+ var resumed=false;
+ try{var raw=localStorage.getItem('life_S');if(raw){var sv=JSON.parse(raw);
+   if(sv&&sv.sid===v&&!sv.done){
+     ['pick','custom','goal','memo','ch','ev'].forEach(function(k){if(sv[k]&&typeof sv[k]==='object')S[k]=sv[k];});
+     if(Array.isArray(sv.guess))S.guess=sv.guess;if(Array.isArray(sv.moved))S.moved=sv.moved;
+     if(typeof sv.idx==='number')S.idx=sv.idx;
+     resumed=S.pick&&Object.keys(S.pick).length>0;
+   }}}catch(e){}
  saveProgress(0);
- if(goStep(1))saveProgress(1);};
+ var tgt=resumed?(3+S.idx):1;
+ if(goStep(tgt))saveProgress(tgt);};
 
 /* ---- 짐작 곡선 ---- */
 var GMAX=20000;   /* 짐작 곡선 위쪽 끝 = 2억 */
@@ -949,7 +965,7 @@ function guessDrag(e){
  var g=gg(),r=g.cv.getBoundingClientRect(),t=e.touches?e.touches[0]:e;
  var px=t.clientX-r.left,py=t.clientY-r.top,best=0,bd=1e9;
  AGES.forEach(function(a,i){var d=Math.abs(g.X(a)-px);if(d<bd){bd=d;best=i;}});
- S.guess[best]=g.toV(py);S.moved[best]=1;drawGuess();gateGuess();}
+ S.guess[best]=g.toV(py);S.moved[best]=1;drawGuess();gateGuess();persist();}
 (function(){var cv=$('#curveC'),dn=false;
  function st(e){dn=true;e.preventDefault();guessDrag(e);}
  function mv(e){if(dn){e.preventDefault();guessDrag(e);}}
@@ -1037,7 +1053,7 @@ function PLAN(){
 
  {age:35,sub:'한창 때',desc:'가장 많은 일이 한꺼번에 몰리는 시기입니다.',
   slots:[
-   {k:'work',n:'일',memo:true,opts:[
+   {k:'work',n:'일',memo:'must',opts:[
      {v:'stay',t:'지금 회사를 다닌다',d:'변화 없음'},
      {v:'promo',t:'승진에 도전한다',d:'성공하면 수입 15% 증가',money:'주사위'},
      {v:'move',t:'회사를 옮긴다',d:'수입이 바로 10% 오릅니다'},
@@ -1051,7 +1067,7 @@ function PLAN(){
    {k:'kids',n:'아이',two:true,memo:true,opts:[
      {v:'0',t:'0명'},{v:'1',t:'1명',money:'1년 '+won(900*c)},
      {v:'2',t:'2명',money:'1년 '+won(1800*c)},{v:'3',t:'3명',money:'1년 '+won(2700*c)}]},
-   {k:'home',n:'집',s:'이제 부모님 집에서는 나와야 합니다',memo:true,opts:[
+   {k:'home',n:'집',s:'이제 부모님 집에서는 나와야 합니다',memo:'must',opts:[
      {v:'same',t:'월세·전세로 산다',d:'부모님 집에서 살았다면 이제 나와서 세를 냅니다',money:'그대로'},
      {v:'jeonse',t:'보증금을 맡기는 집으로 옮긴다 (전세)',d:'월세는 안 내고 이자만 냅니다',money:'1년 이자 '+won(R.jeonse)},
      {v:'buy',t:'집을 산다',d:'은행에서 돈을 빌려야 합니다. 심사를 통과해야 해요',
@@ -1073,7 +1089,7 @@ function PLAN(){
      {v:'1',t:'학원 한두 개',money:'1년 '+won(700*kids)},
      {v:'2',t:'학원 여러 개',money:'1년 '+won(1300*kids)},
      {v:'3',t:'할 수 있는 건 다',money:'1년 '+won(2100*kids)}]},
-   {k:'home',n:'집',memo:true,opts:[
+   {k:'home',n:'집',memo:'must',opts:[
      {v:'same',t:'그대로 산다'},
      {v:'up',t:'넓은 집으로 옮긴다',money:'주거비 1.5배'},
      {v:'buy',t:'이제 집을 산다',d:'은행 심사를 통과해야 합니다',money:'처음에 '+won(down)+' · 매달 '+won(mth),warn:warn45}]},
@@ -1110,7 +1126,7 @@ function PLAN(){
      {v:'same',t:'살던 집에 산다'},
      {v:'small',t:'작은 집으로 옮긴다',d:'차액이 생깁니다',money:'집이 있으면 목돈 + 주거비 30% 감소'},
      {v:'kid',t:'자녀와 함께 산다',money:'주거비 거의 0'}]},
-   {k:'care',n:'의료비와 보험',s:'지금 정한 게 75살 이후 큰돈을 좌우합니다',memo:true,opts:[
+   {k:'care',n:'의료비와 보험',s:'지금 정한 게 75살 이후 큰돈을 좌우합니다',memo:'must',opts:[
      {v:'0',t:'아프면 그때 낸다',d:'평소엔 싸지만, 나중에 크게 아프면 <b>전부 내 돈</b>입니다',money:'1년 300만원'},
      {v:'1',t:'보험을 들어둔다',d:'나중에 돌봄·치료가 필요할 때 <b>절반을 보험이 냅니다</b>',money:'1년 600만원'},
      {v:'2',t:'건강에 투자한다',d:'운동·식단으로 <b>크게 아플 확률 자체를 낮춥니다</b>',money:'1년 500만원'}]}],
@@ -1151,14 +1167,15 @@ function jobOf(){
 function need(key){
   var st=P(15,'study'),prep=st==='hard'?1:st==='fun'?-1:0;
   if(key==='job'){var J=jobOf();return clamp(3+(J.d||0)+prep,1,5);}
-  if(key==='marry')return clamp(3+prep,1,5);
+  if(key==='marry')return clamp(4+prep,1,5);   /* 한 번만 굴림 → 성공 확률을 조금 높임 */
   if(key==='loan'){var J2=jobOf();return clamp(3+(J2.p>=4000?1:0)+(P(25,'home_where')==='other'?1:P(25,'home_where')==='seoul'?-1:0),1,5);}
   if(key==='promo')return clamp(3+prep,1,5);
   if(key==='biz'||key==='biz45')return 2;
   return 3;
 }
 function needNow(key){var s=S.ch[key]||{tries:0};
-  if(key==='biz'||key==='biz45')return need(key);
+  if(key==='biz'||key==='biz45'||key==='marry')return need(key);
+  if(key==='job'&&s.tries>=2)return 6;   /* 취업은 마지막(3번째) 판에서 반드시 성공 → 평생 백수는 안 나옴 */
   return clamp(need(key)+(s.tries===1?1:s.tries>=2?2:0),1,5);}
 function passed(k){return !!(S.ch[k]&&S.ch[k].pass);}
 
@@ -1232,10 +1249,10 @@ function simulate(){
   function liveCost(age,income){
     var fam=(married&&age>=35)?1.55:1;
     var base=1350*c*fam;
-    if(age>=65)base*=0.9;
-    if(age>=75)base*=0.85;
+    if(age>=65)base*=0.95;
+    if(age>=75)base*=0.9;
     /* 버는 만큼 씀 — 소득이 높을수록 생활 수준도 올라갑니다(수업 포인트) */
-    var lifestyle=Math.max(0,income||0)*0.11;
+    var lifestyle=Math.max(0,income||0)*0.14;
     return Math.round(base+lifestyle);
   }
   function bigYear(a){                 /* a = 25/35/45/55 */
@@ -1268,10 +1285,11 @@ function simulate(){
     return Math.round(t);
   }
   function careCost(age){
-    if(age<55)return Math.round(180*c);
-    if(age<65)return Math.round(300*c);
-    if(age<75)return [300,600,500][+(P(65,'care')||0)]||300;   /* 0:그때그때 1:보험 2:건강투자 */
-    return ([500,1000,1800][+(P(75,'care')||0)]||500)+(P(75,'live')==='care'?2400:P(75,'live')==='helper'?1200:0);
+    if(age<55)return Math.round(250*c);
+    if(age<65)return Math.round(450*c);
+    if(age<75)return [500,800,700][+(P(65,'care')||0)]||500;   /* 0:그때그때 1:보험 2:건강투자 */
+    /* 75살 이후: 누구나 병원비가 크게 늘어납니다 */
+    return ([900,1500,2300][+(P(75,'care')||0)]||900)+(P(75,'live')==='care'?2400:P(75,'live')==='helper'?1200:0);
   }
   function pensionPay(age){return (age>=55&&age<65)?pen:0;}
 
@@ -1524,13 +1542,17 @@ function renderFree(){
     var nm=CU(25,'job_name'),py=CU(25,'job_pay'),f=lookupPay(nm);
     box.innerHTML='<div class="free"><div class="fl">어떤 일을 하고 싶어요?</div>'+
       '<input id="fN" placeholder="예) 웹툰 작가, 소방관, 수의사, 프로게이머" value="'+String(nm).replace(/"/g,'')+'">'+
-      (f?'<div class="found">✓ 비슷한 직업을 찾았어요 · 첫 연봉 약 '+won(f.p)+'</div>':'')+
+      '<div class="found" id="fFound"'+(f?'':' style="display:none"')+'>'+(f?'✓ 비슷한 직업을 찾았어요 · 첫 연봉 약 '+won(f.p):'')+'</div>'+
       '<div class="fl" style="margin-top:10px">1년에 얼마쯤 벌 것 같아요? (만원, 세금 뗀 뒤)</div>'+
       '<input id="fP" type="number" inputmode="numeric" placeholder="'+(f?f.p:3000)+'" value="'+py+'">'+
       '<div class="tiny" style="margin-top:6px">비워두면 위에서 찾은 금액으로 계산합니다.</div></div>';
+    /* 입력칸을 다시 그리지 않고 안내문만 갱신 → 한글 자음·모음이 분리되지 않습니다 */
     document.getElementById('fN').oninput=function(){
-      setCu(25,'job_name',this.value);renderFree();refresh();
-      var el=document.getElementById('fN');if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);}};
+      setCu(25,'job_name',this.value);
+      var f2=lookupPay(this.value),fd=document.getElementById('fFound');
+      if(fd){if(f2){fd.style.display='';fd.textContent='✓ 비슷한 직업을 찾았어요 · 첫 연봉 약 '+won(f2.p);}else fd.style.display='none';}
+      var fp=document.getElementById('fP');if(fp)fp.placeholder=(f2?f2.p:3000);
+      refresh();};
     document.getElementById('fP').oninput=function(){setCu(25,'job_pay',this.value);refresh();};
   });
 }
@@ -1561,7 +1583,7 @@ function renderChal(){
   if(!list.length){box.innerHTML='';return;}
   box.innerHTML=list.map(function(k){
     var T=CHT[k],s=S.ch[k]||{tries:0,pass:false,done:false};S.ch[k]=s;
-    var mx=(k==='biz'||k==='biz45')?1:3,n=needNow(k);
+    var mx=(k==='biz'||k==='biz45'||k==='marry')?1:3,n=needNow(k);
     if(s.done)return '<div class="chal"><div class="chname">'+T[0]+' 도전</div>'+
       (s.pass?'<div class="done ok">'+T[1]+'</div>':'<div class="done bad">'+T[2]+'</div><div class="need">'+T[3]+'</div>')+'</div>';
     var dots='';for(var i=0;i<mx;i++)dots+=(i<mx-s.tries)?'●':'○';
@@ -1579,7 +1601,7 @@ function pips(n,cls){var s='';for(var i=0;i<9;i++)s+='<i style="visibility:'+((n
  return '<div class="bigdice'+(cls||'')+'">'+s+'</div>';}
 function openRoll(key){
   var s=S.ch[key];if(s.done)return;
-  var T=CHT[key],mx=(key==='biz'||key==='biz45')?1:3,n=needNow(key);
+  var T=CHT[key],mx=(key==='biz'||key==='biz45'||key==='marry')?1:3,n=needNow(key);
   $('#popTitle').textContent=T[0]+' 도전'+(mx>1?' '+(s.tries+1)+'번째':'');
   $('#popNeed').innerHTML='주사위가 <b>1 ~ '+n+'</b> 이면 성공';
   $('#popStage').innerHTML=pips(1+Math.floor(Math.random()*6),' throwin');
@@ -1722,6 +1744,7 @@ function refresh(){
   var gate=allowed(target);
   $('#nextBtn').disabled=!ok||!gate;$('#footNote').textContent=msg;fitFoot();
   $('#nextBtn').textContent=(!gate&&ok)?'기다리는 중…':((S.idx===L.length-1)?'85살까지 살아보기':'다음');
+  persist();
 }
 $('#nextBtn').onclick=function(){
   var L=PLAN(),target=(S.idx<L.length-1)?(3+S.idx+1):10;
@@ -1731,15 +1754,21 @@ $('#nextBtn').onclick=function(){
 $('#backBtn').onclick=function(){if(S.idx>0){S.idx--;renderStage();window.scrollTo(0,0);}};
 
 /* ================= 결산 ================= */
+function homeEquity(r){return r.bought?Math.round(r.homeValue*(P(65,'home')==='small'?0.75:1)):0;}
+function netWorth(r){return r.cash85+homeEquity(r);}
 function endingOf(r){
-  if(r.broke&&r.broke<=70)return ['너무 일찍 바닥났습니다',r.broke+'살에 돈이 떨어졌습니다. 계획이 필요했어요'];
-  if(r.broke)return ['아슬아슬했습니다',r.broke+'살에 돈이 떨어졌습니다'];
-  if(r.cash85>=50000)return ['넉넉한 노년','85살까지 쓰고도 '+won(r.cash85)+'이 남았습니다'];
-  if(r.cash85>=10000)return ['계획대로','끝까지 돈이 모자라지 않았습니다'];
+  var eq=homeEquity(r),net=netWorth(r);
+  if(r.broke){
+    if(eq>0&&net>=0)return ['집은 있지만 현금이 말랐습니다',r.broke+'살에 쓸 현금이 떨어졌습니다. '+won(eq)+'짜리 집은 있어도 당장 쓸 돈이 없었어요 (하우스푸어)'];
+    if(r.broke<=70)return ['너무 일찍 바닥났습니다',r.broke+'살에 돈이 떨어졌습니다. 계획이 필요했어요'];
+    return ['아슬아슬했습니다',r.broke+'살에 돈이 떨어졌습니다'];
+  }
+  if(net>=50000)return ['넉넉한 노년','85살까지 쓰고도 재산이 '+won(net)+' 남았습니다'+(eq?' (집 '+won(eq)+' 포함)':'')];
+  if(net>=10000)return ['계획대로','끝까지 돈이 모자라지 않았습니다'];
   return ['빠듯하게','겨우 맞췄습니다'];
 }
 function finish(){
-  var r=simulate(),e=endingOf(r);S.done=true;
+  var r=simulate(),e=endingOf(r);S.done=true;persist();
   $('#rName').textContent=S.sid;
   $('#endName').textContent=e[0];$('#endDesc').textContent=e[1];
   setBg(IMG[85]);
@@ -1772,9 +1801,12 @@ function finish(){
       (o.v<0?'+'+won(-o.v):won(o.v))+'</b></div>';});});
   $('#onceList').innerHTML=ol||'<p class="tiny" style="margin:6px 0 0">한 번에 크게 나간 돈이 없습니다.</p>';
 
-  var rw=r.rows.filter(function(x){return x.age>=65;});
-  var avg=Math.round(rw.reduce(function(s,x){return s+x.exp;},0)/rw.length);
-  $('#flowNote').innerHTML='일을 놓은 뒤에도 <b>1년에 '+won(avg)+'씩</b> 나갑니다. 20년이면 <b>'+won(avg*20)+'</b>이 필요합니다.';
+  var totOld=r.rows.reduce(function(s,x){return s+(x.age>=65?x.exp*x.years:0);},0);
+  var a65=r.rows[5].exp,a75=r.rows[6].exp;
+  $('#flowNote').innerHTML='일을 놓아도 돈은 계속 나갑니다. <b>65살부터 1년에 약 '+won(a65)+'</b>, '+
+    '<b>75살이 넘으면 병원비까지 늘어 1년에 약 '+won(a75)+'</b>씩 듭니다. '+
+    '65~85살까지만 따져도 모두 <b>'+won(totOld)+'</b>이 필요합니다 — 그래서 젊을 때 미리 모아 둬야 합니다.'+
+    (r.bought?'<br><b>집을 포함한 85살 순재산은 약 '+won(netWorth(r))+'</b>입니다. (현금 '+won(r.cash85)+' + 집 '+won(homeEquity(r))+')':'');
   var gsum=0;[1,2,3,4,5,6,7].forEach(function(i){gsum+=(r.rows[i].income-S.guess[i]);});
   var ga=Math.round(gsum/7);
   $('#gapNote').innerHTML=ga<=-300?'너는 실제보다 <b>1년에 '+won(-ga)+'쯤 더 벌 거라고</b> 짐작했습니다. 대부분이 그렇습니다.'
@@ -1945,7 +1977,7 @@ function payload(r){
     취업성공:r.jobOK,승진:passed('promo'),대출통과:passed('loan'),사업성공:passed('biz'),사업성공45:passed('biz45'),
     선택:JSON.stringify(choiceMap()),
     일한기간:r.workYears,은퇴나이:r.retire,돈바닥나이:r.broke||0,
-    평생번돈:r.totalIn,평생쓴돈:r.totalOut,팔십오세현금:r.cash85,엔딩:endingOf(r)[0],
+    평생번돈:r.totalIn,평생쓴돈:r.totalOut,팔십오세현금:r.cash85,집자산:homeEquity(r),순재산:netWorth(r),엔딩:endingOf(r)[0],
     큰지출:bigSummary()||'없음',일어난일:evSummary(),
     부모님이낸돈:r.parentPaid,
     주거비총액:r.cat.home,생활비총액:r.cat.live,자녀비총액:r.cat.kid,
