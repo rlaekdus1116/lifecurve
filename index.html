@@ -666,7 +666,7 @@ var BIG={
  35:[{v:'none',t:'없음'},
      {v:'car',t:'차를 산다',o:2500,y:380},
      {v:'travel',t:'가족 여행',y:400},
-     {v:'cert',t:'더 공부한다 (대학원·자격증)',y:300},
+     {v:'cert',t:'대학원에 간다',o:2500,tag:'2년 등록금 등이 한 번에 크게 나갑니다'},
      {v:'hobby',t:'취미',y:200}],
  45:[{v:'none',t:'없음'},
      {v:'car',t:'차를 바꾼다',o:3000,y:380},
@@ -701,11 +701,13 @@ var EV={
    eff:function(){return '치료비·일 못 한 기간까지 합쳐 한 번에 2,000만원이 나갑니다';},
    miss:'건강하게 지나갑니다'},
  75:{n:'혼자 지내기 어려워짐',
-   txt:'75살이 넘으면 <b>남의 도움 없이 지내기 어려워지는 사람</b>이 100명 중 <b>40명</b>쯤 됩니다.',
-   p:function(){var c=P(65,'care');return (c==='1'||c==='2')?25:40;},
+   txt:'75살이 넘으면 <b>남의 도움 없이 지내기 어려워지는 사람</b>이 100명 중 <b>40명</b>쯤 됩니다. 65살에 건강에 투자했으면 이 확률이 낮아집니다.',
+   p:function(){var c=P(65,'care');return c==='2'?15:c==='1'?25:40;},
    hit:'돌봄이 필요해졌습니다',
-   eff:function(){return P(65,'care')==='1'?'보험이 절반을 내줍니다. 1년에 700만원이 더 나갑니다'
-        :'1년에 1,500만원이 더 나갑니다';},
+   eff:function(){var c=P(65,'care');
+     return c==='1'?'보험이 절반을 내줍니다. 1년에 1,000만원이 더 나갑니다'
+        :c==='2'?'건강해서 회복이 빠릅니다. 1년에 1,500만원이 더 나갑니다'
+        :'보험이 없어 전부 내 돈입니다. 1년에 2,000만원이 더 나갑니다';},
    miss:'끝까지 스스로 지냅니다'}
 };
 function evHit(age){var s=S.ev[age];return !!(s&&s.done&&s.hit);}
@@ -1040,7 +1042,7 @@ function PLAN(){
      {v:'promo',t:'승진에 도전한다',d:'성공하면 수입 15% 증가',money:'주사위'},
      {v:'move',t:'회사를 옮긴다',d:'수입이 바로 10% 오릅니다'},
      {v:'biz',t:'내 사업을 시작한다',
-      d:'<b>성공하면 수입이 1.45배</b>가 되고 정년 없이 70살까지 일할 수 있습니다.<br><b>실패하면 수입이 0.65배</b>로 줄고 정리 비용 5,000만원이 빚으로 남습니다.',
+      d:'<b>성공하면 수입이 1.3배</b>가 되고 정년 없이 70살까지 일할 수 있습니다.<br><b>실패하면 수입이 0.8배</b>로 줄고 정리 비용 5,000만원이 빚으로 남습니다.',
       money:'주사위 한 번 · 다시 기회 없음'},
      {v:'other',t:'다른 걸 해본다',d:'수입은 지금과 비슷합니다',ask:'무엇을 하고 싶어요?'}]},
    {k:'marry',n:'결혼',two:true,memo:'must',opts:[
@@ -1064,13 +1066,13 @@ function PLAN(){
      {v:'stay',t:'계속 다닌다'},
      {v:'up',t:'더 올라가 본다',d:'수입 10% 증가 · 시간은 없어집니다'},
      {v:'down',t:'일을 줄인다',d:'수입 20% 감소 · 시간이 생깁니다'},
-     {v:'biz',t:'새 사업을 시작한다',d:'<b>성공하면 수입 1.45배</b> · <b>실패하면 0.65배 + 5,000만원 빚</b><br>35살에 한 사업과는 <b>따로</b> 새로 주사위를 굴립니다',money:'주사위 한 번'},
+     {v:'biz',t:'새 사업을 시작한다',d:'<b>성공하면 수입 1.3배</b> · <b>실패하면 0.8배 + 5,000만원 빚</b><br>35살에 한 사업과는 <b>따로</b> 새로 주사위를 굴립니다',money:'주사위 한 번'},
      {v:'other',t:'다른 걸 해본다',d:'수입은 지금과 비슷합니다',ask:'무엇을 하고 싶어요?'}]},
    {k:'edu',n:'자녀 교육',s:kids?'아이 '+kids+'명 기준':'아이가 없으면 안 듭니다',memo:true,
-    opts:[{v:'0',t:'학교만 보낸다',money:'0원'},
-     {v:'1',t:'학원 한두 개',money:'1년 '+won(600*kids)},
-     {v:'2',t:'학원 여러 개',money:'1년 '+won(1200*kids)},
-     {v:'3',t:'할 수 있는 건 다',money:'1년 '+won(2000*kids)}]},
+    opts:[{v:'0',t:'학교만 보낸다 (사교육 없이)',d:'급식·교복·준비물·수학여행 같은 기본 비용은 듭니다',money:'1년 '+won(200*kids)},
+     {v:'1',t:'학원 한두 개',money:'1년 '+won(700*kids)},
+     {v:'2',t:'학원 여러 개',money:'1년 '+won(1300*kids)},
+     {v:'3',t:'할 수 있는 건 다',money:'1년 '+won(2100*kids)}]},
    {k:'home',n:'집',memo:true,opts:[
      {v:'same',t:'그대로 산다'},
      {v:'up',t:'넓은 집으로 옮긴다',money:'주거비 1.5배'},
@@ -1108,10 +1110,10 @@ function PLAN(){
      {v:'same',t:'살던 집에 산다'},
      {v:'small',t:'작은 집으로 옮긴다',d:'차액이 생깁니다',money:'집이 있으면 목돈 + 주거비 30% 감소'},
      {v:'kid',t:'자녀와 함께 산다',money:'주거비 거의 0'}]},
-   {k:'care',n:'의료비와 보험',memo:true,opts:[
-     {v:'0',t:'아프면 그때 낸다',money:'1년 300만원'},
-     {v:'1',t:'보험을 들어둔다',money:'1년 600만원'},
-     {v:'2',t:'건강에 투자한다',money:'1년 1,000만원'}]}],
+   {k:'care',n:'의료비와 보험',s:'지금 정한 게 75살 이후 큰돈을 좌우합니다',memo:true,opts:[
+     {v:'0',t:'아프면 그때 낸다',d:'평소엔 싸지만, 나중에 크게 아프면 <b>전부 내 돈</b>입니다',money:'1년 300만원'},
+     {v:'1',t:'보험을 들어둔다',d:'나중에 돌봄·치료가 필요할 때 <b>절반을 보험이 냅니다</b>',money:'1년 600만원'},
+     {v:'2',t:'건강에 투자한다',d:'운동·식단으로 <b>크게 아플 확률 자체를 낮춥니다</b>',money:'1년 500만원'}]}],
   goal:{q:'예순다섯, 어떻게 지내고 싶나요?',chips:['편하게 쉬기','건강','취미·여행','손주','계속 일하기']}},
 
  {age:75,sub:'노년',desc:'병원에 가는 일이 늘어납니다.',
@@ -1120,14 +1122,15 @@ function PLAN(){
      {v:'0',t:'최소한만',money:'1년 500만원'},
      {v:'1',t:'필요한 만큼',money:'1년 1,000만원'},
      {v:'2',t:'좋은 병원에서',money:'1년 1,800만원'}]},
-   {k:'live',n:'어떻게 살까',memo:'must',opts:(function(){
-     var hurt=!!(S.ev[75]&&S.ev[75].done&&S.ev[75].hit);
+   {k:'live',n:'어떻게 살까',s:'먼저 아래 「혼자 지내기 어려워짐」에서 내 건강을 확인하세요',memo:'must',opts:(function(){
+     var evDone=!!(S.ev[75]&&S.ev[75].done),hurt=evDone&&S.ev[75].hit;
+     var lock=evDone?null:'먼저 아래에서 내 건강부터 확인하세요';
      return [
-      {v:'self',t:'혼자 지낸다',d:hurt?null:'도움 없이 지냅니다',
-       why:hurt?'혼자 지내기 어려워졌습니다. 누군가의 도움이 필요합니다':null},
-      {v:'kid',t:'자녀와 함께 산다',d:hurt?'자녀가 돌봐줍니다':null,money:'주거비 거의 0'},
-      {v:'helper',t:'집에서 도움을 받는다',d:'요양보호사가 집으로 옵니다',money:'1년 1,200만원'},
-      {v:'care',t:'요양 시설에 들어간다',money:'1년 2,400만원'}];
+      {v:'self',t:'혼자 지낸다',d:'도움 없이 지냅니다',
+       why:lock||(hurt?'혼자 지내기 어려워져서 이제 혼자 지낼 수 없습니다':null)},
+      {v:'kid',t:'자녀와 함께 산다',d:hurt?'자녀가 돌봐줍니다':'자녀와 함께 지냅니다',money:'주거비 거의 0',why:lock},
+      {v:'helper',t:'집에서 도움을 받는다',d:'요양보호사가 집으로 옵니다',money:'1년 1,200만원',why:lock},
+      {v:'care',t:'요양 시설에 들어간다',money:'1년 2,400만원',why:lock}];
    })()}],
   event:75,
   goal:{q:'일흔다섯, 무엇이 제일 중요할까요?',chips:['건강','가족','편안함','남겨주기','하고 싶던 것']}}
@@ -1175,13 +1178,13 @@ function simulate(){
       var w=P(35,'work');
       if(w==='promo'&&passed('promo'))m*=1.15;
       if(w==='move')m*=1.10;
-      if(w==='biz')m*=passed('biz')?1.45:0.65;
+      if(w==='biz')m*=passed('biz')?1.30:0.80;
     }
     if(i>=2){
       var w2=P(45,'work');
       if(w2==='up')m*=1.10;
       if(w2==='down')m*=0.80;
-      if(w2==='biz')m*=passed('biz45')?1.45:0.65;
+      if(w2==='biz')m*=passed('biz45')?1.30:0.80;
     }
     if(i>=3){
       /* 55~64살: 정년이 지난 만큼 수입이 줄어듭니다 */
@@ -1191,14 +1194,14 @@ function simulate(){
       if(w3==='less')m*=0.70;
       if(w3==='quit')m=0;
     }
-    return Math.round(base*m*(married&&i>=1?1.7:1));
+    return Math.round(base*m*(married&&i>=1?1.5:1));
   }
   var pay=[payAt(0),payAt(1),payAt(2),payAt(3)];
   var peak=Math.max.apply(null,pay);
   var pen=[0,300,700,1200][+(P(55,'pension')||0)]||0;
   /* 국민연금: 개인 기준 연 1,500만원(월 125만원) 언저리가 상한.
      부부면 배우자 몫이 더해지지만 배우자 연금은 대개 더 적습니다. */
-  var pensionIncome=Math.round(Math.min(peak/(married?1.7:1)*0.28,1500)*(married?1.5:1)+pen*0.5);
+  var pensionIncome=Math.round(Math.min(peak/(married?1.5:1)*0.28,1500)*(married?1.5:1)+pen*0.5);
 
   /* 주거 */
   var bought=false,buyAge=0;
@@ -1223,13 +1226,17 @@ function simulate(){
     }
     return Math.round(base);
   }
-  /* 지출 */
-  function liveCost(age){
-    var fam=(married&&age>=35)?1.7:1;
-    var base=1150*c*fam;
-    if(age>=65)base*=0.85;
-    if(age>=75)base*=0.8;
-    return Math.round(base);
+  /* 지출 — 생활비 (주거·자녀·의료·큰지출은 따로 계산)
+     통계청 가계동향조사: 1인가구 월 소비지출 약 160만(연 1,900만),
+     2인 이상 가구는 월 300만 안팎. 주거·자녀·의료를 뺀 '나머지 생활비'로 잡았습니다. */
+  function liveCost(age,income){
+    var fam=(married&&age>=35)?1.55:1;
+    var base=1350*c*fam;
+    if(age>=65)base*=0.9;
+    if(age>=75)base*=0.85;
+    /* 버는 만큼 씀 — 소득이 높을수록 생활 수준도 올라갑니다(수업 포인트) */
+    var lifestyle=Math.max(0,income||0)*0.11;
+    return Math.round(base+lifestyle);
   }
   function bigYear(a){                 /* a = 25/35/45/55 */
     var t=0,L=BIG[a]||[];
@@ -1250,20 +1257,20 @@ function simulate(){
   function evCost(age){
     var t=0;
     if(age>=45&&age<55&&evHit(45))t+=700;
-    if(age>=75&&evHit(75))t+=(P(65,'care')==='1'?700:1500);
+    if(age>=75&&evHit(75))t+=(P(65,'care')==='1'?1000:P(65,'care')==='2'?1500:2000);
     return Math.round(t*c);
   }
   function kidCost(age){
     if(!kids)return 0;
     var t=0;
     if(age>=35&&age<55)t+=900*c*kids;                       /* 기본 양육 */
-    if(age>=45&&age<65)t+=[0,600,1200,2000][+(P(45,'edu')||0)]*kids;
+    if(age>=45&&age<65)t+=[200,700,1300,2100][+(P(45,'edu')||0)]*kids;
     return Math.round(t);
   }
   function careCost(age){
     if(age<55)return Math.round(180*c);
     if(age<65)return Math.round(300*c);
-    if(age<75)return [300,600,1000][+(P(65,'care')||0)]||300;
+    if(age<75)return [300,600,500][+(P(65,'care')||0)]||300;   /* 0:그때그때 1:보험 2:건강투자 */
     return ([500,1000,1800][+(P(75,'care')||0)]||500)+(P(75,'live')==='care'?2400:P(75,'live')==='helper'?1200:0);
   }
   function pensionPay(age){return (age>=55&&age<65)?pen:0;}
@@ -1288,22 +1295,23 @@ function simulate(){
       exp=Math.round(1450*c);
     }
     else{
-      exp=liveCost(age)+homeCost(age)+kidCost(age)+bigCost(age)+careCost(age)+pensionPay(age)+evCost(age);
+      exp=liveCost(age,income)+homeCost(age)+kidCost(age)+bigCost(age)+careCost(age)+pensionPay(age)+evCost(age);
       if(age===25)exp+=LOVE;
     }
     /* 목돈 */
     var once=0,ol=[];
     function OC(label,v,cat){if(!v)return;once+=v;ol.push({l:label,v:v,c:cat});}
-    if(age===25){if(has(25,'big','car'))OC('차 구입',2500,'big');}
+    /* 그 나이대 큰 지출 중 '한 번에' 나가는 것(차·대학원 등)을 목돈으로 처리 */
+    if(age===25||age===35||age===45||age===55){
+      (BIG[age]||[]).forEach(function(b){if(b.o&&has(age,'big',b.v))OC(b.t,b.o,'big');});
+    }
     if(age===35){
       if(married)OC('결혼 비용',5000,'kid');
       if(kids)OC('아이 낳기',500*kids,'kid');
-      if(has(35,'big','car'))OC('차 구입',2500,'big');
       if(bought&&buyAge===35)OC('집 살 때 처음 낸 돈',Math.round(R.home*0.3),'home');
       if(P(35,'work')==='biz'&&!passed('biz'))OC('사업 실패로 남은 빚',5000,'big');
     }
     if(age===45){
-      if(has(45,'big','car'))OC('차 구입',3000,'big');
       if(bought&&buyAge===45)OC('집 살 때 처음 낸 돈',Math.round(R.home*0.3),'home');
       if(P(45,'work')==='biz'&&!passed('biz45'))OC('사업 실패로 남은 빚',5000,'big');
     }
@@ -1320,7 +1328,7 @@ function simulate(){
     cash+=save;
     rows.push({age:age,income:income,exp:exp,once:once,onceList:ol,save:save,cash:Math.round(cash),years:years,
       byParent:(age===15),
-      live:age===15?Math.round(1450*c):liveCost(age),home:0,kid:age===15?0:kidCost(age),
+      live:age===15?Math.round(1450*c):liveCost(age,income),home:0,kid:age===15?0:kidCost(age),
       big:age===15?0:bigCost(age)+(age===25?LOVE:0),
       care:age===15?0:careCost(age)+evCost(age),pen:pensionPay(age)});
     if(age!==15)rows[rows.length-1].home=homeCost(age);
@@ -1374,6 +1382,9 @@ function renderStage(){
   var keepY=window.scrollY;
   $('#hAge').innerHTML=st.age+'살 <small>'+st.sub+'</small>';
   $('#hDesc').textContent=st.desc||'';
+  if(st.age===55||st.age===65){try{var pr=simulate();
+    $('#hDesc').innerHTML=(st.desc||'')+' <b style="color:var(--pri)">지금까지대로면 65살 이후 국민연금은 1년에 약 '+
+      won(pr.pensionIncome)+'</b> (한 달 '+won(Math.round(pr.pensionIncome/12))+')';}catch(e){}}
   $('#hStep').textContent=(S.idx+1)+' / '+L.length;
   setBg(IMG[st.age]);
   $('#backBtn').disabled=(S.idx===0);
@@ -1627,7 +1638,10 @@ function renderEvent(){
       '<div class="evt" style="margin-top:7px">100명 중 '+s.p+'명 · 내 번호는 '+(s.roll+1)+'번이었습니다</div></div>';
     return;
   }
-  var ready=true;st.slots.forEach(function(g){if(!slotDone(st.age,g))ready=false;});
+  /* 75살은 '어떻게 살까'를 이 결과에 따라 고르므로, 그 칸은 빼고 확인합니다 */
+  var ready=true;st.slots.forEach(function(g){
+    if(st.age===75&&g.k==='live')return;
+    if(!slotDone(st.age,g))ready=false;});
   if(!ready){box.innerHTML='<div class="evbox"><div class="evn">'+E.n+'</div>'+
     '<div class="evt">위에서 다 고르면 확인할 수 있어요</div></div>';return;}
   var p=E.p();

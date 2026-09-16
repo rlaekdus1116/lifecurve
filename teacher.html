@@ -836,26 +836,35 @@ document.addEventListener('keydown',function(e){
 /* --- 한 학생의 인생 그래프 --- */
 var ONE=null;
 function oneList(){return list().slice().sort(function(a,b){return String(a.name).localeCompare(String(b.name));});}
+var oneAge=null;
+function oneAgeBoxHTML(r){
+  var p=picksOf(r)[oneAge];
+  if(!p)return '<div class="dcard"><div class="tiny">이 나이대 선택 기록이 없습니다. (학생이 예전 버전으로 제출했을 수 있어요)</div></div>';
+  var items=Object.keys(p).map(function(k){
+    return '<div class="goalrow"><span style="width:auto;min-width:82px">'+esc(k)+'</span><div>'+esc(p[k])+'</div></div>';}).join('');
+  var goal=r['목표_'+oneAge]?'<div class="tiny" style="margin-top:7px;color:var(--pri)"><b>이 나이 목표:</b> '+esc(r['목표_'+oneAge])+'</div>':'';
+  return '<div class="dcard"><h4>'+oneAge+'살에 고른 것</h4>'+items+goal+'</div>';
+}
 function oneDetailHTML(r){
-  var picks=picksOf(r);
-  var res='<div class="dcard"><h4>이 선택들이 낳은 결과</h4>'+
-    drow('엔딩',esc(r.엔딩||'아직 진행 중'))+
-    drow('돈 바닥',r.돈바닥나이?('<b style="color:var(--bad)">'+r.돈바닥나이+'살</b>'):'끝까지 안 바닥남',r.돈바닥나이?'no':'ok')+
-    drow('평생 번 돈',shortWon(r.평생번돈||0))+
-    drow('평생 쓴 돈',shortWon(r.평생쓴돈||0))+
-    drow('일한 기간',(r.일한기간||0)+'년')+
-    drow('85살에 남은 돈',shortWon(r.팔십오세현금||0))+
-    '</div>';
-  var tl='';
-  [15,25,35,45,55,65,75].forEach(function(a){
-    var p=picks[a];if(!p)return;
-    var items=Object.keys(p).map(function(k){
-      return '<div class="goalrow"><span style="width:auto;min-width:76px">'+esc(k)+'</span><div>'+esc(p[k])+'</div></div>';}).join('');
-    var goal=r['목표_'+a]?'<div class="tiny" style="margin-top:5px;color:var(--pri)"><b>목표:</b> '+esc(r['목표_'+a])+'</div>':'';
-    tl+='<div class="dcard"><h4>'+a+'살에 고른 것</h4>'+items+goal+'</div>';
-  });
-  if(!tl)tl='<div class="dcard"><div class="tiny">아직 선택 기록이 없습니다. (학생이 예전 버전으로 제출했을 수 있어요)</div></div>';
-  return res+tl;
+  var picks=picksOf(r),finished=(r.진행단계||0)>=10;
+  var res = finished
+    ? '<div class="dcard"><h4>이 선택들이 낳은 결과</h4>'+
+        drow('엔딩',esc(r.엔딩||'—'))+
+        drow('돈 바닥',r.돈바닥나이?('<b style="color:var(--bad)">'+r.돈바닥나이+'살</b>'):'끝까지 안 바닥남',r.돈바닥나이?'no':'ok')+
+        drow('평생 번 돈',shortWon(r.평생번돈||0))+
+        drow('평생 쓴 돈',shortWon(r.평생쓴돈||0))+
+        drow('일한 기간',(r.일한기간||0)+'년')+
+        drow('85살에 남은 돈',shortWon(r.팔십오세현금||0))+'</div>'
+    : '<div class="dcard"><div class="tiny">아직 <b>'+esc(r.진행||'진행 중')+'</b> 단계입니다. 학생이 끝까지 마치면 여기에 <b>결과</b>가 나옵니다.</div></div>';
+  var ages=[15,25,35,45,55,65,75].filter(function(a){return picks[a];});
+  var tabs='';
+  if(ages.length){
+    if(!oneAge||ages.indexOf(oneAge)<0)oneAge=ages[0];
+    tabs='<div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px" id="oneAgeTabs">'+
+      ages.map(function(a){return '<button class="clschip'+(a===oneAge?' on':'')+'" data-oa="'+a+'">'+a+'살</button>';}).join('')+'</div>';
+  }
+  return res+'<div class="tiny" style="margin:10px 0 2px;font-weight:700;color:var(--ink2)">나이대별로 고른 것</div>'+
+    tabs+'<div id="oneAgeBox">'+oneAgeBoxHTML(r)+'</div>';
 }
 function renderOne(){
   var L=oneList(),sel=document.getElementById('oneSel');
@@ -874,7 +883,13 @@ function renderOne(){
     '<span class="dtag">'+esc(r.직업||'—')+(r.취업성공?'':' (탈락)')+'</span>'+
     (r.돈바닥나이?'<span class="dtag no">'+r.돈바닥나이+'살 바닥</span>':'<span class="dtag ok">안 바닥남</span>')+
     '<span class="dtag">'+esc(r.진행||'—')+'</span>';
-  var det=$('#oneDetail');if(det)det.innerHTML=oneDetailHTML(r);
+  var det=$('#oneDetail');if(det){det.innerHTML=oneDetailHTML(r);
+    var tabsEl=document.getElementById('oneAgeTabs');
+    if(tabsEl)tabsEl.querySelectorAll('[data-oa]').forEach(function(b){b.onclick=function(){
+      oneAge=+this.dataset.oa;
+      var bx=document.getElementById('oneAgeBox');if(bx)bx.innerHTML=oneAgeBoxHTML(r);
+      tabsEl.querySelectorAll('[data-oa]').forEach(function(x){x.classList.toggle('on',x===b);});
+    };});}
   $('#oneNote').innerHTML= '<b style="color:var(--pri)">본인이 그린 가장 높은 값 '+shortWon(r.예상최고액||Math.max.apply(null,g))+'</b> · '+
     ((r.진행단계||0)<10?'아직 결산 전':
       '짐작과 실제 차이 평균 <b>'+shortWon(Math.abs(gap))+'</b>'+(gap<0?' (실제가 더 적었음)':gap>0?' (실제가 더 많았음)':''));
