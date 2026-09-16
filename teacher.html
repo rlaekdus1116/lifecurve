@@ -246,8 +246,8 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 <div class="tabpane on" data-pane="overview">
 <div class="kpis">
   <div class="kpi"><div class="l">끝낸 학생</div><div class="v" id="kDone">0</div><div class="s">명</div></div>
-  <div class="kpi"><div class="l">돈이 바닥난 학생</div><div class="v" id="kBroke">—</div><div class="s" id="kBrokeSub">&nbsp;</div></div>
-  <div class="kpi"><div class="l">평균 바닥 나이</div><div class="v" id="kAge">—</div><div class="s">85살까지 사는데</div></div>
+  <div class="kpi"><div class="l">노후 자금 부족 학생</div><div class="v" id="kBroke">—</div><div class="s" id="kBrokeSub">&nbsp;</div></div>
+  <div class="kpi"><div class="l">평균 부족 시점</div><div class="v" id="kAge">—</div><div class="s">85살까지 사는데</div></div>
   <div class="kpi"><div class="l">평생 번 돈 1등</div><div class="v" id="kTopM" style="font-size:17px">—</div><div class="s" id="kTopMs">&nbsp;</div></div>
   <div class="kpi"><div class="l">가장 오래 버틴 학생</div><div class="v" id="kTopH" style="font-size:17px">—</div><div class="s" id="kTopHs">&nbsp;</div></div>
 </div>
@@ -336,7 +336,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
     <table>
       <thead><tr>
         <th>반</th><th>학번 이름</th><th>진행</th><th class="n">예상 최고액</th><th>전공</th><th>직업</th><th>결혼 · 아이</th><th>집</th>
-        <th class="n">평생 번 돈</th><th class="n">돈 바닥</th>
+        <th class="n">평생 번 돈</th><th class="n">노후 부족</th>
       </tr></thead>
       <tbody id="rows"><tr><td colspan="10" class="empty">아직 아무도 끝내지 않았습니다.</td></tr></tbody>
     </table>
@@ -463,7 +463,7 @@ function choiceOf(r,tab){
   if(tab==='목표_45')return '큰 지출: '+(r.큰지출||'없음');
   if(tab==='목표_55')return '노후 준비 '+(r.노후준비||'—')+' · '+(r.일어난일||'—');
   if(tab==='목표_65')return (r.은퇴나이||'—')+'살에 은퇴';
-  if(tab==='목표_75')return r.돈바닥나이?(r.돈바닥나이+'살에 돈 바닥'):'끝까지 안 바닥남';
+  if(tab==='목표_75')return r.돈바닥나이?(r.돈바닥나이+'살에 돈 부족'):'끝까지 넉넉';
   return '';
 }
 
@@ -479,7 +479,7 @@ var DIST_FIELDS=[
   {k:'아이수', t:'아이 수', suffix:'명'},
   {k:'일어난일',t:'확률로 일어난 일'},
   {k:'엔딩',t:'엔딩'},
-  {k:'돈바닥나이',t:'돈이 바닥난 나이', fn:function(v){return v?v+'살':'끝까지 안 바닥남';}}
+  {k:'돈바닥나이',t:'노후 자금이 부족해진 나이', fn:function(v){return v?v+'살':'끝까지 넉넉';}}
 ];
 function tally(field){
   var m={},n=0;
@@ -852,7 +852,7 @@ function oneDetailHTML(r){
   var res = finished
     ? '<div class="dcard"><h4>이 선택들이 낳은 결과</h4>'+
         drow('엔딩',esc(r.엔딩||'—'))+
-        drow('돈 바닥',r.돈바닥나이?('<b style="color:var(--bad)">'+r.돈바닥나이+'살</b>'):'끝까지 안 바닥남',r.돈바닥나이?'no':'ok')+
+        drow('노후 자금',r.돈바닥나이?('<b style="color:var(--bad)">'+r.돈바닥나이+'살에 부족</b>'):'끝까지 넉넉',r.돈바닥나이?'no':'ok')+
         drow('평생 번 돈',shortWon(r.평생번돈||0))+
         drow('평생 쓴 돈',shortWon(r.평생쓴돈||0))+
         drow('일한 기간',(r.일한기간||0)+'년')+
@@ -887,7 +887,7 @@ function renderOne(){
   if(tags)tags.innerHTML=
     '<span class="dtag">'+esc((r.반||'').replace('2학년 ',''))+'</span>'+
     '<span class="dtag">'+esc(r.직업||'—')+(r.취업성공?'':' (탈락)')+'</span>'+
-    (r.돈바닥나이?'<span class="dtag no">'+r.돈바닥나이+'살 바닥</span>':'<span class="dtag ok">안 바닥남</span>')+
+    (r.돈바닥나이?'<span class="dtag no">'+r.돈바닥나이+'살 부족</span>':'<span class="dtag ok">끝까지 넉넉</span>')+
     '<span class="dtag">'+esc(r.진행||'—')+'</span>';
   var det=$('#oneDetail');if(det){det.innerHTML=oneDetailHTML(r);
     var tabsEl=document.getElementById('oneAgeTabs');
@@ -936,7 +936,7 @@ function drawOne(id,r,h,dark){
     x.strokeStyle='#c0392b';x.lineWidth=2;x.setLineDash([4,4]);
     x.beginPath();x.moveTo(bx,pad.t);x.lineTo(bx,h-pad.b);x.stroke();x.setLineDash([]);
     x.fillStyle='#c0392b';x.font='bold '+(dark?'16px':'12px')+' sans-serif';
-    x.fillText(r.돈바닥나이+'살 바닥',Math.min(bx+6,w-110),pad.t+(dark?18:13));}
+    x.fillText(r.돈바닥나이+'살 · 힘든 때',Math.min(bx+6,w-120),pad.t+(dark?18:13));}
 }
 /* --- 표 --- */
 function renderRows(){
@@ -970,8 +970,8 @@ function openDetail(id){
   document.querySelector('#detailPop .box').classList.add('wide');
 
   var tag = r.돈바닥나이
-    ? '<span class="dtag no">'+r.돈바닥나이+'살에 돈 바닥</span>'
-    : '<span class="dtag ok">끝까지 안 바닥남</span>';
+    ? '<span class="dtag no">'+r.돈바닥나이+'살에 자금 부족</span>'
+    : '<span class="dtag ok">끝까지 넉넉</span>';
   var head='<div class="dhead">'+tag+
     '<span class="dtag">'+esc(r.엔딩||'—')+'</span>'+
     '<span class="dtag">평생 번 돈 '+shortWon(r.평생번돈||0)+'</span>'+
@@ -1020,11 +1020,19 @@ function openDetail(id){
         '<span class="b"><i style="width:'+Math.round(v/cmax*100)+'%;background:'+c[2]+'"></i></span>'+
         '<span class="v">'+shortWon(v)+'</span></div>';}).join('')+'</div>';
 
-  /* 3열 : 이유 + 목표 */
+  /* 3열 : 나이대별 전체 선택 + 이유 + 목표 */
+  var picks=picksOf(r);
+  var fullSel=[15,25,35,45,55,65,75].map(function(a){
+    var p=picks[a];if(!p)return '';
+    return '<div style="margin:0 0 8px"><b style="color:var(--pri)">'+a+'살</b>'+
+      Object.keys(p).map(function(k){return '<div class="goalrow"><span style="width:auto;min-width:72px">'+esc(k)+'</span><div>'+esc(p[k])+'</div></div>';}).join('')+'</div>';
+  }).join('');
   var reasons=MEMO_FIELDS.map(function(f){return memoLine(f[0],f[1]);}).join('');
-  var c3='<div class="dcard" style="max-height:34vh;overflow:auto"><h4>왜 그렇게 골랐나</h4>'+
+  var c3='<div class="dcard" style="max-height:40vh;overflow:auto"><h4>나이대별 전체 선택 (모든 항목)</h4>'+
+    (fullSel||'<div class="tiny">선택 기록이 없습니다. (예전 버전으로 제출했을 수 있어요)</div>')+'</div>'+
+    '<div class="dcard" style="max-height:30vh;overflow:auto"><h4>왜 그렇게 골랐나</h4>'+
     (reasons||'<div class="tiny">쓴 이유가 없습니다.</div>')+'</div>'+
-    '<div class="dcard" style="max-height:26vh;overflow:auto"><h4>시기별 목표</h4>'+
+    '<div class="dcard" style="max-height:24vh;overflow:auto"><h4>시기별 목표</h4>'+
     [15,25,35,45,55,65,75].map(function(a){
       return r['목표_'+a]?'<div class="goalrow"><span>'+a+'살</span><div>'+esc(r['목표_'+a])+'</div></div>':'';}).join('')+
     '</div>';
@@ -1051,9 +1059,9 @@ function renderKpi(){
   var tm=L.slice().sort(function(a,b){return (b.평생번돈||0)-(a.평생번돈||0);})[0];
   var th=L.slice().sort(function(a,b){return bk2(b)-bk2(a);})[0];
   $('#kTopM').textContent=shortName(tm.name);
-  $('#kTopMs').textContent=shortWon(tm.평생번돈||0)+' · '+(tm.돈바닥나이?tm.돈바닥나이+'살 바닥':'안 바닥남');
+  $('#kTopMs').textContent=shortWon(tm.평생번돈||0)+' · '+(tm.돈바닥나이?tm.돈바닥나이+'살 부족':'끝까지 넉넉');
   $('#kTopH').textContent=shortName(th.name);
-  $('#kTopHs').textContent=(th.돈바닥나이?th.돈바닥나이+'살 바닥':'끝까지 버팀')+' · '+shortWon(th.평생번돈||0);
+  $('#kTopHs').textContent=(th.돈바닥나이?th.돈바닥나이+'살 부족':'끝까지 넉넉')+' · '+shortWon(th.평생번돈||0);
 }
 
 function bindOne(){
@@ -1121,7 +1129,7 @@ $('#btnCsv').onclick=function(){
     '예상소득곡선','실제소득곡선',
     '목표_15','목표_25','목표_35','목표_45','목표_55','목표_65','목표_75'];
   var head=['학번 이름','반','진행','본인 예상 최고액(만원)','전공','직업','사는 곳','25살 주거','내 집 마련','결혼','아이 수','노후 준비','큰 지출','확률로 일어난 일',
-    '취업성공','대출통과','승진','사업성공','일한 기간(년)','은퇴 나이','돈 바닥난 나이','평생 번 돈(만원)','평생 쓴 돈(만원)','85살 현금(만원)','엔딩',
+    '취업성공','대출통과','승진','사업성공','일한 기간(년)','은퇴 나이','노후 부족 나이','평생 번 돈(만원)','평생 쓴 돈(만원)','85살 현금(만원)','엔딩',
     '부모님이 낸 돈(만원)','주거비(만원)','생활비(만원)','결혼·자녀(만원)','병원비·보험(만원)','큰 지출(만원)','노후 준비(만원)',
     '예상소득곡선(15~85)','실제소득곡선(15~85)',
     '목표_15','목표_25','목표_35','목표_45','목표_55','목표_65','목표_75'];
@@ -1162,7 +1170,7 @@ $('#btnClear').onclick=async function(){
     var houses=['jeonse','monthly'],regions=['서울','경기도','그 밖의 지역'];
     var careers=['promo','move','startup','stay'];
     var strat=['stable','fit','reach'];
-    var endings=['너무 일찍 바닥났습니다','아슬아슬했습니다','넉넉한 노년','계획대로','빠듯하게'];
+    var endings=['노후 자금이 부족했습니다','집은 있지만 현금이 부족','넉넉한 노년','계획대로','빠듯하게'];
     var why=['돈보다 시간이 더 중요하다고 생각해서','어릴 때부터 하고 싶던 일이라서','부모님이 편하게 사셨으면 해서',
       '내가 만든 걸 사람들이 쓰는 게 좋아서','안정적으로 오래 다니고 싶어서','친구들과 다르게 살아보고 싶어서',
       '실패해도 다시 할 수 있는 나이라고 생각해서','가족과 저녁을 같이 먹고 싶어서','좋아하는 걸 계속하려면 돈이 필요해서'];
