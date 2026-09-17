@@ -671,11 +671,17 @@ function memoOf(r){try{return JSON.parse(r.메모||'{}');}catch(e){return {};}}
 function askOfR(r){try{return JSON.parse(r.직접답||'{}');}catch(e){return {};}}
 function picksOf(r){try{return JSON.parse(r.선택||'{}');}catch(e){return {};}}
 function pickLabel(r,key){
-  var a=key.split('_')[0], k=key.slice(a.length+1);
+  var a=key.split('_')[0];
+  /* 먼저 '선택' 데이터에서 그 항목에 실제로 고른 답을 찾습니다 (이유와 1:1로 붙이기 위해) */
+  var lab='';for(var i=0;i<MEMO_FIELDS.length;i++)if(MEMO_FIELDS[i][0]===key){lab=MEMO_FIELDS[i][1];break;}
+  var slot=lab.replace(/^\s*\d+살\s*/,'');
+  var p=picksOf(r)[a];
+  if(p&&p[slot]!==undefined&&p[slot]!=='')return p[slot];
+  /* 예전 버전 제출 데이터 fallback */
+  var k=key.slice(a.length+1);
   var map={job:r.직업,home_where:r.사는곳,home:(HOUSE[r.집]||r.집),marry:(r.결혼?'결혼한다':'안 한다'),
            kids:(r.아이수!==undefined?r.아이수+'명':''),pension:r.노후준비,big:r.큰지출};
-  var v=map[k];
-  var ak=askOfR(r)[key];
+  var v=map[k],ak=askOfR(r)[key];
   return (v?v:'')+(ak?(v?' · ':'')+ak:'');
 }
 function renderRqTabs(){

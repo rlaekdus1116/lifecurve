@@ -464,6 +464,11 @@ table.life td.g{color:var(--ink2)}
         <div class="tiny" style="margin-top:2px">이건 <b>부모님이 내주셨습니다</b></div></div>
     </div>
 
+    <div class="card" style="margin-top:12px;border-color:#e6dcc4;background:#fdfbf5">
+      <div class="tiny" style="font-weight:700;color:var(--ink)">65살 이후, 노후에 필요한 돈</div>
+      <div id="oldNeed"></div>
+    </div>
+
     <div class="card" style="margin-top:12px">
       <div class="tiny" style="font-weight:700;color:var(--ink)">평생 어디에 얼마를 썼나</div>
       <div class="brk" id="brk"></div>
@@ -1050,15 +1055,15 @@ function PLAN(){
    {k:'major',n:'무엇을 공부했나',s:'누르면 어떤 일을 할 수 있는지 나옵니다',wide:true,opts:majorOpts()},
    {k:'job',n:'일',s:'세금 뗀 뒤 손에 쥐는 돈입니다',wide:true,memo:'must',opts:jobOpts(),free:'job'},
    {k:'home_where',n:'사는 곳',memo:true,opts:[
-     {v:'seoul',t:'서울',money:'월세 월 200만(1년 2,400만) · 아파트 평균 13억'},
-     {v:'gg',t:'경기도',money:'월세 월 150만(1년 1,800만) · 아파트 평균 6억 2,000만'},
-     {v:'other',t:'그 밖의 지역',money:'월세 월 100만(1년 1,200만) · 아파트 평균 3억 5,000만'}]},
+     {v:'seoul',t:'서울',money:'월세 혼자 월 90만 → 가족 월 200만 · 아파트 평균 13억'},
+     {v:'gg',t:'경기도',money:'월세 혼자 월 70만 → 가족 월 150만 · 아파트 평균 6억 2,000만'},
+     {v:'other',t:'그 밖의 지역',money:'월세 혼자 월 45만 → 가족 월 100만 · 아파트 평균 3억 5,000만'}]},
    {k:'home',n:'집',s:'20살이 되면 모두 독립합니다',memo:true,opts:[
      {v:'parents',t:'부모님 집에 산다',d:'돈은 거의 안 들지만, <b>35살부터는 반드시 독립해서 나가야 합니다</b>',money:'1년 300만원'},
-     {v:'monthly',t:'월세로 산다',d:'매달 집주인에게 돈을 냅니다. 목돈 없이 바로 들어갈 수 있어요',money:'1년 '+won(R.rent)},
+     {v:'monthly',t:'월세로 산다',d:'매달 집주인에게 돈을 냅니다. 지금은 작은 집이라 쌉니다',money:'지금 1년 '+won(Math.round(R.rent*0.45))+' · 35살부턴 커집니다'},
      {v:'jeonse',t:'보증금을 맡기고 산다 (전세)',
-      d:'집주인에게 큰 돈('+won(R.jdep)+')을 맡기면 매달 내는 월세가 없습니다. 그 돈을 은행에서 빌려서 <b>이자만</b> 냅니다. 나올 때 맡긴 돈은 돌려받아요.',
-      money:'1년 이자 '+won(R.jeonse)}]},
+      d:'집주인에게 큰 돈('+won(Math.round(R.jdep*0.45))+')을 맡기면 매달 내는 월세가 없습니다. 그 돈을 은행에서 빌려서 <b>이자만</b> 냅니다. 나올 때 맡긴 돈은 돌려받아요.',
+      money:'지금 1년 이자 '+won(Math.round(R.jeonse*0.45))}]},
    {k:'love',n:'연애',two:true,memo:true,opts:[
      {v:'0',t:'안 한다',money:'0원'},
      {v:'1',t:'가끔 만난다',money:'1년 240만원'},
@@ -1242,10 +1247,10 @@ function simulate(){
   if(P(35,'home')==='buy'&&passed('loan')){bought=true;buyAge=35;}
   else if(P(45,'home')==='buy'&&passed('loan')){bought=true;buyAge=45;}
   var mortgage=Math.round(pmt(R.home*0.7,.04,30)*12);
-  /* 집 크기 계수: 사회초년·혼자면 작은 집, 결혼하면 가족용 큰 집 (R.rent는 가족용 기준) */
+  /* 집 크기 계수: 사회초년(25살)은 원룸, 35살부터 평수를 넓힘, 가족이면 더 큰 집 (R.rent는 가족용 기준) */
   function homeSize(age){
-    if(age<=25)return 0.5;                       /* 원룸·작은 집 */
-    return (married&&age>=35)?1:0.65;            /* 혼자면 중간, 가족이면 큰 집 */
+    if(age<=25)return 0.45;                      /* 사회초년 원룸 (월 100만 안짝) */
+    return (married&&age>=35)?1:0.7;             /* 35살부터: 혼자면 중간, 가족이면 큰 집 */
   }
   function homeCost(age){
     var base,sz=homeSize(age);
@@ -1807,7 +1812,7 @@ function finish(){
   $('#r3').textContent=r.workYears+'년';$('#r4').textContent=r.spendYears+'년';
   $('#r5').textContent=won(r.parentPaid);
   $('#r1L').textContent=r.married?'우리 집이 평생 번 돈':'평생 번 돈';
-  $('#r2L').textContent=r.married?'우리 집이 평생 쓴 돈':'평생 쓴 돈';
+  $('#r2L').textContent=r.married?'우리 집이 이렇게 살면 드는 돈':'이렇게 살면 드는 돈';
   $('#wy').textContent=r.workYears;$('#sy').textContent=r.spendYears;
   /* 항목별 합계 */
   var CATN=[['home','주거비','#2f5aa8'],['live','생활비','#c4703f'],['kid','결혼·자녀','#2a7a55'],
@@ -1821,10 +1826,12 @@ function finish(){
   var homeNote=r.bought?'주거비에 평생 '+won(r.cat.home)+'을 썼습니다. 대출 30년을 다 갚은 뒤에는 확 줄었고, 그 대신 '+won(r.homeValue)+'짜리 집이 내 것으로 남습니다. (위 계산에는 안 들어간 재산입니다)'
     :'집을 사지 않았기 때문에 주거비가 <b>85살까지 한 번도 멈추지 않았습니다.</b> 평생 '+won(r.cat.home)+'입니다.';
   $('#calcNote').innerHTML=
-    '<b>「쓰는 돈」은 무엇일까?</b> ①생활비(밥·옷·교통·통신·문화생활) ②집세나 대출이자 ③자녀 키우기·교육 ④병원비·보험 ⑤한 번씩 크게 쓰는 돈, 이 다섯 가지를 모두 더한 것입니다. '+
+    '<b>「번 돈」과 「드는 돈」이 왜 다를까?</b> <b>드는 돈</b>은 <b>내가 고른 방식대로 평생 살 때 필요한 돈</b>이에요. '+
+    '번 돈에서 드는 돈을 빼면 = <b>85살에 남는 돈</b>이 됩니다. 그래서 두 숫자는 원래 다릅니다. 번 돈이 더 많으면 남고, 드는 돈이 더 많으면 모자라요.<br><br>'+
+    '<b>「드는 돈」은 무엇일까?</b> ①생활비(밥·옷·교통·통신·문화생활) ②집세나 대출이자 ③자녀 키우기·교육 ④병원비·보험 ⑤한 번씩 크게 쓰는 돈, 이 다섯 가지를 모두 더한 것입니다. '+
     '특히 <b>생활비는 버는 돈이 많을수록 같이 늘어납니다</b> — 많이 벌면 더 좋은 걸 먹고 쓰기 때문이에요. 그래서 수입이 두 배라고 저축이 두 배가 되진 않습니다.<br><br>'+
     '<b>평생 번 돈</b> = 25살부터 나이대마다 1년에 번 돈 × 10년을 모두 더한 값<br>'+
-    '<b>평생 쓴 돈</b> = 25살부터 나이대마다 1년에 쓴 돈 × 10년 + 한 번에 크게 나간 돈<br>'+
+    '<b>이렇게 살면 드는 돈</b> = 25살부터 나이대마다 1년에 드는 돈 × 10년 + 한 번에 크게 나간 돈<br>'+
     '<b>15~24살은 빠져 있습니다.</b> 그 10년 동안 나에게 <b>'+won(r.parentPaid)+'</b>이 쓰였지만, 내가 번 게 아니라 부모님이 내주셨기 때문입니다.<br>'+
     '<span style="color:var(--accent)">'+homeNote+'</span>';
   var ol='';
@@ -1835,6 +1842,25 @@ function finish(){
 
   var totOld=r.rows.reduce(function(s,x){return s+(x.age>=65?x.exp*x.years:0);},0);
   var a65=r.rows[5].exp,a75=r.rows[6].exp;
+  /* 노후에 필요한 돈 목록 + 얼마나 더 필요한가 */
+  var o65=r.rows.filter(function(x){return x.age>=65;});
+  function catSum(k){return o65.reduce(function(s,x){return s+(x[k]||0)*x.years;},0);}
+  var needLive=catSum('live'),needHome=catSum('home'),needCare=catSum('care'),needTot=catSum('exp');
+  var incOld=o65.reduce(function(s,x){return s+x.income*x.years;},0);
+  var savedAt65=Math.max(0,r.rows[4].cash);
+  var have=savedAt65+incOld, gap=needTot-have;
+  $('#oldNeed').innerHTML=
+    '<div class="tiny" style="margin:2px 0 8px">일을 놓은 65살부터 85살까지 <b>20년</b> 동안 이만큼 나갑니다.</div>'+
+    kvv('생활비 (밥·옷·교통 등)',won(needLive))+
+    kvv('집세·주거비',won(needHome))+
+    kvv('병원비·돌봄',won(needCare))+
+    '<div class="kv" style="border-top:2px solid #e6dcc4;margin-top:2px"><span style="color:var(--ink);font-weight:750">노후에 필요한 돈 합계</span><b style="color:var(--accent)">'+won(needTot)+'</b></div>'+
+    '<div class="tiny" style="margin:10px 0 4px;font-weight:700;color:var(--ink)">이 돈, 어디서 마련할까?</div>'+
+    kvv('국민연금 등 노후 수입 (20년)',won(incOld))+
+    kvv('일할 때 모아둔 돈 (65살 기준)',won(savedAt65))+
+    '<div class="note" style="margin-top:10px;'+(gap>0?'background:#fdeeee;border-color:#e7c4c4':'background:#eef7f1;border-color:#bfe0cc')+'">'+
+      (gap>0?'<b style="color:var(--bad)">얼마나 더 필요할까요? → '+won(gap)+' 모자랍니다.</b><br>젊을 때 더 모으거나, 더 오래 일하거나, 노후에 덜 써야 합니다.'
+            :'<b style="color:var(--ok)">준비된 돈으로 충분합니다.</b> 오히려 '+won(-gap)+'쯤 여유가 있어요.')+'</div>';
   $('#flowNote').innerHTML='일을 놓아도 돈은 계속 나갑니다. <b>65살부터 1년에 약 '+won(a65)+'</b>, '+
     '<b>75살이 넘으면 병원비까지 늘어 1년에 약 '+won(a75)+'</b>씩 듭니다. '+
     '65~85살까지만 따져도 모두 <b>'+won(totOld)+'</b>이 필요합니다 — 그래서 젊을 때 미리 모아 둬야 합니다.'+
