@@ -464,15 +464,16 @@ table.life td.g{color:var(--ink2)}
         <div class="tiny" style="margin-top:2px">이건 <b>부모님이 내주셨습니다</b></div></div>
     </div>
 
+    <div class="card" style="margin-top:12px">
+      <div class="tiny" style="font-weight:700;color:var(--ink)">평생 어디에 얼마를 썼나</div>
+      <div class="tiny" id="brkSub" style="margin:2px 0 4px">&nbsp;</div>
+      <div class="brk" id="brk"></div>
+      <div class="calc" id="calcNote"></div>
+    </div>
+
     <div class="card" style="margin-top:12px;border-color:#e6dcc4;background:#fdfbf5">
       <div class="tiny" style="font-weight:700;color:var(--ink)">65살 이후, 노후에 필요한 돈</div>
       <div id="oldNeed"></div>
-    </div>
-
-    <div class="card" style="margin-top:12px">
-      <div class="tiny" style="font-weight:700;color:var(--ink)">평생 어디에 얼마를 썼나</div>
-      <div class="brk" id="brk"></div>
-      <div class="calc" id="calcNote"></div>
     </div>
 
     <div class="card" style="margin-top:11px">
@@ -1832,15 +1833,18 @@ function finish(){
   $('#r1L').textContent=r.married?'우리 집이 평생 번 돈':'평생 번 돈';
   $('#r2L').textContent=r.married?'우리 집이 이렇게 살면 드는 돈':'이렇게 살면 드는 돈';
   $('#wy').textContent=r.workYears;$('#sy').textContent=r.spendYears;
-  /* 항목별 합계 */
+  /* 항목별 합계 — 큰 숫자에 놀라지 않도록 '한 달에 얼마'로도 보여줍니다 */
   var CATN=[['home','주거비','#2f5aa8'],['live','생활비','#c4703f'],['kid','결혼·자녀','#2a7a55'],
             ['care','병원비·보험','#b8453c'],['big','큰 지출·기타','#8a6bbf'],['pen','노후 준비','#7b8794']];
   var cmax=1;CATN.forEach(function(c){if(r.cat[c[0]]>cmax)cmax=r.cat[c[0]];});
+  /* 항목별로 실제로 돈이 나간 기간(개월) — 한 달 평균을 정확히 내기 위해 */
+  function activeMonths(key){var m=0;r.rows.forEach(function(x){if(!x.byParent&&(x[key]||0)>0)m+=x.years*12;});return m||720;}
+  $('#brkSub').innerHTML='25살부터 85살까지 <b>60년 동안</b> 쓴 돈이에요. 놀랄 것 없이, <b>한 달로 나누면</b> 오른쪽 회색 글씨처럼 됩니다.';
   $('#brk').innerHTML=CATN.map(function(c){
-    var v=r.cat[c[0]];
+    var v=r.cat[c[0]],mo=Math.round(v/activeMonths(c[0]));
     return '<div class="brkrow"><span class="bn">'+c[1]+'</span>'+
       '<span class="bb"><i style="width:'+Math.round(v/cmax*100)+'%;background:'+c[2]+'"></i></span>'+
-      '<span class="bv">'+shortWon(v)+'</span></div>';}).join('');
+      '<span class="bv" style="display:inline-block;text-align:right;min-width:92px;line-height:1.25">'+shortWon(v)+'<br><span style="font-weight:500;color:var(--ink2);font-size:11px">한 달 '+won(mo)+'</span></span></div>';}).join('');
   var homeNote=r.bought?'주거비에 평생 '+won(r.cat.home)+'을 썼습니다. 대출 30년을 다 갚은 뒤에는 확 줄었고, 그 대신 '+won(r.homeValue)+'짜리 집이 내 것으로 남습니다. (위 계산에는 안 들어간 재산입니다)'
     :'집을 사지 않았기 때문에 주거비가 <b>85살까지 한 번도 멈추지 않았습니다.</b> 평생 '+won(r.cat.home)+'입니다.';
   $('#calcNote').innerHTML=
