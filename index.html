@@ -1105,8 +1105,8 @@ function PLAN(){
      {v:'0',t:'0명'},{v:'1',t:'1명',money:'1년 '+won(900*c)},
      {v:'2',t:'2명',money:'1년 '+won(1800*c)},{v:'3',t:'3명',money:'1년 '+won(2700*c)}]},
    {k:'home',n:'집',s:'이제 부모님 집에서는 나와야 합니다',memo:'must',opts:[
-     {v:'same',t:'월세·전세로 산다',d:'부모님 집에서 살았다면 이제 나와서 세를 냅니다',money:'그대로'},
-     {v:'jeonse',t:'보증금을 맡기는 집으로 옮긴다 (전세)',d:'월세는 안 내고 이자만 냅니다',money:'1년 이자 '+won(R.jeonse)}
+     {v:'same',t:'지금 살던 대로 산다',d:'월세면 월세 그대로, 전세면 전세 그대로. 부모님 집이었다면 이제 나와서 세를 냅니다',money:'그대로'},
+     {v:'jeonse',t:'월세 → 전세로 바꾼다',d:'보증금을 맡기면 매달 내는 월세 대신 이자만 냅니다 (지금 월세인 사람에게 유리)',money:'1년 이자 '+won(R.jeonse)}
     ].concat(buyOpts(cash35))},
    {k:'big',n:'큰 지출',s:'여러 개 골라도 됩니다',multi:true,add:true,two:true,memo:true,opts:bigOpts(35)}],
   chal:'life',
