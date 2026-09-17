@@ -524,12 +524,14 @@ function rollsHTML(){
   var L=list();
   if(!L.length)return '<div class="empty">아직 응답이 없습니다.</div>';
   return ROLL_FIELDS.map(function(f){
+    /* 실제로 그 도전을 한 학생만 분모에 넣습니다 (안 한 사람이 '실패'로 잡히지 않도록) */
     var tried=L.filter(function(r){return r[f.k]!==undefined&&r[f.k]!==null;});
-    if(f.k==='결혼')tried=L.filter(function(r){return r['결혼']!==undefined;});
-    if(f.k==='대출통과')tried=L.filter(function(r){return r['대출통과']!==undefined&&r['내집']!==undefined;});
-    if(f.k==='승진')tried=L.filter(function(r){return r['승진']!==undefined;});
-    if(f.k==='사업성공')tried=L.filter(function(r){return r['사업성공']!==undefined;});
-    if(!tried.length)return '<div class="drow"><span class="nm">'+f.t+'</span><span class="ba"></span><span class="pc">해당 없음</span></div>';
+    if(f.k==='취업성공')tried=L.filter(function(r){return r['취업성공']!==undefined;});
+    if(f.k==='결혼')tried=L.filter(function(r){return r['결혼시도']||r['결혼'];});
+    if(f.k==='대출통과')tried=L.filter(function(r){return r['대출시도']||r['대출통과'];});
+    if(f.k==='승진')tried=L.filter(function(r){return r['승진시도']||r['승진'];});
+    if(f.k==='사업성공')tried=L.filter(function(r){return r['사업시도']||r['사업성공']||r['사업시도45']||r['사업성공45'];});
+    if(!tried.length)return '<div class="drow"><span class="nm">'+f.t+'</span><span class="ba"></span><span class="pc">도전한 학생 없음</span></div>';
     var ok=tried.filter(function(r){return !!r[f.k];}).length;
     var pc=Math.round(ok/tried.length*100);
     return '<div class="drow"><span class="nm">'+f.t+'</span>'+
@@ -1003,12 +1005,12 @@ function openDetail(id){
     '</div>'+
     '<div class="dcard"><h4>큰 지출</h4><div style="font-size:13px">'+esc(r.큰지출||'없음')+'</div>'+
     memoLine('25_big','25살 이유')+memoLine('35_big','35살 이유')+memoLine('45_big','45살 이유')+'</div>'+
-    '<div class="dcard"><h4>주사위 · 확률</h4>'+
+    '<div class="dcard"><h4>주사위 · 확률 <span style="font-weight:400;color:var(--ink2)">(도전한 것만)</span></h4>'+
     drow('취업',r.취업성공?'합격':'탈락',r.취업성공?'ok':'no')+
-    (r.대출통과!==undefined?drow('대출 심사',r.대출통과?'통과':'거절',r.대출통과?'ok':'no'):'')+
-    (r.승진!==undefined?drow('승진',OX(r.승진),r.승진?'ok':'no'):'')+
-    (r.사업성공!==undefined?drow('사업 (35살)',OX(r.사업성공),r.사업성공?'ok':'no'):'')+
-    (r.사업성공45!==undefined?drow('새 사업 (45살)',OX(r.사업성공45),r.사업성공45?'ok':'no'):'')+
+    ((r.대출시도||r.대출통과)?drow('대출 심사',r.대출통과?'통과':'거절',r.대출통과?'ok':'no'):'')+
+    ((r.승진시도||r.승진)?drow('승진',OX(r.승진),r.승진?'ok':'no'):'')+
+    ((r.사업시도||r.사업성공)?drow('사업 (35살)',OX(r.사업성공),r.사업성공?'ok':'no'):'')+
+    ((r.사업시도45||r.사업성공45)?drow('새 사업 (45살)',OX(r.사업성공45),r.사업성공45?'ok':'no'):'')+
     drow('일어난 일',esc(r.일어난일||'—'),(r.일어난일&&r.일어난일!=='큰일 없이 지나감')?'no':'ok')+
     drow('부모님이 낸 돈 (15~24살)',shortWon(r.부모님이낸돈||0))+'</div>';
 

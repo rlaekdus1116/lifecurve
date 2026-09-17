@@ -1255,9 +1255,9 @@ function simulate(){
   var pay=[payAt(0),payAt(1),payAt(2),payAt(3)];
   var peak=Math.max.apply(null,pay);
   var pen=[0,300,700,1200][+(P(55,'pension')||0)]||0;
-  /* 국민연금: 개인 기준 연 1,500만원(월 125만원) 언저리가 상한.
-     부부면 배우자 몫이 더해지지만 배우자 연금은 대개 더 적습니다. */
-  var pensionIncome=Math.round(Math.min(peak/(married?1.5:1)*0.28,1500)*(married?1.5:1)+pen*0.5);
+  /* 국민연금: 실제 노령연금 월평균은 약 60만원, 20년 이상 가입해도 월 100만원 안팎.
+     개인 상한을 연 900만원(월 75만) 정도로 낮게 잡았습니다. 부부면 배우자 몫이 조금 더해집니다. */
+  var pensionIncome=Math.round(Math.min(peak/(married?1.35:1)*0.18,900)*(married?1.35:1)+pen*0.5);
 
   /* 주거 — 어떤 집을 샀는지(가격)까지 반영 */
   var bought=false,buyAge=0,boughtV=null;
@@ -1763,13 +1763,11 @@ function renderFoot(){
   if(cur.byParent){
     $('#nowLine').innerHTML='<span class="a">버는 돈 <b>0</b></span>'+
       '<span class="b2">쓰는 돈 <b>'+shortWon(cur.exp)+'</b></span>'+
-      '<span style="color:var(--accent);font-weight:750">이 돈은 부모님이 내주십니다</span>'+
-      '<span>모은 돈 <b>'+shortWon(cur.cash)+'</b></span>';
+      '<span style="color:var(--accent);font-weight:750">이 돈은 부모님이 내주십니다</span>';
     return;}
-  $('#nowLine').innerHTML='<span class="a">버는 돈 <b>'+shortWon(cur.income)+'</b></span>'+
+  $('#nowLine').innerHTML='<span class="a">이 나이대 1년에 버는 돈 <b>'+shortWon(cur.income)+'</b></span>'+
     '<span class="b2">쓰는 돈 <b>'+shortWon(cur.exp)+'</b></span>'+
-    '<span class="c'+(cur.income-cur.exp<0?' neg':'')+'">남는 돈 <b>'+shortWon(cur.income-cur.exp)+'</b></span>'+
-    '<span>모은 돈 <b>'+shortWon(cur.cash)+'</b></span>';
+    '<span class="c'+(cur.income-cur.exp<0?' neg':'')+'">남는 돈 <b>'+shortWon(cur.income-cur.exp)+'</b></span>';
 }
 function refresh(){
   var L=PLAN(),st=L[S.idx];
@@ -1846,7 +1844,7 @@ function finish(){
       '<span class="bb"><i style="width:'+Math.round(v/cmax*100)+'%;background:'+c[2]+'"></i></span>'+
       '<span class="bv" style="display:inline-block;text-align:right;min-width:92px;line-height:1.25">'+shortWon(v)+'<br><span style="font-weight:500;color:var(--ink2);font-size:11px">한 달 '+won(mo)+'</span></span></div>';}).join('');
   var homeNote=r.bought?'주거비에 평생 '+won(r.cat.home)+'을 썼습니다. 대출 30년을 다 갚은 뒤에는 확 줄었고, 그 대신 '+won(r.homeValue)+'짜리 집이 내 것으로 남습니다. (위 계산에는 안 들어간 재산입니다)'
-    :'집을 사지 않았기 때문에 주거비가 <b>85살까지 한 번도 멈추지 않았습니다.</b> 평생 '+won(r.cat.home)+'입니다.';
+    :'<b>내 집이 없는 삶:</b> 집을 사지 않아서 <b>85살까지 집세가 한 번도 멈추지 않습니다</b>(평생 '+won(r.cat.home)+'). 2년마다 이사 갈 집을 알아봐야 하고, 나이 들어서도 집주인에게 월세를 냅니다. <b>통장에 돈이 많아 보여도, 그중 상당액은 앞으로 낼 집세</b>예요 — 남은 돈이 다 내 것은 아닙니다.';
   $('#calcNote').innerHTML=
     '<b>「번 돈」과 「드는 돈」이 왜 다를까?</b> <b>드는 돈</b>은 <b>내가 고른 방식대로 평생 살 때 필요한 돈</b>이에요. '+
     '번 돈에서 드는 돈을 빼면 = <b>85살에 남는 돈</b>이 됩니다. 그래서 두 숫자는 원래 다릅니다. 번 돈이 더 많으면 남고, 드는 돈이 더 많으면 모자라요.<br><br>'+
@@ -1871,14 +1869,24 @@ function finish(){
   var incOld=o65.reduce(function(s,x){return s+x.income*x.years;},0);
   var savedAt65=Math.max(0,r.rows[4].cash);
   var have=savedAt65+incOld, gap=needTot-have;
+  var penM=Math.round(r.pensionIncome/12);                       /* 국민연금 한 달 */
+  var needM=Math.round(a75/12);                                  /* 노후 한 달 필요액 */
+  var minLive=r.married?210:130;                                 /* 최소 노후 생계비(월, 국민연금연구원 참고) */
+  var prevM=Math.round(r.rows[4].exp/12);                        /* 은퇴 직전(55~64) 한 달 지출 */
   $('#oldNeed').innerHTML=
     '<div class="tiny" style="margin:2px 0 8px">일을 놓은 65살부터 85살까지 <b>20년</b> 동안 이만큼 나갑니다.</div>'+
     kvv('생활비 (밥·옷·교통 등)',won(needLive))+
     kvv('집세·주거비',won(needHome))+
     kvv('병원비·돌봄',won(needCare))+
     '<div class="kv" style="border-top:2px solid #e6dcc4;margin-top:2px"><span style="color:var(--ink);font-weight:750">노후에 필요한 돈 합계</span><b style="color:var(--accent)">'+won(needTot)+'</b></div>'+
-    '<div class="tiny" style="margin:10px 0 4px;font-weight:700;color:var(--ink)">이 돈, 어디서 마련할까?</div>'+
-    kvv('국민연금 등 노후 수입 (20년)',won(incOld))+
+    '<div class="calc" style="margin-top:10px;background:#fff;border-color:#e6dcc4">'+
+      '내 국민연금은 <b>한 달 '+won(penM)+'</b>입니다.<br>'+
+      '· 최소 생계비(밥·집세 등 기본): 한 달 약 '+won(minLive)+' → 연금만으로 '+(penM>=minLive?'<b style="color:var(--ok)">채울 수 있어요</b>':'<b style="color:var(--bad)">부족합니다</b>')+'<br>'+
+      '· 은퇴 전처럼 살려면: 한 달 약 '+won(prevM)+' 필요 → 연금은 그 '+Math.max(1,Math.round(penM/Math.max(1,prevM)*100))+'%뿐<br>'+
+      '나머지는 <b>젊을 때 모은 돈</b>으로 메워야 합니다.'+
+    '</div>'+
+    '<div class="tiny" style="margin:10px 0 4px;font-weight:700;color:var(--ink)">그래서 20년 치를 어디서 마련할까?</div>'+
+    kvv('국민연금 (20년 합계)',won(incOld))+
     kvv('일할 때 모아둔 돈 (65살 기준)',won(savedAt65))+
     '<div class="note" style="margin-top:10px;'+(gap>0?'background:#fdeeee;border-color:#e7c4c4':'background:#eef7f1;border-color:#bfe0cc')+'">'+
       (gap>0?'<b style="color:var(--bad)">얼마나 더 필요할까요? → '+won(gap)+' 모자랍니다.</b><br>젊을 때 더 모으거나, 더 오래 일하거나, 노후에 덜 써야 합니다.'
@@ -2055,6 +2063,7 @@ function payload(r){
     전공:P(25,'major')||'',직업:r.job,사는곳:r.region,집:P(25,'home')||'',내집:r.bought,
     결혼:r.married,아이수:r.kids,노후준비:['안 함','조금씩','꽤 많이','최대한'][+(P(55,'pension')||0)],
     취업성공:r.jobOK,승진:passed('promo'),대출통과:passed('loan'),사업성공:passed('biz'),사업성공45:passed('biz45'),
+    결혼시도:(P(35,'marry')==='1'),승진시도:(P(35,'work')==='promo'),사업시도:(P(35,'work')==='biz'),사업시도45:(P(45,'work')==='biz'),대출시도:(isBuy(P(35,'home'))||isBuy(P(45,'home'))),
     선택:JSON.stringify(choiceMap()),
     일한기간:r.workYears,은퇴나이:r.retire,돈바닥나이:r.broke||0,
     평생번돈:r.totalIn,평생쓴돈:r.totalOut,팔십오세현금:r.cash85,집자산:homeEquity(r),순재산:netWorth(r),엔딩:endingOf(r)[0],
