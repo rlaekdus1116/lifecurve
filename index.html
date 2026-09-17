@@ -629,6 +629,14 @@ var REGION={seoul:{n:'서울',c:1.00,home:130000,rent:2400,jeonse:1600,jdep:4500
             other:{n:'그 밖의 지역',c:0.80,home:35000,rent:1200,jeonse:600,jdep:16000}};
 function reg(){return REGION[P(25,'home_where')]||REGION.gg;}
 function pmt(Pr,r,y){var i=r/12,n=y*12;return Pr*i/(1-Math.pow(1+i,-n));}
+/* 살 집 종류 — 지역 평균값(R.home)에 곱하는 배수. 비쌀수록 대출 심사가 어렵습니다 */
+var HOUSE_TIER={
+  small:{n:'작고 외곽인 집',f:0.6,ln:1,d:'역에서 멀고 작지만 쌉니다. 대출도 잘 나와요'},
+  mid:{n:'보통 아파트',f:1.0,ln:0,d:'무난한 위치와 크기'},
+  good:{n:'역세권·학군지 아파트',f:1.5,ln:-1,d:'위치·학군이 좋지만 비싸고 대출 심사가 까다롭습니다'}
+};
+function isBuy(v){return typeof v==='string'&&v.indexOf('buy')===0;}
+function buyTier(v){var t=(v||'').split('_')[1];return HOUSE_TIER[t]||HOUSE_TIER.mid;}
 
 /* ---- 상태 ---- */
 var S={sid:'',cls:'',idx:0,pick:{},custom:{},goal:{},memo:{},ch:{},ev:{},guess:[0,0,0,0,0,0,0,0],moved:[0,0,0,0,0,0,0,0],done:false};
@@ -1031,10 +1039,16 @@ function majorOpts(){var a=[];for(var k in MAJORS){
 function cashBefore(idx){try{var r=simulate();return idx>0?r.rows[idx-1].cash:0;}catch(e){return 0;}}
 function PLAN(){
  var R=reg(),c=R.c,kids=+(P(35,'kids')||0);
- var down=Math.round(R.home*0.3),loan=Math.round(R.home*0.7),mth=Math.round(pmt(loan,.04,30));
  var cash35=cashBefore(2),cash45=cashBefore(3);
- function shortfall(cash){return cash<down?('지금 돈이 '+won(down-cash)+' 모자랍니다 · 모자란 만큼 빚이 됩니다'):null;}
- var warn35=shortfall(cash35),warn45=shortfall(cash45);
+ /* 살 집 종류별 선택지 (가격·계약금·월 상환액을 각각 보여줌) */
+ function buyOpts(cash){
+   return Object.keys(HOUSE_TIER).map(function(t){
+     var T=HOUSE_TIER[t],price=Math.round(R.home*T.f),dn=Math.round(price*0.3),mo=Math.round(pmt(price*0.7,.04,30));
+     return {v:'buy_'+t,t:T.n+' ('+won(price)+')',d:T.d+' · 은행 심사를 통과해야 삽니다',
+       money:'계약금 '+won(dn)+' · 매달 '+won(mo)+'씩 30년',
+       warn:cash<dn?('계약금이 '+won(dn-cash)+' 모자랍니다 · 모자란 만큼 빚이 됩니다'):null};
+   });
+ }
  return [
  {age:15,sub:'지금',desc:'지금도 나에게 1년에 1,400만원쯤 쓰이고 있습니다. 내가 아니라 부모님이 내고 있어요.',
   slots:[
@@ -1091,9 +1105,8 @@ function PLAN(){
      {v:'2',t:'2명',money:'1년 '+won(1800*c)},{v:'3',t:'3명',money:'1년 '+won(2700*c)}]},
    {k:'home',n:'집',s:'이제 부모님 집에서는 나와야 합니다',memo:'must',opts:[
      {v:'same',t:'월세·전세로 산다',d:'부모님 집에서 살았다면 이제 나와서 세를 냅니다',money:'그대로'},
-     {v:'jeonse',t:'보증금을 맡기는 집으로 옮긴다 (전세)',d:'월세는 안 내고 이자만 냅니다',money:'1년 이자 '+won(R.jeonse)},
-     {v:'buy',t:'집을 산다',d:'은행에서 돈을 빌려야 합니다. 심사를 통과해야 해요',
-      money:R.n+' 평균 '+won(R.home)+' · 처음에 '+won(down)+' · 매달 '+won(mth)+'씩 30년',warn:warn35}]},
+     {v:'jeonse',t:'보증금을 맡기는 집으로 옮긴다 (전세)',d:'월세는 안 내고 이자만 냅니다',money:'1년 이자 '+won(R.jeonse)}
+    ].concat(buyOpts(cash35))},
    {k:'big',n:'큰 지출',s:'여러 개 골라도 됩니다',multi:true,add:true,two:true,memo:true,opts:bigOpts(35)}],
   chal:'life',
   goal:{q:'서른다섯의 내 목표는?',chips:['내 집 마련','결혼','아이 키우기','승진','내 사업','빚 갚기']}},
@@ -1113,8 +1126,8 @@ function PLAN(){
      {v:'3',t:'할 수 있는 건 다',money:'1년 '+won(2100*kids)}]},
    {k:'home',n:'집',memo:'must',opts:[
      {v:'same',t:'그대로 산다'},
-     {v:'up',t:'넓은 집으로 옮긴다',money:'주거비 1.5배'},
-     {v:'buy',t:'이제 집을 산다',d:'은행 심사를 통과해야 합니다',money:'처음에 '+won(down)+' · 매달 '+won(mth),warn:warn45}]},
+     {v:'up',t:'넓은 집으로 옮긴다',money:'주거비 1.5배'}
+    ].concat(buyOpts(cash45))},
    {k:'big',n:'큰 지출',s:'여러 개 골라도 됩니다',multi:true,add:true,two:true,memo:true,opts:bigOpts(45)}],
   chal:'life45',
   event:45,
@@ -1190,7 +1203,10 @@ function need(key){
   var st=P(15,'study'),prep=st==='hard'?1:st==='fun'?-1:0;
   if(key==='job'){var J=jobOf();return clamp(3+(J.d||0)+prep,1,5);}
   if(key==='marry')return clamp(4+prep,1,5);   /* 한 번만 굴림 → 성공 확률을 조금 높임 */
-  if(key==='loan'){var J2=jobOf();return clamp(3+(J2.p>=4000?1:0)+(P(25,'home_where')==='other'?1:P(25,'home_where')==='seoul'?-1:0),1,5);}
+  if(key==='loan'){var J2=jobOf();
+    var bv=isBuy(P(35,'home'))?P(35,'home'):isBuy(P(45,'home'))?P(45,'home'):null;
+    var tierAdj=bv?buyTier(bv).ln:0;   /* 싼 집은 대출 쉽고(+), 비싼 집은 어려움(-) */
+    return clamp(3+(J2.p>=4000?1:0)+(P(25,'home_where')==='other'?1:P(25,'home_where')==='seoul'?-1:0)+tierAdj,1,5);}
   if(key==='promo')return clamp(3+prep,1,5);
   if(key==='biz'||key==='biz45')return 2;
   return 3;
@@ -1242,11 +1258,12 @@ function simulate(){
      부부면 배우자 몫이 더해지지만 배우자 연금은 대개 더 적습니다. */
   var pensionIncome=Math.round(Math.min(peak/(married?1.5:1)*0.28,1500)*(married?1.5:1)+pen*0.5);
 
-  /* 주거 */
-  var bought=false,buyAge=0;
-  if(P(35,'home')==='buy'&&passed('loan')){bought=true;buyAge=35;}
-  else if(P(45,'home')==='buy'&&passed('loan')){bought=true;buyAge=45;}
-  var mortgage=Math.round(pmt(R.home*0.7,.04,30)*12);
+  /* 주거 — 어떤 집을 샀는지(가격)까지 반영 */
+  var bought=false,buyAge=0,boughtV=null;
+  if(isBuy(P(35,'home'))&&passed('loan')){bought=true;buyAge=35;boughtV=P(35,'home');}
+  else if(isBuy(P(45,'home'))&&passed('loan')){bought=true;buyAge=45;boughtV=P(45,'home');}
+  var homePrice=bought?Math.round(R.home*buyTier(boughtV).f):R.home;
+  var mortgage=Math.round(pmt(homePrice*0.7,.04,30)*12);
   /* 집 크기 계수: 사회초년(25살)은 원룸, 35살부터 평수를 넓힘, 가족이면 더 큰 집 (R.rent는 가족용 기준) */
   function homeSize(age){
     if(age<=25)return 0.45;                      /* 사회초년 원룸 (월 100만 안짝) */
@@ -1353,18 +1370,18 @@ function simulate(){
     if(age===35){
       if(married)OC('결혼 비용',5000,'kid');
       if(kids)OC('아이 낳기',500*kids,'kid');
-      if(bought&&buyAge===35)OC('집 살 때 처음 낸 돈',Math.round(R.home*0.3),'home');
+      if(bought&&buyAge===35)OC('집 살 때 낸 계약금',Math.round(homePrice*0.3),'home');
       if(P(35,'work')==='biz'&&!passed('biz'))OC('사업 실패로 남은 빚',5000,'big');
     }
     if(age===45){
-      if(bought&&buyAge===45)OC('집 살 때 처음 낸 돈',Math.round(R.home*0.3),'home');
+      if(bought&&buyAge===45)OC('집 살 때 낸 계약금',Math.round(homePrice*0.3),'home');
       if(P(45,'work')==='biz'&&!passed('biz45'))OC('사업 실패로 남은 빚',5000,'big');
     }
     if(age===55){
       if(P(55,'kidwed')==='1'&&kids)OC('자녀 결혼 도와주기',3000*kids,'kid');
       if(evHit(55))OC('큰 병 치료비',2000,'care');
     }
-    if(age===65){if(P(65,'home')==='small'&&bought)OC('작은 집으로 옮기며 남은 돈',-Math.round(R.home*0.25),'home');}
+    if(age===65){if(P(65,'home')==='small'&&bought)OC('작은 집으로 옮기며 남은 돈',-Math.round(homePrice*0.25),'home');}
 
     var years=(age===85)?1:10;
     /* 15살 구간의 지출은 부모님 몫이라 내 통장에서 빠지지 않습니다 */
@@ -1405,7 +1422,7 @@ function simulate(){
   for(var ck in cat)cat[ck]=Math.round(cat[ck]);
   return {rows:rows,broke:broke,cash85:rows[7].cash,cat:cat,parentPaid:Math.round(parentPaid),
     totalIn:Math.round(totalIn),totalOut:Math.round(totalOut),
-    pay:pay,pensionIncome:pensionIncome,retire:retire,startWork:startWork,homeValue:R.home,
+    pay:pay,pensionIncome:pensionIncome,retire:retire,startWork:startWork,homeValue:homePrice,
     workYears:Math.max(0,retire-startWork),spendYears:85-15,
     married:married,kids:kids,bought:bought,job:J.name,region:R.n,jobOK:jobOK};
 }
@@ -1598,12 +1615,13 @@ function chalList(){
   if(st.chal==='job')out.push('job');
   if(st.chal==='life'){
     if(P(35,'marry')==='1')out.push('marry');
-    if(P(35,'home')==='buy')out.push('loan');
+    if(isBuy(P(35,'home')))out.push('loan');
     if(P(35,'work')==='promo')out.push('promo');
     if(P(35,'work')==='biz')out.push('biz');
   }
   if(st.chal==='life45'){
     if(P(45,'work')==='biz')out.push('biz45');
+    if(isBuy(P(45,'home'))&&!passed('loan'))out.push('loan');
   }
   return out;
 }
