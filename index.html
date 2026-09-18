@@ -1121,14 +1121,16 @@ function PLAN(){
  var R=reg(),c=R.c,kids=+(P(35,'kids')||0);
  var cash35=cashBefore(2),cash45=cashBefore(3);
  /* 살 집 종류별 선택지 (가격·계약금·월 상환액을 각각 보여줌) */
- function buyOpts(cash){
+ function buyOpts(cash,locked){
    return Object.keys(HOUSE_TIER).map(function(t){
      var T=HOUSE_TIER[t],price=Math.round(R.home*T.f),dn=Math.round(price*0.3),mo=Math.round(pmt(price*0.7,.04,30));
      return {v:'buy_'+t,t:T.n+' ('+won(price)+')',d:T.d+' · 은행 심사를 통과해야 삽니다',
        money:'계약금 '+won(dn)+' · 매달 '+won(mo)+'씩 30년',
-       warn:cash<dn?('계약금 마련에 '+won(dn-Math.max(0,cash))+'이 부족합니다 · 모자란 만큼 빚이 됩니다'):null};
+       why:locked||null,
+       warn:locked?null:(cash<dn?('계약금 마련에 '+won(dn-Math.max(0,cash))+'이 부족합니다 · 모자란 만큼 빚이 됩니다'):null)};
    });
  }
+ var owns35=(isBuy(P(35,'home'))&&passed('loan'));   /* 35살에 이미 집을 샀나 */
  return [
  {age:15,sub:'지금',desc:'지금도 나에게 1년에 1,400만원쯤 쓰이고 있습니다. 내가 아니라 부모님이 내고 있어요.',
   slots:[
@@ -1207,7 +1209,7 @@ function PLAN(){
    {k:'home',n:'집',memo:'must',opts:[
      {v:'same',t:'그대로 산다'},
      {v:'up',t:'넓은 집으로 옮긴다',money:'주거비 1.5배'}
-    ].concat(buyOpts(cash45))},
+    ].concat(buyOpts(cash45,owns35?'이미 집이 있어요 (35살에 샀습니다)':null))},
    {k:'big',n:'큰 지출',s:'여러 개 골라도 됩니다',multi:true,add:true,two:true,memo:true,opts:bigOpts(45)}],
   chal:'life45',
   event:45,
