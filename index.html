@@ -162,6 +162,29 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--pri);box
 .popcard{background:#fff;color:var(--ink);border-radius:19px;padding:15px;text-align:left;margin-top:14px}
 .popbtn{margin-top:18px}
 
+/* 발표 화면 */
+#presentScreen{position:fixed;inset:0;z-index:200;background:var(--bg);overflow-y:auto;display:none;
+  padding:20px 16px calc(24px + env(safe-area-inset-bottom))}
+#presentScreen.on{display:block}
+.prs{max-width:820px;margin:0 auto}
+.prs .ptag{font-size:13px;letter-spacing:3px;font-weight:800;color:var(--accent);text-align:center}
+.prs h1{font-size:30px;text-align:center;margin:6px 0 2px}
+.prs .psub{text-align:center;color:var(--ink2);font-size:15px;margin:0 0 4px}
+.prs .pwait{text-align:center;color:var(--ink2);font-size:14px;margin-top:40vh}
+.prs .pcard{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:15px 16px;margin-top:12px;box-shadow:var(--sh-s)}
+.prs .pcard h3{margin:0 0 8px;font-size:16px}
+.prs .page{font-size:15px;font-weight:800;color:var(--pri);margin:12px 0 4px}
+.prs .prow{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid #f2efe9;font-size:15px}
+.prs .prow:last-child{border:0}
+.prs .prow .k{flex:none;min-width:96px;color:var(--ink2)}
+.prs .prow .v{font-weight:650}
+.prs .why{background:#fdfbf5;border:1px solid #e6dcc4;border-radius:12px;padding:8px 11px;margin:5px 0 2px;font-size:14.5px}
+.prs .why b{color:var(--accent)}
+.prs .big2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.prs .big2>div{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px}
+.prs .big2 .l{font-size:12px;color:var(--ink2)} .prs .big2 .v{font-size:22px;font-weight:800}
+@media (min-width:740px){.prs h1{font-size:40px}.prs .prow{font-size:17px}.prs .page{font-size:18px}}
+
 /* 예상 곡선 */
 .curvewrap{background:#fff;border:1px solid var(--line);border-radius:20px;padding:13px;box-shadow:var(--sh);margin-top:14px}
 #curveC{touch-action:none;cursor:crosshair;border-radius:12px}
@@ -541,6 +564,9 @@ table.life td.g{color:var(--ink2)}
   <div class="popbtn"><button class="btn big" id="popBtn" style="background:#fff;color:#17191d;border-color:#fff">확인</button></div>
 </div></div>
 
+<!-- 발표 화면 (선생님이 한 학생을 골라 모두에게 띄움) -->
+<div id="presentScreen"></div>
+
 <script>
 var FIREBASE_CONFIG={apiKey:"AIzaSyApUKeVhJ0EnOm_wu1vcT-14yeax7iQR7I",authDomain:"court-ae96f.firebaseapp.com",
  projectId:"court-ae96f",storageBucket:"court-ae96f.firebasestorage.app",
@@ -625,9 +651,9 @@ var PAYBOOK=[["의사",6500],["치과",6500],["한의",5500],["약사",4800],["�
 function lookupPay(n){var s=(n||'').toLowerCase().replace(/\s/g,'');if(!s)return null;
  for(var i=0;i<PAYBOOK.length;i++)if(s.indexOf(PAYBOOK[i][0])>=0)return {k:PAYBOOK[i][0],p:PAYBOOK[i][1]};return null;}
 
-var REGION={seoul:{n:'서울',c:1.00,home:130000,rent:2400,jeonse:1600,jdep:45000},
-            gg:{n:'경기도',c:0.90,home:62000,rent:1800,jeonse:1000,jdep:28000},
-            other:{n:'그 밖의 지역',c:0.80,home:35000,rent:1200,jeonse:600,jdep:16000}};
+var REGION={seoul:{n:'서울',c:1.00,home:130000,rent:2400,jeonse:2300,jdep:65000},
+            gg:{n:'경기도',c:0.90,home:62000,rent:1800,jeonse:1250,jdep:35000},
+            other:{n:'그 밖의 지역',c:0.80,home:35000,rent:1200,jeonse:700,jdep:20000}};
 function reg(){return REGION[P(25,'home_where')]||REGION.gg;}
 function pmt(Pr,r,y){var i=r/12,n=y*12;return Pr*i/(1-Math.pow(1+i,-n));}
 /* 살 집 종류 — 지역 평균값(R.home)에 곱하는 배수. 비쌀수록 대출 심사가 어렵습니다 */
@@ -663,6 +689,7 @@ function setMM(age,slot,v){if(!S.memo[age])S.memo[age]={};S.memo[age][slot]=v;}
 function askOf(age,g){var v=P(age,g.k),o=null;
   (g.opts||[]).forEach(function(z){if(z.v===v&&z.ask)o=z;});return o;}
 function len(s){return (s||'').replace(/\s/g,'').length;}
+function esc(s){return String(s==null?'':s).replace(/[&<>]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;'})[c];});}
 /* 의미 없는 입력(ㅇㅇㅇ, ㅋㅋㅋ, 0000, 자음/모음만)을 거릅니다 */
 function notGibberish(s){s=(s||'').replace(/\s/g,'');if(!s)return false;
   var d={};for(var i=0;i<s.length;i++)d[s[i]]=1;
@@ -837,6 +864,7 @@ function connectFB(){
         var v=(d&&d.exists&&d.exists())?d.data():{};
         ALLOW=(typeof v.step==='number')?v.step:0;
         FREE=(ALLOW===99)||!!v.free;
+        handlePresent(v.present||'');
         LINK=true;dot();onAllow();
       },function(e){
         /* 선생님 신호를 못 읽으면 수업이 멈추므로 잠금을 풉니다 */
@@ -845,6 +873,57 @@ function connectFB(){
       });
     });
   }).catch(function(){CONNECTED=false;});
+}
+/* ===== 발표: 선생님이 한 학생을 골라 모두 화면에 띄움 ===== */
+var curPresent=null;
+function slotNameMap(){var m={};try{PLAN().forEach(function(st){st.slots.forEach(function(g){m[st.age+'_'+g.k]=g.n;});});}catch(e){}return m;}
+function handlePresent(name){
+  var scr=document.getElementById('presentScreen');
+  if(!name){ if(curPresent!==null){curPresent=null;scr.classList.remove('on');} return; }
+  if(name===curPresent)return;
+  curPresent=name;
+  scr.classList.add('on');
+  scr.innerHTML='<div class="prs"><div class="pwait">발표 화면을 불러오는 중…</div></div>';
+  window.scrollTo(0,0);
+  try{FS.getDoc(FS.doc(DB,COLLECTION,name)).then(function(s){
+    if(curPresent!==name)return;                 /* 그새 바뀌었으면 무시 */
+    if(s&&s.exists&&s.exists())renderPresentation(s.data());
+    else scr.innerHTML='<div class="prs"><div class="pwait">아직 제출 자료가 없습니다.</div></div>';
+  }).catch(function(){scr.innerHTML='<div class="prs"><div class="pwait">불러오지 못했습니다.</div></div>';});}
+  catch(e){}
+}
+function pGiven(n){var s=String(n||'').split(' ').slice(-1)[0];return s.length>1?s.slice(1):s;}
+function renderPresentation(d){
+  var scr=document.getElementById('presentScreen');
+  var picks={},memos={},nm=slotNameMap();
+  try{picks=JSON.parse(d.선택||'{}');}catch(e){}
+  try{memos=JSON.parse(d.메모||'{}');}catch(e){}
+  var HOUSE={parents:'부모님 집',monthly:'월세',jeonse:'전세'};
+  /* 나이대별: 선택 + 이유 */
+  var ages=[15,25,35,45,55,65,75],life='';
+  ages.forEach(function(a){
+    var p=picks[a];if(!p&&!d['목표_'+a])return;
+    var rows='';
+    if(p)Object.keys(p).forEach(function(k){rows+='<div class="prow"><span class="k">'+esc(k)+'</span><span class="v">'+esc(p[k])+'</span></div>';});
+    /* 이 나이의 이유들 */
+    var whys='';for(var mk in memos){if(mk.indexOf(a+'_')===0&&String(memos[mk]).trim()){
+      whys+='<div class="why"><b>왜?</b> ('+esc(nm[mk]||mk)+') '+esc(memos[mk])+'</div>';}}
+    var goal=d['목표_'+a]?'<div class="why" style="background:#eef3fb;border-color:#d5e2f4"><b style="color:var(--pri)">이 나이 목표</b> '+esc(d['목표_'+a])+'</div>':'';
+    life+='<div class="page">'+a+'살</div>'+rows+whys+goal;
+  });
+  var net=(d.순재산!==undefined)?d.순재산:(d.팔십오세현금||0);
+  var head='<div class="prs"><div class="ptag">인생 발표</div>'+
+    '<h1>'+esc(pGiven(d.name))+'의 인생</h1>'+
+    '<div class="psub">'+esc((d.반||''))+' · '+esc(d.직업||'—')+' · '+esc(d.엔딩||'진행 중')+'</div>'+
+    '<div class="big2">'+
+      '<div><div class="l">평생 번 돈</div><div class="v">'+shortWon(d.평생번돈||0)+'</div></div>'+
+      '<div><div class="l">이렇게 살면 드는 돈</div><div class="v">'+shortWon(d.평생쓴돈||0)+'</div></div>'+
+      '<div><div class="l">내 집</div><div class="v">'+(d.내집?shortWon(d.집자산||0)+' 집':'없음(세입자)')+'</div></div>'+
+      '<div><div class="l">85살 순재산(집 포함)</div><div class="v" style="color:'+(net<0?'var(--bad)':'var(--ok)')+'">'+shortWon(net)+'</div></div>'+
+    '</div>';
+  var story='<div class="pcard"><h3>어떤 선택을 했고, 왜 그랬나</h3>'+(life||'<div class="tiny">선택 기록이 없습니다.</div>')+'</div>';
+  scr.innerHTML=head+story+'<div class="tiny" style="text-align:center;margin:14px 0 4px;color:var(--ink2)">선생님이 발표를 끄면 원래 화면으로 돌아갑니다</div></div>';
+  window.scrollTo(0,0);
 }
 /* 단계마다 저장 — 교사가 중간에도 볼 수 있게 */
 var STEPNAME=['시작','평균 보기','예상 소득','15살','25살','35살','45살','55살','65살','75살','결산'];
@@ -1047,7 +1126,7 @@ function PLAN(){
      var T=HOUSE_TIER[t],price=Math.round(R.home*T.f),dn=Math.round(price*0.3),mo=Math.round(pmt(price*0.7,.04,30));
      return {v:'buy_'+t,t:T.n+' ('+won(price)+')',d:T.d+' · 은행 심사를 통과해야 삽니다',
        money:'계약금 '+won(dn)+' · 매달 '+won(mo)+'씩 30년',
-       warn:cash<dn?('계약금이 '+won(dn-cash)+' 모자랍니다 · 모자란 만큼 빚이 됩니다'):null};
+       warn:cash<dn?('계약금 마련에 '+won(dn-Math.max(0,cash))+'이 부족합니다 · 모자란 만큼 빚이 됩니다'):null};
    });
  }
  return [

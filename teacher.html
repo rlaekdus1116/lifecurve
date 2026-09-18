@@ -198,6 +198,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 <header>
   <h1>인생설계 시뮬레이터 · 교실 전광판</h1>
   <span class="conn" id="conn">연결 확인 중…</span>
+  <button class="btn" id="presentBadge" style="display:none;background:var(--warn);border-color:var(--warn);color:#fff;font-weight:800"></button>
   <span class="sp"></span>
   <button class="btn dark" id="btnPresent">발표 화면 (F)</button>
   <button class="btn" id="btnCsv">엑셀로 내려받기</button>
@@ -348,6 +349,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 <!-- 학생 한 명 전체 선택 -->
 <div id="detailPop"><div class="box">
   <button class="btn close" id="dpClose">닫기</button>
+  <button class="btn" id="dpPresent" style="float:right;margin-right:8px;background:var(--pri);border-color:var(--pri);color:#fff;font-weight:800">📢 아이들 화면에 띄우기</button>
   <h2 id="dpName">—</h2>
   <p class="sub2" id="dpSub">—</p>
   <div id="dpBody"></div>
@@ -812,9 +814,28 @@ function ctrlMsg(txt,bad){
 function pushCtrl(){
   if(!DB){ctrlMsg('연결 안 됨 — 아이들 화면은 안 바뀝니다',true);return;}
   ctrlMsg('보내는 중…');
-  api.setDoc(api.doc(DB,COLLECTION,CTRL_DOC),{step:FREEMODE?99:STEP,free:FREEMODE,at:Date.now()})
+  api.setDoc(api.doc(DB,COLLECTION,CTRL_DOC),{step:FREEMODE?99:STEP,free:FREEMODE,at:Date.now()},{merge:true})
     .then(function(){ctrlMsg('아이들 화면에 전달됨 · '+(FREEMODE?'자유 진행':STEPS[STEP]));})
     .catch(function(e){ctrlMsg('전달 실패 — '+(e&&e.code?e.code:'권한/규칙 확인'),true);console.error(e);});
+}
+/* ===== 발표: 학생 한 명을 골라 아이들 화면에 띄우기 ===== */
+var PRESENTING=null;
+function presentTo(name){
+  if(!DB){alert('연결 안 됨 — 띄울 수 없습니다');return;}
+  PRESENTING=name;
+  api.setDoc(api.doc(DB,COLLECTION,CTRL_DOC),{present:name,presentAt:Date.now()},{merge:true})
+    .then(function(){updatePresentBadge();}).catch(function(e){alert('띄우기 실패: '+(e&&e.code||''));});
+  updatePresentBadge();
+}
+function clearPresent(){
+  PRESENTING=null;
+  if(DB)api.setDoc(api.doc(DB,COLLECTION,CTRL_DOC),{present:''},{merge:true}).catch(function(){});
+  updatePresentBadge();
+}
+function updatePresentBadge(){
+  var b=document.getElementById('presentBadge');if(!b)return;
+  if(PRESENTING){b.style.display='';b.textContent='📢 발표 중: '+shortName(PRESENTING)+' — 끄기';}
+  else b.style.display='none';
 }
 function bindCtrl(){
   var n=document.getElementById('stNext');if(!n||n.dataset.b)return;n.dataset.b='1';
@@ -1047,9 +1068,11 @@ function openDetail(id){
 
   $('#dpBody').innerHTML=head+'<div class="dgrid"><div class="dcol">'+c1+'</div><div class="dcol">'+c2+'</div><div class="dcol">'+c3+'</div></div>';
   $('#detailPop').classList.add('on');
+  $('#dpPresent').onclick=function(){presentTo(id);$('#detailPop').classList.remove('on');};
   setTimeout(function(){drawOne('dpC',r,190);},30);
 }
 $('#dpClose').onclick=function(){$('#detailPop').classList.remove('on');};
+$('#presentBadge').onclick=function(){clearPresent();};
 $('#detailPop').addEventListener('click',function(e){ if(e.target===this) this.classList.remove('on'); });
 
 /* --- KPI --- */
@@ -1241,7 +1264,8 @@ $('#btnClear').onclick=async function(){
       /* 교사가 넘긴 단계는 바로 반영 */
       var c=fresh[CTRL_DOC];
       if(c){var st=(typeof c.step==='number')?c.step:0;
-            FREEMODE=(st===99)||!!c.free; if(!FREEMODE)STEP=st;}
+            FREEMODE=(st===99)||!!c.free; if(!FREEMODE)STEP=st;
+            PRESENTING=c.present||null;updatePresentBadge();}
       if(first){first=false;DATA=fresh;renderAll();return;}
       /* 학생 자료는 쌓아두기만 하고, 선생님이 새로고침을 눌러야 화면이 바뀝니다 */
       PENDING=fresh;
